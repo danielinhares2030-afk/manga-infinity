@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, Bell, Dices, Hexagon, Infinity as InfinityIcon, 
-  Home as HomeIcon, LayoutGrid, Library, UserCircle, User, X, Trophy 
+  Home as HomeIcon, LayoutGrid, Library, UserCircle, User, X, Trophy, BookOpen, Eye 
 } from 'lucide-react';
 
 import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
@@ -10,16 +10,12 @@ import {
   query, getDocs, updateDoc, increment 
 } from "firebase/firestore";
 
-// TUDO SOLTO NA RAIZ (APENAS ./)
-// *Atenção: Garanta que os nomes desses 3 arquivos soltos sejam exatamente esses:*
 import { app, auth, db } from './firebase'; 
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
 import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo } from './helpers';
 
-// Componentes da UI
 import { ErrorBoundary, GlobalToast, Footer, SplashScreen } from './UIComponents';
 
-// IMPORTAÇÃO DAS TELAS (Tudo no mesmo lugar)
 import { LoginView } from './LoginView';
 import { HomeView } from './HomeView';
 import { SearchView } from './SearchView';
@@ -55,7 +51,7 @@ function MangaInfinityApp() {
   const [catalogState, setCatalogState] = useState({ filterType: "Todos", selectedGenres: [], visibleCount: 24, scrollPos: 0 });
 
   const [user, setUser] = useState(null);
-  const [userProfileData, setUserProfileData] = useState({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], activeFrame: '', activeCover: '', activeEffect: '', activeFont: '', activeMission: null, completedMissions: [] });
+  const [userProfileData, setUserProfileData] = useState({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [] });
   const [userSettings, setUserSettings] = useState({ readMode: 'Cascata', dataSaver: false, theme: 'Escuro' });
   const [libraryData, setLibraryData] = useState({});
   const [historyData, setHistoryData] = useState([]);
@@ -126,13 +122,13 @@ function MangaInfinityApp() {
               setUserProfileData({ 
                 bio: data.bio, avatarUrl: data.avatarUrl, coverUrl: data.coverUrl, 
                 xp: data.xp || 0, level: data.level || 1, coins: data.coins || 0, crystals: data.crystals || 0,
-                inventory: data.inventory || [], activeFrame: data.activeFrame || '', activeCover: data.activeCover || '', 
-                activeEffect: data.activeEffect || '', activeFont: data.activeFont || '',
+                inventory: data.inventory || [], 
+                equipped_items: data.equipped_items || {}, 
                 activeMission: data.activeMission || null, completedMissions: data.completedMissions || []
               });
               if(data.settings) setUserSettings({ ...userSettings, ...data.settings }); 
             } else {
-              setDoc(profileRef, { bio: "Leitor Nível 1.", settings: userSettings, xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], activeFrame: '', activeCover: '', activeMission: null, completedMissions: [] }, { merge: true });
+              setDoc(profileRef, { bio: "Leitor Nível 1.", settings: userSettings, xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [] }, { merge: true });
             }
           });
 
@@ -154,7 +150,7 @@ function MangaInfinityApp() {
           return () => { unsubProfile(); unsubLib(); unsubHist(); unsubNotif(); };
         } catch (error) { console.error(error); }
       } else {
-        setUserProfileData({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], activeFrame: '', activeCover: '', activeEffect: '', activeFont: '', activeMission: null, completedMissions: [] }); setLibraryData({}); setHistoryData([]); setNotifications([]); setDataLoaded(true);
+        setUserProfileData({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [] }); setLibraryData({}); setHistoryData([]); setNotifications([]); setDataLoaded(true);
       }
     });
     return () => unsubscribeAuth();
@@ -293,14 +289,20 @@ function MangaInfinityApp() {
   };
 
   const toggleEquipItem = async (item) => {
-    const updates = {}; const cat = item.categoria || item.type;
-    const isEquipped = userProfileData.activeFrame === item.cssClass || userProfileData.activeCover === item.preview || userProfileData.activeCover === item.url || userProfileData.avatarUrl === item.preview || userProfileData.avatarUrl === item.url || userProfileData.activeEffect === item.cssClass || userProfileData.activeFont === item.cssClass;
-    if (cat === 'moldura' || cat === 'frame') updates.activeFrame = isEquipped ? '' : item.cssClass;
-    if (cat === 'capa_fundo' || cat === 'cover') updates.activeCover = isEquipped ? '' : (item.preview || item.url);
-    if (cat === 'avatar') updates.avatarUrl = isEquipped ? '' : (item.preview || item.url);
-    if (cat === 'efeito' || cat === 'effect') updates.activeEffect = isEquipped ? '' : item.cssClass;
-    if (cat === 'nickname' || cat === 'fonte' || cat === 'font') updates.activeFont = isEquipped ? '' : item.cssClass;
-    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), updates);
+    const cat = item.categoria || item.type;
+    const currentEquipped = userProfileData.equipped_items || {};
+    const isEquipped = currentEquipped[cat]?.id === item.id;
+    const newEquipped = { ...currentEquipped };
+    
+    if (isEquipped) {
+        delete newEquipped[cat];
+    } else {
+        newEquipped[cat] = item;
+    }
+    
+    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { 
+        equipped_items: newEquipped 
+    });
   };
 
   const synthesizeCrystal = async () => {
@@ -329,11 +331,12 @@ function MangaInfinityApp() {
   }
 
   const unreadNotifCount = notifications.filter(n => !n.read).length;
+  const eq = userProfileData.equipped_items || {};
 
   return (
-    <div className={`min-h-screen font-sans selection:bg-cyan-600 selection:text-white flex flex-col transition-colors duration-300 ${getThemeClasses(userSettings.theme)} ${userProfileData.activeFont || ''} ${userProfileData.activeEffect || ''}`}>
+    <div className={`min-h-screen font-sans selection:bg-cyan-600 selection:text-white flex flex-col transition-colors duration-300 ${getThemeClasses(userSettings.theme)}`}>
       
-      <style dangerouslySetInnerHTML={{__html: shopItems.map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`).join('\n')}} />
+      <style dangerouslySetInnerHTML={{__html: Object.values(eq).filter(Boolean).map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`).join('\n')}} />
       <style>{`input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #22d3ee; cursor: pointer; box-shadow: 0 0 15px rgba(34, 211, 238, 0.9); border: 2px solid white; } .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
 
       {levelUpAlert && (
@@ -361,9 +364,14 @@ function MangaInfinityApp() {
         <nav className="sticky top-0 z-40 bg-[#030407]/80 backdrop-blur-xl border-b border-white/5 shadow-sm relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
+              
               <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
-                <div className="bg-gradient-to-br from-cyan-500 via-indigo-500 to-fuchsia-500 p-2 rounded-lg shadow-[0_0_15px_rgba(34,211,238,0.4)] group-hover:scale-105 transition-transform duration-300"><InfinityIcon className="w-5 h-5 text-white" /></div>
-                <span className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 to-fuchsia-300 hidden sm:block">INFINITY</span>
+                <div className="relative flex items-center justify-center w-10 h-10 group-hover:scale-105 transition-transform duration-300">
+                   <Hexagon className="absolute w-full h-full text-blue-600/40 animate-[spin_10s_linear_infinite]" />
+                   <BookOpen className="w-6 h-6 text-amber-500 relative z-10 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+                   <Eye className="w-2.5 h-2.5 text-red-600 absolute z-20 animate-pulse drop-shadow-[0_0_5px_rgba(239,68,68,0.8)]" />
+                </div>
+                <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-amber-500 tracking-[0.2em] uppercase hidden sm:block">ABISSAL</span>
               </div>
               
               <div className="hidden md:block flex-1 max-w-lg mx-8 relative group">
@@ -420,8 +428,11 @@ function MangaInfinityApp() {
                       <span className="text-sm font-bold text-gray-200 group-hover:text-cyan-300 transition-colors duration-300">{user.displayName || "Leitor"}</span>
                       <span className="text-[10px] text-fuchsia-400 font-bold uppercase tracking-widest">Nível {userProfileData.level || 1}</span>
                     </div>
-                    <div className={`w-9 h-9 rounded-full overflow-hidden bg-[#0d0d12] border border-white/10 group-hover:border-cyan-500 transition-colors duration-300 ${userProfileData.activeFrame || ''}`}>
-                      {userProfileData.avatarUrl || user.photoURL ? <img src={userProfileData.avatarUrl || user.photoURL} className="w-full h-full object-cover" /> : <User className="w-full h-full p-1.5 text-gray-300/80" />}
+                    <div className="relative w-10 h-10 flex items-center justify-center">
+                      {eq.moldura && <img src={eq.moldura.preview} className={`absolute inset-[-15%] w-[130%] h-[130%] max-w-none pointer-events-none z-30 ${eq.moldura.cssClass}`} />}
+                      <div className={`w-9 h-9 rounded-full overflow-hidden bg-[#0d0d12] border border-white/10 group-hover:border-cyan-500 transition-colors duration-300 relative z-10 ${eq.avatar?.cssClass || ''}`}>
+                        {userProfileData.avatarUrl || user.photoURL ? <img src={userProfileData.avatarUrl || user.photoURL} className="w-full h-full object-cover" /> : <User className="w-full h-full p-1.5 text-gray-300/80" />}
+                      </div>
                     </div>
                   </div>
                 ) : (
