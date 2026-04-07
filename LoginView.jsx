@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Loader2, Sparkles, Fingerprint, Lock, BookOpen, Hexagon, Eye } from 'lucide-react';
+import { Loader2, Sparkles, Fingerprint, Lock } from 'lucide-react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from './firebase';
+import { AbyssalLogo } from './UIComponents';
 
 export function LoginView({ onLoginSuccess, onGuestAccess }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -32,29 +33,16 @@ export function LoginView({ onLoginSuccess, onGuestAccess }) {
 
   return (
     <div className="min-h-screen bg-[#020205] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
-      
-      <style>{`
-        @keyframes drift { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.15; } 50% { transform: translate(30px, -20px) scale(1.05); opacity: 0.3; } }
-      `}</style>
+      <style>{`@keyframes drift { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.15; } 50% { transform: translate(30px, -20px) scale(1.05); opacity: 0.3; } }`}</style>
       <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-900/10 rounded-full blur-[130px] animate-[drift_15s_ease-in-out_infinite]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-red-900/5 rounded-full blur-[130px] animate-[drift_18s_ease-in-out_infinite_reverse]"></div>
 
       <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-10 duration-1000">
         <div className="bg-[#050508]/80 backdrop-blur-3xl border border-blue-900/30 rounded-[2rem] p-8 sm:p-10 shadow-[0_0_80px_rgba(37,99,235,0.1)] relative overflow-hidden group">
-          
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
           
           <div className="text-center mb-10 relative z-10">
-            
-            {/* NEW DIGNIFIED BOOK ICON LOGO ON LOGIN */}
-            <div className="relative flex items-center justify-center w-24 h-24 mx-auto mb-6">
-               <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-red-600 rounded-full blur-xl opacity-30 animate-pulse"></div>
-               <Hexagon className="absolute inset-[-10%] w-[120%] h-[120%] text-blue-500/40 animate-[spin_10s_linear_infinite]" strokeWidth={1} />
-               <Hexagon className="absolute inset-0 w-full h-full text-red-500/40 animate-[spin_7s_linear_infinite_reverse]" strokeWidth={1} />
-               <BookOpen className="w-12 h-12 text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.8)] relative z-10" />
-               <Eye className="w-5 h-5 text-red-500 absolute z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-            </div>
-
+            <AbyssalLogo className="w-24 h-24 mx-auto mb-6 drop-shadow-[0_0_20px_rgba(239,68,68,0.5)]" />
             <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-blue-50 to-blue-700 tracking-tight">
               {isLogin ? 'O ABISMO' : 'SINGULARIDADE'}
             <br/>
