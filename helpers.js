@@ -96,5 +96,7 @@ export const removeXpLogic = (currentXp, currentLvl, penaltyXp) => {
 export const getThemeClasses = (theme) => {
     if (theme === 'OLED') return 'bg-black text-gray-300';
     if (theme === 'Drácula') return 'bg-[#1e1e2e] text-[#cdd6f4]';
+    if (theme === 'Abissal') return 'bg-[#030510] text-blue-100';
+    if (theme === 'Sangue') return 'bg-[#0a0000] text-red-100';
     return 'bg-[#030407] text-gray-200'; 
 };
