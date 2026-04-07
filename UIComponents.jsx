@@ -1,5 +1,40 @@
 import React from 'react';
-import { ShieldAlert, AlertCircle, CheckCircle, Zap, Lock, BookOpen, Hexagon, Eye } from 'lucide-react';
+import { ShieldAlert, AlertCircle, CheckCircle, Zap, Lock } from 'lucide-react';
+
+/* NOVO ÍCONE: LIVRO ABISSAL COM OLHO DE I.A. */
+export function AbyssalLogo({ className = "w-10 h-10" }) {
+  return (
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <defs>
+        <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="bookGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+        <linearGradient id="eyeIris" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </linearGradient>
+      </defs>
+      {/* Aura Pulsante */}
+      <circle cx="50" cy="50" r="45" fill="url(#eyeGlow)" className="animate-pulse" />
+      {/* Capa do Livro */}
+      <path d="M20 75 L50 90 L80 75 L80 25 L50 40 L20 25 Z" fill="#0f172a" stroke="url(#bookGradient)" strokeWidth="4" strokeLinejoin="round" />
+      {/* Páginas Internas */}
+      <path d="M25 70 L50 85 L75 70 L75 30 L50 45 L25 30 Z" fill="#1e293b" stroke="#fbbf24" strokeWidth="2" strokeLinejoin="round" />
+      <line x1="50" y1="45" x2="50" y2="85" stroke="#fbbf24" strokeWidth="2" />
+      {/* Olho Abissal */}
+      <path d="M35 55 Q50 40 65 55 Q50 70 35 55 Z" fill="#000" stroke="#ef4444" strokeWidth="3" />
+      <circle cx="50" cy="55" r="7" fill="url(#eyeIris)" />
+      <circle cx="50" cy="55" r="3" fill="#000" />
+      {/* Linhas de I.A e Poder */}
+      <path d="M50 20 L50 10 M30 35 L20 25 M70 35 L80 25" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" className="animate-pulse" />
+    </svg>
+  );
+}
 
 export class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
@@ -37,17 +72,10 @@ export function Footer() {
         <footer className="w-full bg-[#020205] border-t border-blue-900/20 py-12 mt-auto pb-24 md:pb-12 relative overflow-hidden flex flex-col items-center justify-center">
             <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-900/10 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="max-w-7xl mx-auto px-4 text-center relative z-10 flex flex-col items-center justify-center w-full">
-                
-                {/* NEW DIGNIFIED BOOK ICON LOGO */}
                 <div className="flex justify-center items-center gap-3 mb-5 relative">
-                    <div className="relative flex items-center justify-center w-10 h-10">
-                       <Hexagon className="absolute inset-[-10%] w-[120%] h-[120%] text-blue-600/50 animate-[spin_12s_linear_infinite]" strokeWidth={1} />
-                       <BookOpen className="w-6 h-6 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)] relative z-10" />
-                       <Eye className="w-2.5 h-2.5 text-red-500 absolute z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_5px_rgba(239,68,68,0.7)]" />
-                    </div>
+                    <AbyssalLogo className="w-10 h-10 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                     <span className="font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-amber-500 tracking-[0.2em] uppercase">MANGÁS ABISSAL</span>
                 </div>
-
                 <p className="text-gray-500 text-[9px] uppercase font-black tracking-[0.2em] mb-4 text-center">Mangás Abissal - © 2026. O Vazio Resguarda.</p>
                 <div className="flex items-center justify-center gap-1.5 opacity-40 mx-auto">
                     <Lock className="w-3 h-3 text-amber-500" />
@@ -63,22 +91,12 @@ export function SplashScreen() {
     <div className="fixed inset-0 z-[600] bg-[#020205] flex flex-col items-center justify-center overflow-hidden font-sans">
       <style>{`
         @keyframes vortex-open { 0% { transform: scale(0.8); opacity: 0; filter: blur(20px); } 50% { transform: scale(1.05); opacity: 1; filter: blur(0px); } 100% { transform: scale(1); opacity: 1; } }
-        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.15); } 70% { box-shadow: 0 0 0 40px rgba(37, 99, 235, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); } }
       `}</style>
       
       <div className="absolute w-[60rem] h-[60rem] bg-gradient-to-tr from-blue-900/10 via-[#020205] to-red-900/5 rounded-full blur-[120px] animate-[spin_25s_linear_infinite]"></div>
 
       <div className="relative z-20 flex flex-col items-center animate-[vortex-open_1.5s_cubic-bezier(0.2,0.8,0.2,1)_forwards] w-full max-w-sm mx-auto text-center">
-        
-        {/* NEW GIANT DIGNIFIED BOOK ICON */}
-        <div className="mb-10 relative flex items-center justify-center w-36 h-36 rounded-full animate-[pulse-ring_4s_infinite]">
-           <div className="absolute inset-0 bg-gradient-to-tr from-blue-600 to-red-600 rounded-full blur-2xl opacity-30 animate-pulse"></div>
-           <Hexagon className="absolute inset-[-20%] w-[140%] h-[140%] text-blue-500/40 animate-[spin_10s_linear_infinite]" strokeWidth={0.8} />
-           <Hexagon className="absolute inset-0 w-full h-full text-red-500/40 animate-[spin_7s_linear_infinite_reverse]" strokeWidth={0.8} />
-           <BookOpen className="w-20 h-20 text-amber-500 drop-shadow-[0_0_20px_rgba(245,158,11,1)] relative z-10" />
-           <Eye className="w-8 h-8 text-red-500 absolute z-20 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-        </div>
-        
+        <AbyssalLogo className="w-36 h-36 mx-auto mb-10 drop-shadow-[0_0_25px_rgba(239,68,68,0.6)]" />
         <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-blue-100 to-blue-700 tracking-[0.3em] ml-[0.3em] text-center leading-tight uppercase">MANGÁS<br/>ABISSAL</h1>
         <div className="mt-12 text-amber-500 text-[9px] md:text-[10px] font-black tracking-[0.5em] uppercase animate-pulse bg-[#050508]/80 px-6 py-2.5 rounded-full border border-amber-900/30 backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.15)] text-center mx-auto">CONECTANDO AO VAZIO...</div>
       </div>
