@@ -72,23 +72,8 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   // MOTOR DA LOJA
   const eq = userProfileData.equipped_items || {};
 
-  // BLOCO ÚNICO DE CSS DINÂMICO
-  const dynamicStyles = Object.values(eq)
-    .filter(Boolean)
-    .map(item => `
-      .${item.cssClass} {
-        ${item.css || ''}
-      }
-      ${item.animacao || ''}
-    `)
-    .join('\n');
-
   return (
     <div className={`animate-in fade-in duration-500 w-full pb-20 font-sans min-h-screen text-gray-300 ${eq.tema_perfil ? eq.tema_perfil.cssClass : 'bg-[#020205]'}`}>
-      
-      {/* INJEÇÃO DO BLOCO ÚNICO DE CSS */}
-      {dynamicStyles && <style dangerouslySetInnerHTML={{ __html: dynamicStyles }} />}
-
       {confirmAction && (
           <div className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
               <div className="bg-[#050508] border border-red-900/50 p-6 rounded-3xl shadow-[0_0_50px_rgba(220,38,38,0.15)] max-w-sm w-full text-center relative overflow-hidden">
@@ -112,8 +97,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
       <div className="h-40 md:h-64 w-full bg-[#020205] relative group border-b border-blue-900/20 overflow-hidden">
         {eq.capa_fundo ? (
             <img src={eq.capa_fundo.preview} className={`w-full h-full object-cover opacity-90 ${eq.capa_fundo.cssClass}`} />
-        ) : userProfileData.activeCover ? (
-            <img src={userProfileData.activeCover} className="w-full h-full object-cover opacity-70 mix-blend-luminosity" /> 
         ) : coverBase64 ? (
             <img src={coverBase64} className="w-full h-full object-cover opacity-70 mix-blend-luminosity" /> 
         ) : (
@@ -151,7 +134,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
           </div>
 
           <div className="flex-1 text-center md:text-left mt-4 md:mt-0">
-            {/* 2. NICKNAME INJETADO DA LOJA */}
             <h1 className={`text-2xl md:text-4xl font-black tracking-tight ${eq.nickname ? eq.nickname.cssClass : 'text-blue-50'}`}>
                 {name || 'Entidade Sem Nome'}
             </h1>
@@ -229,56 +211,38 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                     {libraryMangas.length === 0 ? (
                         <div className="text-center py-12 bg-[#050508] rounded-2xl border border-blue-900/20 shadow-inner"><Library className="w-10 h-10 mx-auto text-blue-900/40 mb-3"/><p className="text-blue-800/60 font-black text-[10px] uppercase tracking-widest">Sua coleção abissal está vazia.</p></div>
                     ) : (
-                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4">
-                           {libraryMangas.map(manga => {
-                               const status = libraryData[manga.id];
-                               let statusColor = "bg-gray-800";
-                               if(status === 'Lendo') statusColor = "bg-blue-600 text-white";
-                               if(status === 'Favoritos') statusColor = "bg-amber-500 text-black";
-                               if(status === 'Finalizado') statusColor = "bg-red-900 text-white";
-                               return (
-                                   <div key={manga.id} onClick={() => onNavigate('details', manga)} className="cursor-pointer group relative">
-                                       <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-blue-900/30 shadow-md mb-2 bg-black">
-                                           <img src={manga.coverUrl} className="w-full h-full object-cover opacity-80 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" />
-                                           <div className={`absolute top-0 right-0 ${statusColor} text-[9px] font-black px-2 py-1 rounded-bl-xl shadow-lg uppercase tracking-wider`}>{status}</div>
-                                       </div>
-                                       <h3 className="font-bold text-xs text-blue-200/80 line-clamp-1 group-hover:text-white transition-colors">{manga.title}</h3>
-                                   </div>
-                               )
-                           })}
-                       </div>
+                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+                          {libraryMangas.map(manga => (
+                            <div key={manga.id} className="cursor-pointer group flex flex-col gap-1.5" onClick={() => onNavigate('details', manga)}>
+                              <div className={`relative aspect-[2/3] rounded-lg overflow-hidden bg-[#0d0d12] border border-white/10 shadow-sm ${userSettings?.dataSaver ? 'blur-[1px]' : ''}`}><img src={manga.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /></div>
+                              <h3 className="font-bold text-xs md:text-sm text-gray-200 line-clamp-1 group-hover:text-cyan-400 transition-colors duration-300">{manga.title}</h3>
+                            </div>
+                          ))}
+                        </div>
                     )}
                 </div>
             )}
-            
+
             {activeTab === "Configuracoes" && (
-              <div className="space-y-4 animate-in fade-in duration-300">
-                <div className="bg-[#050508] border border-blue-900/20 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner">
-                  <h4 className="font-black text-blue-200 uppercase tracking-widest flex items-center gap-2.5 text-[10px]"><Moon className="w-5 h-5 text-blue-600"/> Matriz Visual</h4>
-                  <div className="flex bg-black border border-blue-900/30 rounded-xl p-1 w-full sm:w-auto shadow-inner">
-                    <button onClick={() => updateSettings({ theme: 'Escuro' })} className={`flex-1 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-black transition-all duration-300 ${userSettings.theme === 'Escuro' || !userSettings.theme ? 'bg-[#0a0f1a] text-white shadow-md border border-blue-900/50' : 'text-blue-900/60 hover:text-blue-200'}`}>Azul Cósmico</button>
-                    <button onClick={() => updateSettings({ theme: 'OLED' })} className={`flex-1 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-black transition-all duration-300 ${userSettings.theme === 'OLED' ? 'bg-black text-blue-500 shadow-md border border-blue-900/50' : 'text-blue-900/60 hover:text-blue-200'}`}>OLED Absoluto</button>
-                  </div>
+                <div className="animate-in fade-in duration-300 space-y-6">
+                    <div className="bg-[#050508] border border-blue-900/20 p-5 rounded-2xl shadow-inner">
+                       <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-widest">Modo de Leitura</h3>
+                       <div className="flex gap-4">
+                           <button onClick={() => updateSettings({ readMode: 'Cascata' })} className={`flex-1 py-3 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all duration-300 ${userSettings.readMode === 'Cascata' ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' : 'border-blue-900/40 text-gray-400 hover:text-white hover:bg-white/5'}`}>Cascata</button>
+                           <button onClick={() => updateSettings({ readMode: 'Páginas' })} className={`flex-1 py-3 rounded-xl border font-bold text-xs uppercase tracking-widest transition-all duration-300 ${userSettings.readMode === 'Páginas' ? 'bg-blue-600 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' : 'border-blue-900/40 text-gray-400 hover:text-white hover:bg-white/5'}`}>Páginas</button>
+                       </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <button onClick={() => setConfirmAction('history')} className="bg-black border border-red-900/20 hover:border-red-500/50 hover:bg-red-950/30 text-red-800/80 hover:text-red-400 font-black uppercase tracking-widest p-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 text-[10px] shadow-sm">
+                            <Trash2 className="w-5 h-5" /> Apagar Rastros
+                        </button>
+                        <button onClick={() => setConfirmAction('cache')} className="bg-black border border-blue-900/20 hover:border-blue-500/50 hover:bg-blue-950/30 text-blue-800/80 hover:text-blue-400 font-black uppercase tracking-widest p-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 text-[10px] shadow-sm">
+                            <RefreshCw className="w-5 h-5" /> Limpar Sistema
+                        </button>
+                    </div>
                 </div>
-
-                <div className="bg-[#050508] border border-blue-900/20 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-inner">
-                  <h4 className="font-black text-blue-200 uppercase tracking-widest flex items-center gap-2.5 text-[10px]"><BookOpen className="w-5 h-5 text-amber-600"/> Motor de Leitura</h4>
-                  <div className="flex bg-black border border-blue-900/30 rounded-xl p-1 w-full sm:w-auto shadow-inner">
-                    <button onClick={() => updateSettings({ readMode: 'Cascata' })} className={`flex-1 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-black transition-all duration-300 ${userSettings.readMode === 'Cascata' ? 'bg-[#0a0f1a] text-white shadow-md border border-blue-900/50' : 'text-blue-900/60 hover:text-blue-200'}`}>Cascata</button>
-                    <button onClick={() => updateSettings({ readMode: 'Páginas' })} className={`flex-1 px-5 py-2.5 rounded-lg text-[10px] uppercase tracking-widest font-black transition-all duration-300 ${userSettings.readMode === 'Páginas' ? 'bg-[#0a0f1a] text-white shadow-md border border-blue-900/50' : 'text-blue-900/60 hover:text-blue-200'}`}>Páginas</button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-2">
-                    <button onClick={() => setConfirmAction('history')} className="bg-black border border-red-900/20 hover:border-red-500/50 hover:bg-red-950/30 text-red-800/80 hover:text-red-400 font-black uppercase tracking-widest p-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 text-[10px] shadow-sm">
-                        <Trash2 className="w-5 h-5" /> Apagar Rastros
-                    </button>
-                    <button onClick={() => setConfirmAction('cache')} className="bg-black border border-blue-900/20 hover:border-blue-500/50 hover:bg-blue-950/30 text-blue-800/80 hover:text-blue-400 font-black uppercase tracking-widest p-5 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 text-[10px] shadow-sm">
-                        <RefreshCw className="w-5 h-5" /> Limpar Sistema
-                    </button>
-                </div>
-              </div>
             )}
+
           </div>
         )}
       </div>
