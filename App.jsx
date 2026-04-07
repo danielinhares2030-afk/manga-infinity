@@ -14,7 +14,6 @@ import { app, auth, db } from './firebase';
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
 import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo } from './helpers';
 
-// IMPORTAÇÃO DO NOVO ÍCONE AQUI
 import { ErrorBoundary, GlobalToast, Footer, SplashScreen, AbyssalLogo } from './UIComponents';
 
 import { LoginView } from './LoginView';
@@ -337,7 +336,11 @@ function MangaInfinityApp() {
   return (
     <div className={`min-h-screen font-sans selection:bg-cyan-600 selection:text-white flex flex-col transition-colors duration-300 ${getThemeClasses(userSettings.theme)}`}>
       
-      <style dangerouslySetInnerHTML={{__html: Object.values(eq).filter(Boolean).map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`).join('\n')}} />
+      {/* CORREÇÃO DO CSS DA LOJA: Agora injeta de todos os itens da loja para animar os cards no NexoView! */}
+      <style dangerouslySetInnerHTML={{__html: [
+          ...shopItems.map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`),
+          ...Object.values(eq).filter(Boolean).map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`)
+      ].join('\n')}} />
       <style>{`input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #22d3ee; cursor: pointer; box-shadow: 0 0 15px rgba(34, 211, 238, 0.9); border: 2px solid white; } .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
 
       {levelUpAlert && (
@@ -366,7 +369,6 @@ function MangaInfinityApp() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               
-              {/* O NOVO ÍCONE DA LOGO ESTÁ AQUI NA NAVBAR */}
               <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
                 <AbyssalLogo className="w-10 h-10 group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_10px_rgba(239,68,68,0.4)]" />
                 <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-amber-500 tracking-[0.2em] uppercase hidden sm:block">ABISSAL</span>
