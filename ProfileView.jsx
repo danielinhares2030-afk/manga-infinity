@@ -108,20 +108,51 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
       <div className="max-w-4xl mx-auto px-4 sm:px-6 relative -mt-16 md:-mt-20 z-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-4 mb-8">
           
-          {/* MISTURA COM O FUNDO (MIX-BLEND-SCREEN) APLICADA AQUI NO AVATAR DO PERFIL */}
-          <div className="relative group w-28 h-28 md:w-36 md:h-36 flex-shrink-0 flex items-center justify-center">
+          {/* ESTRUTURA CORRIGIDA DO AVATAR - COMO VOCÊ PEDIU */}
+          <div className="relative w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center flex-shrink-0 group">
             
-            {eq.particulas && <img src={eq.particulas.preview} className={`absolute inset-[-50%] w-[200%] h-[200%] max-w-none object-cover pointer-events-none mix-blend-screen z-0 ${eq.particulas.cssClass}`} />}
+            {/* 1. O Avatar do Usuário (Base) */}
+            <img 
+               src={eq.avatar ? eq.avatar.preview : (avatarBase64 || `https://placehold.co/150x150/050508/3b82f6?text=U`)} 
+               className={`w-full h-full rounded-full object-cover z-0 shadow-[0_0_30px_rgba(37,99,235,0.15)] ${eq.avatar?.cssClass || ''}`} 
+               alt="Avatar do Usuário"
+            />
             
-            <div className={`w-full h-full rounded-full bg-black flex items-center justify-center relative z-10 overflow-hidden ${eq.moldura ? '' : 'border-4 border-[#020205] shadow-[0_0_30px_rgba(37,99,235,0.15)]'}`}>
-               <img src={eq.avatar ? eq.avatar.preview : (avatarBase64 || `https://placehold.co/150x150/050508/3b82f6?text=U`)} className={`w-full h-full object-cover ${eq.avatar?.cssClass || ''}`} />
-            </div>
+            {/* 2. As Partículas por trás (se quiser que passe por fora, fica com inset negativo) */}
+            {eq.particulas && (
+              <img 
+                src={eq.particulas.preview} 
+                className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${eq.particulas.cssClass}`} 
+                style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} 
+              />
+            )}
+            
+            {/* 3. O Efeito de Brilho (sobrepõe exatamente no avatar) */}
+            {eq.efeito && (
+              <img 
+                src={eq.efeito.preview} 
+                className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${eq.efeito.cssClass}`} 
+                style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} 
+              />
+            )}
 
-            {eq.efeito && <img src={eq.efeito.preview} className={`absolute inset-0 w-full h-full pointer-events-none mix-blend-screen z-20 ${eq.efeito.cssClass}`} />}
-            
-            {eq.moldura && <img src={eq.moldura.preview} className={`absolute inset-[-15%] w-[130%] h-[130%] max-w-none pointer-events-none mix-blend-screen z-30 ${eq.moldura.cssClass}`} />}
-            
-            {eq.badge && <img src={eq.badge.preview} className={`absolute -bottom-2 -right-2 w-8 h-8 z-40 drop-shadow-lg mix-blend-screen pointer-events-none ${eq.badge.cssClass}`} />}
+            {/* 4. A Moldura Mágica (pouco maior que o avatar) */}
+            {eq.moldura && (
+              <img 
+                src={eq.moldura.preview} 
+                className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${eq.moldura.cssClass}`} 
+                style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} 
+              />
+            )}
+
+            {/* 5. A Badge/Medalha no Canto Inferior */}
+            {eq.badge && (
+              <img 
+                src={eq.badge.preview} 
+                className={`absolute -bottom-2 -right-2 w-8 h-8 object-contain z-20 ${eq.badge.cssClass}`} 
+                style={{ pointerEvents: 'none' }} 
+              />
+            )}
 
             {isEditing && <button onClick={() => avatarInputRef.current.click()} className="absolute bottom-0 right-0 bg-blue-600 p-3 rounded-full text-black z-50 shadow-[0_0_15px_rgba(37,99,235,0.5)] hover:bg-blue-500 transition-colors duration-300"><Camera className="w-5 h-5" /></button>}
             <input type="file" accept="image/*" ref={avatarInputRef} className="hidden" onChange={(e) => handleImageUpload(e, 'avatar')} />
