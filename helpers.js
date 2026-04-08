@@ -101,12 +101,11 @@ export const getThemeClasses = (theme) => {
     return 'bg-[#030407] text-gray-200'; 
 };
 
-// NOVA FUNÇÃO: Injeta o código do Cloudinary para arrancar o fundo preto!
+// BLINDAGEM: Se a imagem estiver vazia, ele mata a renderização antes de dar o quadrado branco!
 export const cleanCosmeticUrl = (url) => {
-    if (!url || typeof url !== 'string') return url;
+    if (!url || typeof url !== 'string' || url.trim() === '') return null;
     if (url.includes('cloudinary.com') && url.includes('/upload/')) {
         if (url.includes('e_make_transparent')) return url;
-        // Pede ao Cloudinary para tornar a cor preta (000000) transparente
         return url.replace('/upload/', '/upload/e_make_transparent:15,co_rgb:000000/');
     }
     return url;
