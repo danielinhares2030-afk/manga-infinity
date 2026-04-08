@@ -12,7 +12,7 @@ import {
 
 import { app, auth, db } from './firebase'; 
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
-import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo } from './helpers';
+import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo, cleanCosmeticUrl } from './helpers';
 
 import { ErrorBoundary, GlobalToast, Footer, SplashScreen, AbyssalLogo } from './UIComponents';
 
@@ -428,9 +428,8 @@ function MangaInfinityApp() {
                       <span className="text-[10px] text-fuchsia-400 font-bold uppercase tracking-widest">Nível {userProfileData.level || 1}</span>
                     </div>
                     
-                    {/* ESTRUTURA DO AVATAR NA NAVBAR CORRIGIDA COM MIX-BLEND INLINE */}
+                    {/* ESTRUTURA CORRIGIDA DO AVATAR NA NAVBAR */}
                     <div className="relative w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 group">
-                        
                         <img 
                            src={userProfileData.avatarUrl || user.photoURL || `https://placehold.co/100x100/050508/3b82f6?text=U`} 
                            className={`w-9 h-9 rounded-full object-cover z-0 border border-white/10 group-hover:border-cyan-500 transition-colors duration-300 ${eq.avatar?.cssClass || ''}`} 
@@ -439,31 +438,31 @@ function MangaInfinityApp() {
                         
                         {eq.particulas && (
                           <img 
-                            src={eq.particulas.preview} 
+                            src={cleanCosmeticUrl(eq.particulas.preview)} 
                             className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${eq.particulas.cssClass}`} 
-                            style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} 
+                            style={{ pointerEvents: 'none' }} 
                           />
                         )}
                         
                         {eq.efeito && (
                           <img 
-                            src={eq.efeito.preview} 
+                            src={cleanCosmeticUrl(eq.efeito.preview)} 
                             className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${eq.efeito.cssClass}`} 
-                            style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} 
+                            style={{ pointerEvents: 'none' }} 
                           />
                         )}
 
                         {eq.moldura && (
                           <img 
-                            src={eq.moldura.preview} 
+                            src={cleanCosmeticUrl(eq.moldura.preview)} 
                             className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${eq.moldura.cssClass}`} 
-                            style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} 
+                            style={{ pointerEvents: 'none' }} 
                           />
                         )}
 
                         {eq.badge && (
                           <img 
-                            src={eq.badge.preview} 
+                            src={cleanCosmeticUrl(eq.badge.preview)} 
                             className={`absolute -bottom-1 -right-1 w-4 h-4 object-contain z-20 ${eq.badge.cssClass}`} 
                             style={{ pointerEvents: 'none' }} 
                           />
