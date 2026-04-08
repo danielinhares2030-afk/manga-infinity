@@ -116,12 +116,12 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                alt="Avatar do Usuário"
             />
             
-            {/* APLICAÇÃO DO CLOUDINARY CLEAN NAS IMAGENS COSMÉTICAS */}
+            {/* APLICAÇÃO DO MIX-BLEND-MODE E CLOUDINARY CLEAN */}
             {eq.particulas && (
               <img 
                 src={cleanCosmeticUrl(eq.particulas.preview)} 
                 className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${eq.particulas.cssClass}`} 
-                style={{ pointerEvents: 'none' }} 
+                style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} 
               />
             )}
             
@@ -129,7 +129,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
               <img 
                 src={cleanCosmeticUrl(eq.efeito.preview)} 
                 className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${eq.efeito.cssClass}`} 
-                style={{ pointerEvents: 'none' }} 
+                style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} 
               />
             )}
 
@@ -137,7 +137,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
               <img 
                 src={cleanCosmeticUrl(eq.moldura.preview)} 
                 className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${eq.moldura.cssClass}`} 
-                style={{ pointerEvents: 'none' }} 
+                style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} 
               />
             )}
 
