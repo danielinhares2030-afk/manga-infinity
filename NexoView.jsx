@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Target, Hexagon, ShoppingCart, Trophy, Check, Compass, Timer, Star, Skull, Zap, Clock, Crown, Key, Loader2, ShieldAlert, Sparkles, User } from 'lucide-react';
 import { doc, updateDoc, collectionGroup, getDocs, query } from "firebase/firestore";
 import { db } from './firebase';
-import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor } from './helpers';
+import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmeticUrl } from './helpers';
 import { APP_ID } from './constants';
 
 export function NexoView({ user, userProfileData, showToast, mangas, onNavigate, onLevelUp, synthesizeCrystal, shopItems, buyItem, equipItem }) {
@@ -338,20 +338,19 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                           const hasItem = userProfileData.inventory?.includes(item.id);
                           const isEquipped = userProfileData.equipped_items?.[item.categoria]?.id === item.id;
                           
-                          // CORREÇÃO: GARANTE QUE VAI LER TANTO 'CAPA_FUNDO' QUANTO 'capa_fundo'
                           const cat = (item.categoria || item.type || '').toLowerCase();
 
                           return (
                             <div key={item.id} className={`bg-black border p-5 rounded-2xl flex flex-col items-center text-center transition-all duration-300 shadow-inner group ${isEquipped ? 'border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.15)]' : 'border-blue-900/20 hover:border-amber-900/50 hover:shadow-[0_0_15px_rgba(37,99,235,0.1)]'}`}>
                               
-                              <div className={`w-20 h-20 rounded-xl mb-4 bg-[#050508] flex items-center justify-center overflow-hidden shadow-inner border border-white/5 relative flex-shrink-0`}>
+                              {/* ESTRUTURA DOS CARD DA LOJA CORRIGIDA COM CLOUDINARY + POINTER EVENTS NONE */}
+                              <div className={`w-20 h-20 rounded-xl mb-4 bg-[#050508] flex items-center justify-center overflow-hidden shadow-inner border border-white/5 relative flex-shrink-0 group`}>
                                 
                                 {(cat === 'capa_fundo' || cat === 'tema_perfil') ? (
                                     item.preview ? <img src={item.preview} className="w-full h-full object-cover opacity-80" /> : <div className="w-full h-full bg-gradient-to-br from-blue-900/20 to-fuchsia-900/20"></div>
                                 ) : null}
 
-                                {/* ADICIONADO INLINE STYLE `mixBlendMode: 'screen'` COMO PEDIDO NA LOJA TAMBÉM! */}
-                                {cat === 'particulas' && <img src={item.preview} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} />}
+                                {cat === 'particulas' && <img src={cleanCosmeticUrl(item.preview)} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${item.cssClass}`} style={{ pointerEvents: 'none' }} />}
                                 
                                 {['moldura', 'efeito', 'particulas', 'badge'].includes(cat) && (
                                     <div className="w-12 h-12 rounded-full flex items-center justify-center relative z-0">
@@ -361,9 +360,9 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
                                 {cat === 'avatar' && <img src={item.preview} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${item.cssClass}`} />}
                                 
-                                {cat === 'efeito' && <img src={item.preview} className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                {cat === 'moldura' && <img src={item.preview} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                {cat === 'badge' && <img src={item.preview} className={`absolute -bottom-1 -right-1 w-6 h-6 object-contain z-20 ${item.cssClass}`} style={{ pointerEvents: 'none' }} />}
+                                {cat === 'efeito' && <img src={cleanCosmeticUrl(item.preview)} className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${item.cssClass}`} style={{ pointerEvents: 'none' }} />}
+                                {cat === 'moldura' && <img src={cleanCosmeticUrl(item.preview)} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${item.cssClass}`} style={{ pointerEvents: 'none' }} />}
+                                {cat === 'badge' && <img src={cleanCosmeticUrl(item.preview)} className={`absolute -bottom-1 -right-1 w-6 h-6 object-contain z-20 ${item.cssClass}`} style={{ pointerEvents: 'none' }} />}
 
                                 {(cat === 'nickname' || cat === 'fonte' || cat === 'font') && (
                                     <span className={`text-xl font-black relative z-10 ${item.cssClass}`}>A</span>
@@ -405,12 +404,12 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                     <div key={player.id} className={`bg-black border p-4 rounded-2xl flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] ${index < 3 ? 'border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'border-blue-900/30 hover:border-blue-500/50'}`}>
                                         <div className={`w-8 font-black text-lg text-center ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-700' : 'text-blue-900/40'}`}>#{index + 1}</div>
                                         
-                                        {/* ESTRUTURA DO AVATAR DO RANKING CORRIGIDA */}
-                                        <div className="relative w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
+                                        {/* AVATAR DO RANKING CORRIGIDO COM CLOUDINARY */}
+                                        <div className="relative w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 group">
                                             <img src={player.avatarUrl || `https://placehold.co/100x100/050508/3b82f6?text=${player.displayName?.charAt(0) || 'U'}`} className="w-full h-full rounded-full object-cover z-0" />
-                                            {player.equipped_items?.particulas && <img src={player.equipped_items.particulas.preview} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${player.equipped_items.particulas.cssClass}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                            {player.equipped_items?.efeito && <img src={player.equipped_items.efeito.preview} className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${player.equipped_items.efeito.cssClass}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                            {player.equipped_items?.moldura && <img src={player.equipped_items.moldura.preview} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${player.equipped_items.moldura.cssClass}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} />}
+                                            {player.equipped_items?.particulas && <img src={cleanCosmeticUrl(player.equipped_items.particulas.preview)} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${player.equipped_items.particulas.cssClass}`} style={{ pointerEvents: 'none' }} />}
+                                            {player.equipped_items?.efeito && <img src={cleanCosmeticUrl(player.equipped_items.efeito.preview)} className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${player.equipped_items.efeito.cssClass}`} style={{ pointerEvents: 'none' }} />}
+                                            {player.equipped_items?.moldura && <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${player.equipped_items.moldura.cssClass}`} style={{ pointerEvents: 'none' }} />}
                                         </div>
 
                                         <div className="flex-1 min-w-0">
