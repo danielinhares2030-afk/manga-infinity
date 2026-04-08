@@ -4,7 +4,7 @@ import { updateProfile } from "firebase/auth";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
 import { auth, db } from './firebase';
 import { APP_ID } from './constants';
-import { compressImage, getLevelRequirement, getLevelTitle, cleanCosmeticUrl } from './helpers';
+import { compressImage, getLevelRequirement, getLevelTitle } from './helpers';
 
 export function ProfileView({ user, userProfileData, historyData, libraryData, dataLoaded, userSettings, updateSettings, onLogout, onUpdateData, showToast, mangas, onNavigate }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -93,12 +93,12 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
       )}
 
       <div className="h-40 md:h-64 w-full bg-[#020205] relative group border-b border-blue-900/20 overflow-hidden">
-        {eq.capa_fundo ? (
-            <img src={eq.capa_fundo.preview} className={`w-full h-full object-cover opacity-90 ${eq.capa_fundo.cssClass}`} />
+        {eq.capa_fundo?.preview ? (
+            <img src={eq.capa_fundo.preview} className={`w-full h-full object-cover opacity-90 ${eq.capa_fundo.cssClass || ''}`} />
         ) : coverBase64 ? (
             <img src={coverBase64} className="w-full h-full object-cover opacity-70 mix-blend-luminosity" /> 
         ) : (
-            <div className="w-full h-full bg-gradient-to-tr from-[#020205] to-[#050508]" />
+            <div className={`w-full h-full bg-gradient-to-tr from-[#020205] to-[#050508] ${eq.capa_fundo?.cssClass || ''}`} />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#020205] via-transparent to-transparent" />
         {isEditing && <button onClick={() => coverInputRef.current.click()} className="absolute top-4 right-4 bg-black/60 text-blue-100 px-4 py-2 rounded-xl flex items-center gap-2 text-xs uppercase tracking-widest font-black z-10 transition-colors hover:bg-blue-900/50 duration-300 backdrop-blur-sm border border-blue-900/30"><Camera className="w-4 h-4" /> Capa</button>}
@@ -108,45 +108,31 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
       <div className="max-w-4xl mx-auto px-4 sm:px-6 relative -mt-16 md:-mt-20 z-10">
         <div className="flex flex-col md:flex-row items-center md:items-end gap-4 mb-8">
           
-          <div className="relative w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center flex-shrink-0 group">
+          {/* ESTRUTURA BLINDADA CONTRA IMAGENS QUEBRADAS E QUADRADOS */}
+          <div className={`relative w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center flex-shrink-0 group ${(!eq.moldura?.preview && eq.moldura) ? eq.moldura.cssClass : ''}`}>
             
-            <img 
-               src={eq.avatar ? eq.avatar.preview : (avatarBase64 || `https://placehold.co/150x150/050508/3b82f6?text=U`)} 
-               className={`w-full h-full rounded-full object-cover z-0 shadow-[0_0_30px_rgba(37,99,235,0.15)] ${eq.avatar?.cssClass || ''}`} 
-               alt="Avatar do Usuário"
-            />
+            <div className={`w-full h-full rounded-full bg-[#0d0d12] flex items-center justify-center relative z-10 overflow-hidden ${!eq.moldura ? 'border-4 border-[#020205] shadow-[0_0_30px_rgba(37,99,235,0.15)]' : ''}`}>
+               <img 
+                 src={eq.avatar?.preview || avatarBase64 || `https://placehold.co/150x150/050508/3b82f6?text=U`} 
+                 className={`w-full h-full object-cover ${eq.avatar?.cssClass || ''}`} 
+                 alt="Avatar"
+               />
+            </div>
             
-            {/* APLICAÇÃO DO MIX-BLEND-MODE E CLOUDINARY CLEAN */}
-            {eq.particulas && (
-              <img 
-                src={cleanCosmeticUrl(eq.particulas.preview)} 
-                className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${eq.particulas.cssClass}`} 
-                style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} 
-              />
+            {eq.particulas?.preview && (
+              <img src={eq.particulas.preview} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-0 ${eq.particulas.cssClass || ''}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />
             )}
             
-            {eq.efeito && (
-              <img 
-                src={cleanCosmeticUrl(eq.efeito.preview)} 
-                className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${eq.efeito.cssClass}`} 
-                style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} 
-              />
+            {eq.efeito?.preview && (
+              <img src={eq.efeito.preview} className={`absolute inset-0 m-auto w-full h-full object-contain z-20 ${eq.efeito.cssClass || ''}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />
             )}
 
-            {eq.moldura && (
-              <img 
-                src={cleanCosmeticUrl(eq.moldura.preview)} 
-                className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${eq.moldura.cssClass}`} 
-                style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} 
-              />
+            {eq.moldura?.preview && (
+              <img src={eq.moldura.preview} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-30 ${eq.moldura.cssClass || ''}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />
             )}
 
-            {eq.badge && (
-              <img 
-                src={cleanCosmeticUrl(eq.badge.preview)} 
-                className={`absolute -bottom-2 -right-2 w-8 h-8 object-contain z-20 ${eq.badge.cssClass}`} 
-                style={{ pointerEvents: 'none' }} 
-              />
+            {eq.badge?.preview && (
+              <img src={eq.badge.preview} className={`absolute -bottom-2 -right-2 w-8 h-8 object-contain z-40 ${eq.badge.cssClass || ''}`} style={{ pointerEvents: 'none' }} />
             )}
 
             {isEditing && <button onClick={() => avatarInputRef.current.click()} className="absolute bottom-0 right-0 bg-blue-600 p-3 rounded-full text-black z-50 shadow-[0_0_15px_rgba(37,99,235,0.5)] hover:bg-blue-500 transition-colors duration-300"><Camera className="w-5 h-5" /></button>}
