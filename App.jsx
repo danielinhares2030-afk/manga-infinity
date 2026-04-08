@@ -336,7 +336,6 @@ function MangaInfinityApp() {
   return (
     <div className={`min-h-screen font-sans selection:bg-cyan-600 selection:text-white flex flex-col transition-colors duration-300 ${getThemeClasses(userSettings.theme)}`}>
       
-      {/* CORREÇÃO DO CSS DA LOJA: Agora injeta de todos os itens da loja para animar os cards no NexoView! */}
       <style dangerouslySetInnerHTML={{__html: [
           ...shopItems.map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`),
           ...Object.values(eq).filter(Boolean).map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`)
@@ -428,8 +427,13 @@ function MangaInfinityApp() {
                       <span className="text-sm font-bold text-gray-200 group-hover:text-cyan-300 transition-colors duration-300">{user.displayName || "Leitor"}</span>
                       <span className="text-[10px] text-fuchsia-400 font-bold uppercase tracking-widest">Nível {userProfileData.level || 1}</span>
                     </div>
+                    
+                    {/* ADICIONADO O MIX-BLEND-SCREEN NA NAVBAR TAMBÉM */}
                     <div className="relative w-10 h-10 flex items-center justify-center">
-                      {eq.moldura && <img src={eq.moldura.preview} className={`absolute inset-[-15%] w-[130%] h-[130%] max-w-none pointer-events-none z-30 ${eq.moldura.cssClass}`} />}
+                      {eq.particulas && <img src={eq.particulas.preview} className={`absolute inset-[-50%] w-[200%] h-[200%] max-w-none object-cover pointer-events-none mix-blend-screen z-0 ${eq.particulas.cssClass}`} />}
+                      {eq.moldura && <img src={eq.moldura.preview} className={`absolute inset-[-15%] w-[130%] h-[130%] max-w-none pointer-events-none mix-blend-screen z-30 ${eq.moldura.cssClass}`} />}
+                      {eq.efeito && <img src={eq.efeito.preview} className={`absolute inset-0 w-full h-full pointer-events-none mix-blend-screen z-20 ${eq.efeito.cssClass}`} />}
+                      
                       <div className={`w-9 h-9 rounded-full overflow-hidden bg-[#0d0d12] border border-white/10 group-hover:border-cyan-500 transition-colors duration-300 relative z-10 ${eq.avatar?.cssClass || ''}`}>
                         {userProfileData.avatarUrl || user.photoURL ? <img src={userProfileData.avatarUrl || user.photoURL} className="w-full h-full object-cover" /> : <User className="w-full h-full p-1.5 text-gray-300/80" />}
                       </div>
