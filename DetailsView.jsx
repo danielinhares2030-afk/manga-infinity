@@ -1,174 +1,200 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Star, Play, BookmarkPlus, Check, Target } from 'lucide-react';
-import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
-import { db } from './firebase';
+import React, { useState } from 'react';
+import { ArrowLeft, Star, Play, Library, Share2, BookOpen, CheckCircle, Clock } from 'lucide-react';
+import { doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { APP_ID } from './constants';
-import CommentsSection from './CommentsSection';
-import { addXpLogic } from './helpers';
 
-export default function DetailsView({ manga, libraryData, historyData, user, userProfileData, onBack, onChapterClick, onRequireLogin, showToast }) {
-  const [activeTab, setActiveTab] = useState('capitulos');
-  const [showFullSynopsis, setShowFullSynopsis] = useState(false);
-  
-  if (!manga) return null; 
-  
-  // VERIFICA SE COMPLETOU A MISSÃO DE CAÇADA AO ABRIR ESTA PÁGINA
-  useEffect(() => {
-      const checkMission = async () => {
-          if (userProfileData?.activeMission?.type === 'search_local' && userProfileData.activeMission.targetManga === manga.id) {
-              const m = userProfileData.activeMission;
-              const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-              let { newXp, newLvl } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.rewardXp);
-              let newCoins = (userProfileData.coins || 0) + m.rewardCoins;
-              
-              await updateDoc(profileRef, { 
-                  coins: newCoins, 
-                  xp: newXp, 
-                  level: newLvl, 
-                  activeMission: null
-              });
-              showToast(`Caçada Concluída! +${m.rewardXp} XP / +${m.rewardCoins} M`, 'success');
-          }
-      };
-      if (user && userProfileData?.activeMission) checkMission();
-  }, [manga.id, userProfileData?.activeMission, user]);
+export default function DetailsView({ manga, libraryData, historyData, user, userProfileData, onBack, onChapterClick, onRequireLogin, showToast, db }) {
+    const [isSharing, setIsSharing] = useState(false);
 
-  const currentStatus = libraryData[manga.id];
-  const readHistory = historyData.filter(h => h && h.mangaId === manga.id);
-  const lastRead = readHistory.length > 0 ? readHistory.reduce((prev, current) => (prev.timestamp > current.timestamp) ? prev : current) : null;
-  
-  const handleLibraryToggle = async (status) => {
-      if (!user) return onRequireLogin();
-      try {
-          const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'library', manga.id.toString());
-          if (status === "Remover") {
-              await deleteDoc(ref);
-              showToast("Removido da Coleção.", "info");
-          } else {
-              await setDoc(ref, { mangaId: manga.id, status: status, updatedAt: Date.now() });
-              if(status === 'Favoritos') showToast("Adicionado aos Favoritos!", "success");
-              else showToast(`Status: ${status}`, "success");
-          }
-      } catch(error) { showToast('Erro no Banco de Dados.', 'error'); }
-  };
-
-  const firstChapter = manga.chapters && manga.chapters.length > 0 ? manga.chapters[manga.chapters.length - 1] : null;
-
-  return (
-    <div className="min-h-screen bg-[#020203] animate-in fade-in duration-300 pb-20 font-sans">
-      <div className="fixed top-0 left-0 right-0 h-16 bg-[#020203]/90 backdrop-blur-xl z-50 flex items-center px-4 border-b border-red-900/30">
-        <button onClick={onBack} className="p-2 text-white hover:text-red-500 transition-colors"><ChevronLeft className="w-6 h-6"/></button>
-        <h1 className="text-white font-black ml-2 truncate text-lg flex-1 tracking-tight uppercase">{manga.title}</h1>
-      </div>
-      
-      <div className="pt-16">
-        <div className="relative h-64 md:h-80 w-full overflow-hidden bg-[#050000]">
-           <img src={manga.coverUrl} className="w-full h-full object-cover blur-md opacity-30 scale-110 mix-blend-luminosity" />
-           <div className="absolute inset-0 bg-gradient-to-t from-[#020203] via-[#020203]/80 to-transparent"></div>
-           
-           <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 flex items-end gap-4 md:gap-6 max-w-7xl mx-auto">
-             <div className="w-32 md:w-48 aspect-[2/3] rounded-xl shadow-[0_0_30px_rgba(220,38,38,0.2)] border-2 border-red-900/30 overflow-hidden flex-shrink-0 bg-black">
-                <img src={manga.coverUrl} className="w-full h-full object-cover" />
-             </div>
-             <div className="flex-1 pb-2">
-                <div className="flex flex-wrap gap-2 mb-2">
-                  <span className="bg-red-900 text-white text-[9px] font-black px-2.5 py-1 rounded shadow-md uppercase tracking-widest">{manga.type || 'Mangá'}</span>
-                  {manga.ratingCount > 0 && <span className="bg-black border border-yellow-500/30 text-yellow-500 text-[10px] font-black px-2.5 py-1 rounded flex items-center gap-1"><Star className="w-3 h-3 fill-current"/> {Number(manga.rating).toFixed(1)}</span>}
-                </div>
-                <h2 className="text-2xl md:text-4xl font-black text-white line-clamp-2 leading-tight tracking-tight uppercase">{manga.title}</h2>
-                <p className="text-red-500 font-bold text-xs mt-1.5 uppercase tracking-widest">{manga.author || 'Autor Desconhecido'}</p>
-             </div>
-           </div>
-        </div>
+    // SISTEMA DE AVALIAÇÃO (AS ESTRELINHAS)
+    const handleRate = async (ratingValue) => {
+        if (!user) return showToast("Apenas Viajantes registrados podem avaliar.", "warning");
         
-        <div className="max-w-7xl mx-auto px-4 md:px-8 mt-6">
-           <div className="flex flex-wrap gap-2 mb-6">
-             {manga.genres && manga.genres.map(g => (
-                <span key={g} className="bg-black border border-red-900/30 text-gray-400 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg">{g}</span>
-             ))}
-           </div>
-           
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
-                 <p className={`text-gray-400 text-sm leading-relaxed ${showFullSynopsis ? '' : 'line-clamp-4'}`}>
-                    {manga.synopsis || 'Nenhuma sinopse registrada no Vazio.'}
-                 </p>
-                 {manga.synopsis && manga.synopsis.length > 200 && (
-                    <button onClick={() => setShowFullSynopsis(!showFullSynopsis)} className="text-red-500 text-xs font-black mt-2 hover:text-white uppercase tracking-widest transition-colors">
-                       {showFullSynopsis ? 'Ver menos' : 'Ler mais'}
-                    </button>
-                 )}
-                 
-                 <div className="flex gap-3 mt-8">
-                    <button onClick={() => {
-                        if (lastRead) {
-                            const cap = manga.chapters.find(c => c && c.number === lastRead.chapterNumber);
-                            if (cap) onChapterClick(manga, cap);
-                            else if (firstChapter) onChapterClick(manga, firstChapter);
-                        } else if (firstChapter) {
-                            onChapterClick(manga, firstChapter);
-                        } else {
-                            showToast("Nenhum capítulo disponível", "warning");
-                        }
-                    }} className="flex-1 bg-gradient-to-r from-red-800 to-red-600 text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-[0_0_20px_rgba(220,38,38,0.2)] text-[10px] uppercase tracking-widest">
-                       <Play className="w-4 h-4 fill-current"/> {lastRead ? `Continuar (Cap. ${lastRead.chapterNumber})` : 'Ler Primeiro Capítulo'}
-                    </button>
-                    <button onClick={() => handleLibraryToggle(currentStatus ? 'Remover' : 'Lendo')} className={`p-3.5 rounded-xl border flex items-center justify-center transition-all duration-300 ${currentStatus ? 'bg-red-950/40 text-red-500 border-red-500/30 shadow-inner' : 'bg-black text-gray-500 border-white/5 hover:text-white hover:border-red-900/50'}`}>
-                       <BookmarkPlus className={`w-5 h-5 ${currentStatus ? 'fill-current' : ''}`}/>
-                    </button>
-                 </div>
-              </div>
-              
-              <div className="md:col-span-1 space-y-4">
-                 <div className="bg-[#050000] p-5 rounded-2xl border border-red-900/20 shadow-inner">
-                    <h4 className="text-[10px] font-black text-red-900/60 uppercase tracking-[0.2em] mb-4">Status na Coleção</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                       {['Lendo', 'Favoritos', 'Planejo Ler', 'Finalizado'].map(s => (
-                          <button key={s} onClick={() => handleLibraryToggle(s)} className={`text-[9px] font-black uppercase tracking-widest py-2.5 rounded-lg border transition-all duration-300 ${currentStatus === s ? 'bg-red-600 border-red-500 text-white shadow-md' : 'bg-black border-red-900/30 text-gray-500 hover:text-white hover:border-red-500/50'}`}>{s}</button>
-                       ))}
+        try {
+            // Média simples com a nota atual
+            const currentRating = manga.rating || 5.0;
+            const newRating = ((currentRating + ratingValue) / 2).toFixed(1);
+
+            const mangaRef = doc(db, 'obras', manga.id);
+            await updateDoc(mangaRef, {
+                rating: Number(newRating)
+            });
+            
+            showToast(`Avaliação de ${ratingValue} estrelas registrada no Vazio!`, "success");
+        } catch (error) {
+            showToast("Erro ao conectar com o Vazio. Tente novamente.", "error");
+        }
+    };
+
+    // SISTEMA DA BIBLIOTECA
+    const inLibrary = libraryData && libraryData[manga.id];
+    const handleLibraryToggle = async () => {
+        if (!user) {
+            onRequireLogin();
+            return;
+        }
+        try {
+            const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'library', manga.id.toString());
+            if (inLibrary) {
+                await deleteDoc(ref);
+                showToast("Removido da Biblioteca.", "info");
+            } else {
+                await setDoc(ref, { mangaId: manga.id, status: 'Lendo', updatedAt: Date.now() });
+                showToast("Adicionado à Biblioteca!", "success");
+            }
+        } catch (error) {
+            showToast("Erro ao atualizar biblioteca.", "error");
+        }
+    };
+
+    const handleShare = () => {
+        setIsSharing(true);
+        navigator.clipboard.writeText(window.location.href);
+        showToast("Link copiado para a área de transferência!", "success");
+        setTimeout(() => setIsSharing(false), 2000);
+    };
+
+    // Lógica para descobrir qual o último capítulo lido para o botão "Continuar Lendo"
+    const mangaHistory = historyData.filter(h => h.mangaId === manga.id);
+    const lastRead = mangaHistory.length > 0 ? mangaHistory[0] : null;
+    const chapters = manga.chapters || [];
+    const firstChapter = chapters.length > 0 ? chapters[chapters.length - 1] : null; // O capítulo 1 geralmente fica no final da array
+    const nextChapterToRead = lastRead 
+        ? chapters.find(c => Number(c.number) === Number(lastRead.chapterNumber) + 1) || chapters.find(c => c.id === lastRead.id)
+        : firstChapter;
+
+    return (
+        <div className="min-h-screen bg-[#050508] text-gray-200 font-sans pb-24 animate-in fade-in duration-500">
+            {/* CABEÇALHO / CAPA DE FUNDO */}
+            <div className="relative h-64 md:h-80 w-full overflow-hidden">
+                <div className="absolute inset-0 bg-[#0d0d12]">
+                    <img src={manga.coverUrl} className="w-full h-full object-cover opacity-30 blur-sm scale-110" alt="Capa de Fundo" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-[#050508]/80 to-transparent" />
+                
+                <button onClick={onBack} className="absolute top-4 md:top-6 left-4 md:left-6 z-10 p-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 hover:scale-105 transition-all duration-300 shadow-lg">
+                    <ArrowLeft className="w-6 h-6 text-white" />
+                </button>
+            </div>
+
+            {/* INFORMAÇÕES PRINCIPAIS */}
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-32 md:-mt-40 z-10">
+                <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start">
+                    
+                    {/* Capa Principal */}
+                    <div className="w-40 md:w-56 flex-shrink-0 relative group">
+                        <div className="aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-white/10 group-hover:border-cyan-500/50 transition-colors duration-500">
+                            <img src={manga.coverUrl} alt={manga.title} className="w-full h-full object-cover" />
+                        </div>
+                        {manga.status && (
+                            <div className="absolute -top-3 -right-3 bg-cyan-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg border border-cyan-400/30">
+                                {manga.status}
+                            </div>
+                        )}
                     </div>
-                 </div>
-              </div>
-           </div>
-           
-           <div className="mt-10 border-b border-red-900/20 flex gap-6">
-              <button onClick={() => setActiveTab('capitulos')} className={`pb-3 text-xs font-black uppercase tracking-widest transition-colors relative ${activeTab === 'capitulos' ? 'text-red-500' : 'text-gray-600 hover:text-white'}`}>Capítulos {activeTab === 'capitulos' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-500 rounded-t-full shadow-[0_0_10px_#ef4444]"/>}</button>
-              <button onClick={() => setActiveTab('comentarios')} className={`pb-3 text-xs font-black uppercase tracking-widest transition-colors relative ${activeTab === 'comentarios' ? 'text-red-500' : 'text-gray-600 hover:text-white'}`}>Comentários {activeTab === 'comentarios' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-500 rounded-t-full shadow-[0_0_10px_#ef4444]"/>}</button>
-           </div>
-           
-           <div className="py-6">
-              {activeTab === 'capitulos' && (
-                 <div className="space-y-2">
-                    {(!manga.chapters || manga.chapters.length === 0) ? (
-                       <p className="text-center text-gray-500 py-10 font-black text-[10px] uppercase tracking-widest">Nenhum capítulo disponível.</p>
-                    ) : (
-                       manga.chapters.map(cap => {
-                           if (!cap) return null; 
-                           
-                           const isRead = historyData.some(h => h.mangaId === manga.id && h.chapterNumber === cap.number);
-                           return (
-                               <div key={cap.id || Math.random()} onClick={() => onChapterClick(manga, cap)} className={`flex justify-between items-center p-4 rounded-2xl border cursor-pointer transition-all duration-300 ${isRead ? 'bg-black/40 border-white/5 opacity-60' : 'bg-[#0a0000] border-red-900/30 hover:border-red-500/50 hover:shadow-md'}`}>
-                                   <div className="flex flex-col">
-                                      <span className={`font-black text-xs md:text-sm uppercase tracking-wide ${isRead ? 'text-gray-500' : 'text-white'}`}>Capítulo {cap.number}</span>
-                                      {cap.title && <span className="text-[10px] text-gray-400 mt-1">{cap.title}</span>}
-                                   </div>
-                                   <div className="text-right">
-                                      <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">{new Date(cap.createdAt || cap.timestamp || Date.now()).toLocaleDateString()}</span>
-                                      {isRead && <span className="block text-[9px] text-red-500 font-black mt-1 tracking-widest">LIDO <Check className="w-3 h-3 inline"/></span>}
-                                   </div>
-                               </div>
-                           );
-                       })
-                    )}
-                 </div>
-              )}
-              
-              {activeTab === 'comentarios' && (
-                 <CommentsSection mangaId={manga.id} chapterId={null} user={user} userProfileData={userProfileData} onRequireLogin={onRequireLogin} showToast={showToast} />
-              )}
-           </div>
+
+                    {/* Textos e Botões */}
+                    <div className="flex-1 text-center md:text-left mt-2 md:mt-12">
+                        <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tight mb-2">{manga.title}</h1>
+                        <p className="text-sm text-cyan-400 font-bold uppercase tracking-widest mb-4">{manga.author || 'Autor Desconhecido'}</p>
+                        
+                        {/* AS ESTRELINHAS REINANDO AQUI */}
+                        <div className="flex items-center justify-center md:justify-start gap-1 mb-6">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <button key={star} onClick={() => handleRate(star)} className="focus:outline-none hover:scale-125 transition-transform duration-300">
+                                    <Star className={`w-5 h-5 md:w-6 md:h-6 ${star <= Math.round(manga.rating || 0) ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-gray-700 hover:text-amber-400/50'}`} />
+                                </button>
+                            ))}
+                            <span className="text-amber-400 font-black ml-2 text-lg drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]">
+                                {manga.rating ? Number(manga.rating).toFixed(1) : "0.0"}
+                            </span>
+                        </div>
+
+                        {/* Botões de Ação */}
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                            <button 
+                                onClick={() => nextChapterToRead ? onChapterClick(manga, nextChapterToRead) : showToast("Nenhum capítulo disponível", "warning")} 
+                                className="flex-1 md:flex-none bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black px-6 py-3.5 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-[0_0_30px_rgba(8,145,178,0.5)] transition-all hover:scale-105 flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
+                            >
+                                <Play className="w-5 h-5 fill-white" /> 
+                                {lastRead ? 'Continuar Leitura' : 'Começar a Ler'}
+                            </button>
+                            
+                            <button onClick={handleLibraryToggle} className={`p-3.5 rounded-xl border font-black flex items-center justify-center transition-all duration-300 shadow-sm ${inLibrary ? 'bg-amber-950/40 border-amber-500/50 text-amber-500' : 'bg-[#13151f] border-white/10 text-gray-300 hover:bg-white/5 hover:border-cyan-500/50'}`} title="Adicionar à Biblioteca">
+                                {inLibrary ? <CheckCircle className="w-5 h-5" /> : <Library className="w-5 h-5" />}
+                            </button>
+                            
+                            <button onClick={handleShare} className="p-3.5 bg-[#13151f] rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 hover:border-cyan-500/50 transition-all duration-300 shadow-sm" title="Compartilhar">
+                                <Share2 className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Gêneros */}
+                <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-2">
+                    {manga.genres?.map(genre => (
+                        <span key={genre} className="bg-[#13151f] border border-white/5 text-gray-300 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner hover:border-cyan-500/30 transition-colors">
+                            {genre}
+                        </span>
+                    ))}
+                </div>
+
+                {/* Sinopse */}
+                <div className="mt-8 bg-[#13151f]/50 border border-white/5 p-6 rounded-2xl shadow-inner">
+                    <h3 className="text-white font-black mb-3 uppercase tracking-widest text-sm flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-cyan-500" /> Sinopse
+                    </h3>
+                    <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                        {manga.synopsis || "Os registros do Vazio ainda não possuem informações sobre esta obra."}
+                    </p>
+                </div>
+
+                {/* Lista de Capítulos */}
+                <div className="mt-10">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+                            <Clock className="w-5 h-5 text-cyan-500" /> Capítulos
+                        </h3>
+                        <span className="text-xs text-cyan-400 font-bold uppercase tracking-widest bg-cyan-950/30 px-3 py-1 rounded-full border border-cyan-900/30">
+                            {chapters.length} Disponíveis
+                        </span>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        {chapters.length === 0 ? (
+                            <div className="text-center py-10 bg-[#13151f]/50 rounded-2xl border border-white/5">
+                                <BookOpen className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+                                <p className="text-gray-500 font-bold text-xs uppercase tracking-widest">Nenhum capítulo traduzido ainda.</p>
+                            </div>
+                        ) : (
+                            chapters.map(chapter => {
+                                const isRead = mangaHistory.some(h => h.chapterNumber === chapter.number);
+                                return (
+                                    <div 
+                                        key={chapter.id} 
+                                        onClick={() => onChapterClick(manga, chapter)}
+                                        className={`group cursor-pointer p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 ${isRead ? 'bg-black/40 border-white/5 opacity-70' : 'bg-[#13151f] border-white/5 hover:border-cyan-500/50 hover:bg-cyan-950/10 shadow-sm'}`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black transition-colors ${isRead ? 'bg-black text-gray-600' : 'bg-cyan-950/50 text-cyan-400 group-hover:bg-cyan-600 group-hover:text-white'}`}>
+                                                {chapter.number}
+                                            </div>
+                                            <div>
+                                                <h4 className={`font-bold text-sm transition-colors ${isRead ? 'text-gray-500' : 'text-gray-200 group-hover:text-white'}`}>
+                                                    Capítulo {chapter.number}
+                                                </h4>
+                                                {chapter.title && <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5 line-clamp-1">{chapter.title}</p>}
+                                            </div>
+                                        </div>
+                                        {isRead && <CheckCircle className="w-5 h-5 text-cyan-700" />}
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
