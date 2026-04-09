@@ -1,18 +1,15 @@
 import React from 'react';
 import { ShieldAlert, AlertCircle, CheckCircle, Zap, Lock } from 'lucide-react';
 
-/* NOVO ÍCONE: COM MÁSCARA CIRCULAR PARA ESCONDER O FALSO PNG */
+/* NOVO ÍCONE: AGORA SIM, O SEU PNG PURO E DIRETO NO CÓDIGO */
 export function AbyssalLogo({ className = "w-10 h-10" }) {
   return (
-    <div className={className}>
-      <img 
-        src="https://i.postimg.cc/5yjKb919/1775680662923-v4lypu.png" 
-        alt="Logo Mangás Abissal" 
-        /* O rounded-full corta as bordas quadradas falsas, e o object-cover preenche a bola perfeitamente */
-        className="w-full h-full object-cover rounded-full scale-[1.02]"
-        onError={(e) => e.target.style.display = 'none'}
-      />
-    </div>
+    <img 
+      src="https://i.ibb.co/zh5k9rkG/1775680662923-v4lypu-removebg-preview.png" 
+      alt="Logo Mangás Abissal" 
+      className={`object-contain drop-shadow-[0_0_15px_rgba(37,99,235,0.4)] ${className}`}
+      onError={(e) => e.target.style.display = 'none'}
+    />
   );
 }
 
