@@ -6,12 +6,10 @@ import { APP_ID } from './constants';
 export default function DetailsView({ manga, libraryData, historyData, user, userProfileData, onBack, onChapterClick, onRequireLogin, showToast, db }) {
     const [isSharing, setIsSharing] = useState(false);
 
-    // SISTEMA DE AVALIAÇÃO (AS ESTRELINHAS)
     const handleRate = async (ratingValue) => {
-        if (!user) return showToast("Apenas Viajantes registrados podem avaliar.", "warning");
+        if (!user) return showToast("Apenas Viajantes registados podem avaliar.", "warning");
         
         try {
-            // Média simples com a nota atual
             const currentRating = manga.rating || 5.0;
             const newRating = ((currentRating + ratingValue) / 2).toFixed(1);
 
@@ -20,13 +18,12 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                 rating: Number(newRating)
             });
             
-            showToast(`Avaliação de ${ratingValue} estrelas registrada no Vazio!`, "success");
+            showToast(`Avaliação de ${ratingValue} estrelas registada no Vazio!`, "success");
         } catch (error) {
             showToast("Erro ao conectar com o Vazio. Tente novamente.", "error");
         }
     };
 
-    // SISTEMA DA BIBLIOTECA
     const inLibrary = libraryData && libraryData[manga.id];
     const handleLibraryToggle = async () => {
         if (!user) {
@@ -54,18 +51,16 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
         setTimeout(() => setIsSharing(false), 2000);
     };
 
-    // Lógica para descobrir qual o último capítulo lido para o botão "Continuar Lendo"
     const mangaHistory = historyData.filter(h => h.mangaId === manga.id);
     const lastRead = mangaHistory.length > 0 ? mangaHistory[0] : null;
     const chapters = manga.chapters || [];
-    const firstChapter = chapters.length > 0 ? chapters[chapters.length - 1] : null; // O capítulo 1 geralmente fica no final da array
+    const firstChapter = chapters.length > 0 ? chapters[chapters.length - 1] : null;
     const nextChapterToRead = lastRead 
         ? chapters.find(c => Number(c.number) === Number(lastRead.chapterNumber) + 1) || chapters.find(c => c.id === lastRead.id)
         : firstChapter;
 
     return (
         <div className="min-h-screen bg-[#050508] text-gray-200 font-sans pb-24 animate-in fade-in duration-500">
-            {/* CABEÇALHO / CAPA DE FUNDO */}
             <div className="relative h-64 md:h-80 w-full overflow-hidden">
                 <div className="absolute inset-0 bg-[#0d0d12]">
                     <img src={manga.coverUrl} className="w-full h-full object-cover opacity-30 blur-sm scale-110" alt="Capa de Fundo" />
@@ -77,11 +72,9 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                 </button>
             </div>
 
-            {/* INFORMAÇÕES PRINCIPAIS */}
             <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-32 md:-mt-40 z-10">
                 <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-start">
                     
-                    {/* Capa Principal */}
                     <div className="w-40 md:w-56 flex-shrink-0 relative group">
                         <div className="aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-white/10 group-hover:border-cyan-500/50 transition-colors duration-500">
                             <img src={manga.coverUrl} alt={manga.title} className="w-full h-full object-cover" />
@@ -93,12 +86,10 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         )}
                     </div>
 
-                    {/* Textos e Botões */}
                     <div className="flex-1 text-center md:text-left mt-2 md:mt-12">
                         <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tight mb-2">{manga.title}</h1>
                         <p className="text-sm text-cyan-400 font-bold uppercase tracking-widest mb-4">{manga.author || 'Autor Desconhecido'}</p>
                         
-                        {/* AS ESTRELINHAS REINANDO AQUI */}
                         <div className="flex items-center justify-center md:justify-start gap-1 mb-6">
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <button key={star} onClick={() => handleRate(star)} className="focus:outline-none hover:scale-125 transition-transform duration-300">
@@ -110,7 +101,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                             </span>
                         </div>
 
-                        {/* Botões de Ação */}
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                             <button 
                                 onClick={() => nextChapterToRead ? onChapterClick(manga, nextChapterToRead) : showToast("Nenhum capítulo disponível", "warning")} 
@@ -131,7 +121,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                     </div>
                 </div>
 
-                {/* Gêneros */}
                 <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-2">
                     {manga.genres?.map(genre => (
                         <span key={genre} className="bg-[#13151f] border border-white/5 text-gray-300 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-inner hover:border-cyan-500/30 transition-colors">
@@ -140,17 +129,15 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                     ))}
                 </div>
 
-                {/* Sinopse */}
                 <div className="mt-8 bg-[#13151f]/50 border border-white/5 p-6 rounded-2xl shadow-inner">
                     <h3 className="text-white font-black mb-3 uppercase tracking-widest text-sm flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-cyan-500" /> Sinopse
                     </h3>
                     <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap font-medium">
-                        {manga.synopsis || "Os registros do Vazio ainda não possuem informações sobre esta obra."}
+                        {manga.synopsis || "Os registos do Vazio ainda não possuem informações sobre esta obra."}
                     </p>
                 </div>
 
-                {/* Lista de Capítulos */}
                 <div className="mt-10">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
