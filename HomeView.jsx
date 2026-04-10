@@ -13,7 +13,7 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
     const populares = [...(mangas || [])].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 10);
     const destaques = [...(mangas || [])].filter(m => m.coverUrl).slice(0, 5);
 
-    const filterOptions = ['Mangá', 'Manhwa', 'Manhua', 'Shoujo'];
+    const filterOptions = ['Manhwa', 'Manga', 'Manhua', 'Shoujo'];
     
     const filteredByPage = [...(mangas || [])]
         .filter(m => m.type === filter)
