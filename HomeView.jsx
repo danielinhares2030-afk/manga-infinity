@@ -15,8 +15,15 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
 
     const filterOptions = ['Manhwa', 'Manga', 'Manhua', 'Shoujo'];
     
+    // CORREÇÃO DO FILTRO: Agora ele aceita tanto "Mangá" quanto "Manga" sem acento da base de dados
     const filteredByPage = [...(mangas || [])]
-        .filter(m => m.type === filter)
+        .filter(m => {
+            if (!m.type) return false;
+            const mType = m.type.toLowerCase();
+            const fType = filter.toLowerCase();
+            if (fType === 'mangá' && mType === 'manga') return true;
+            return mType === fType;
+        })
         .sort((a, b) => b.createdAt - a.createdAt);
 
     // Cálculos da Paginação
@@ -25,7 +32,6 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredByPage.slice(indexOfFirstItem, indexOfLastItem);
 
-    // Lógica do Carrossel Gigante
     useEffect(() => {
         if (destaques.length === 0) return;
         const timer = setInterval(() => {
@@ -42,24 +48,18 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
     return (
         <div className="pb-24 animate-in fade-in duration-500 bg-[#050508]">
             
-            {/* O SEU CARROSSEL GIGANTE VOLTOU INTACTO */}
             {destaques.length > 0 && (
                 <div className="relative w-full h-[45vh] md:h-[65vh] max-h-[600px] overflow-hidden mb-8 group bg-[#050508] border-b border-white/5">
                     {destaques.map((manga, index) => (
-                        <div 
-                            key={manga.id} 
-                            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
-                        >
+                        <div key={manga.id} className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                             <div className="absolute inset-0 bg-[#050508]">
                                 <img src={manga.coverUrl} className={`w-full h-full object-cover opacity-40 md:opacity-50 ${dataSaver ? 'blur-sm' : ''}`} alt="Background" />
                             </div>
-                            
                             <div className="absolute inset-0 bg-gradient-to-t from-[#050508] via-[#050508]/60 to-transparent" />
                             <div className="absolute inset-0 bg-gradient-to-r from-[#050508] via-[#050508]/40 to-transparent" />
                             
                             <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 max-w-7xl mx-auto flex items-end gap-6 md:gap-10">
                                 <img src={manga.coverUrl} className={`hidden md:block w-40 md:w-48 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.8)] border border-white/10 ${dataSaver ? 'blur-[1px]' : ''}`} alt="Capa" />
-                                
                                 <div className="flex-1 pb-4 md:pb-6">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="bg-cyan-600 text-white text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest shadow-lg">Em Destaque</span>
@@ -67,7 +67,6 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
                                     </div>
                                     <h2 className="text-3xl md:text-5xl font-black text-white mb-3 line-clamp-1 md:line-clamp-2 tracking-tight drop-shadow-lg">{manga.title}</h2>
                                     <p className="text-gray-300 text-xs md:text-sm line-clamp-2 md:line-clamp-3 mb-6 max-w-2xl text-shadow-sm font-medium">{manga.synopsis || "Descubra esta obra épica nos registos do Vazio. Uma jornada inesquecível aguarda por si."}</p>
-                                    
                                     <button onClick={() => onNavigate('details', manga)} className="bg-white text-black hover:bg-cyan-400 hover:text-black font-black px-8 py-3.5 rounded-full flex items-center gap-2 transition-all duration-300 text-xs md:text-sm uppercase tracking-widest shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105">
                                         <Play className="w-4 h-4 fill-current" /> Ler Agora
                                     </button>
@@ -75,7 +74,6 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
                             </div>
                         </div>
                     ))}
-                    
                     <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-20 flex gap-2">
                         {destaques.map((_, i) => (
                             <button key={i} onClick={() => setCurrentSlide(i)} className={`h-1.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-8 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'w-2 bg-white/30 hover:bg-white/50'}`} />
@@ -84,7 +82,6 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
                 </div>
             )}
 
-            {/* MAIS POPULARES */}
             <div className="mt-4 md:mt-8 px-4 md:px-8 max-w-7xl mx-auto">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-black text-white flex items-center gap-2 tracking-tight">
@@ -94,8 +91,6 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
                         Ver Todos <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                     </button>
                 </div>
-                
-                {/* Scroll Horizontal Corrigido */}
                 <div className="flex overflow-x-auto gap-4 pb-6 snap-x snap-mandatory no-scrollbar items-stretch" style={{ WebkitOverflowScrolling: 'touch' }}>
                     {populares.map(manga => (
                         <div key={manga.id} onClick={() => onNavigate('details', manga)} className="flex-none w-[110px] sm:w-[140px] md:w-[160px] snap-start cursor-pointer group">
@@ -113,13 +108,11 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
                 </div>
             </div>
 
-            {/* LANÇAMENTOS E PAGINAÇÃO */}
             <div className="mt-8 px-4 md:px-8 max-w-7xl mx-auto">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <h2 className="text-xl font-black text-white flex items-center gap-2 tracking-tight">
                         <Clock className="w-5 h-5 text-cyan-500" /> Lançamentos
                     </h2>
-                    
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
                         <ListFilter className="w-4 h-4 text-gray-500 flex-shrink-0 mr-1" />
                         {filterOptions.map(opt => (
@@ -135,13 +128,11 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
                         <div key={manga.id} onClick={() => onNavigate('details', manga)} className="cursor-pointer group flex flex-col gap-1.5">
                             <div className={`relative aspect-[2/3] rounded-xl overflow-hidden bg-[#0d0d12] border border-white/5 shadow-sm group-hover:border-cyan-500/30 transition-all duration-300 ${dataSaver ? 'blur-[1px]' : ''}`}>
                                 <img src={manga.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                                
                                 {manga.chapters && manga.chapters.length > 0 && (
                                     <div className="absolute top-2 left-2 bg-cyan-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-md uppercase tracking-wider">
                                         Cap {manga.chapters[0].number}
                                     </div>
                                 )}
-                                
                                 <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/50 to-transparent p-2 pt-6">
                                     <p className="text-[9px] text-cyan-400 font-black uppercase tracking-widest">{timeAgo(manga.createdAt)}</p>
                                 </div>
@@ -158,29 +149,15 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
 
                 {totalPages > 1 && (
                     <div className="mt-12 flex items-center justify-center gap-2">
-                        <button 
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => prev - 1)}
-                            className="p-2.5 rounded-xl bg-[#0d0d12] border border-white/5 text-gray-400 disabled:opacity-20 hover:text-cyan-400 transition-all"
-                        >
+                        <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="p-2.5 rounded-xl bg-[#0d0d12] border border-white/5 text-gray-400 disabled:opacity-20 hover:text-cyan-400 transition-all">
                             <ChevronLeft className="w-5 h-5" />
                         </button>
-
                         {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => setCurrentPage(i + 1)}
-                                className={`w-10 h-10 rounded-xl font-black text-xs transition-all border ${currentPage === i + 1 ? 'bg-cyan-600 border-cyan-400 text-white shadow-[0_0_15px_rgba(8,145,178,0.4)]' : 'bg-[#0d0d12] border-white/5 text-gray-500 hover:text-white hover:bg-white/5'}`}
-                            >
+                            <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl font-black text-xs transition-all border ${currentPage === i + 1 ? 'bg-cyan-600 border-cyan-400 text-white shadow-[0_0_15px_rgba(8,145,178,0.4)]' : 'bg-[#0d0d12] border-white/5 text-gray-500 hover:text-white hover:bg-white/5'}`}>
                                 {i + 1}
                             </button>
                         ))}
-
-                        <button 
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(prev => prev + 1)}
-                            className="p-2.5 rounded-xl bg-[#0d0d12] border border-white/5 text-gray-400 disabled:opacity-20 hover:text-cyan-400 transition-all"
-                        >
+                        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="p-2.5 rounded-xl bg-[#0d0d12] border border-white/5 text-gray-400 disabled:opacity-20 hover:text-cyan-400 transition-all">
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
