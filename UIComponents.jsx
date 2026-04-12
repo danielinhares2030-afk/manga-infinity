@@ -1,13 +1,13 @@
 import React from 'react';
 import { ShieldAlert, AlertCircle, CheckCircle, Zap, Lock } from 'lucide-react';
 
-/* ÍCONE COM ANIMAÇÃO DE PULSAÇÃO E FLUTUAR */
+/* ÍCONE COM ANIMAÇÃO DE PULSAÇÃO ORGÂNICA */
 export function AbyssalLogo({ className = "w-10 h-10" }) {
   return (
     <img 
       src="https://i.ibb.co/zh5k9rkG/1775680662923-v4lypu-removebg-preview.png" 
       alt="Logo Mangás Abissal" 
-      className={`object-contain drop-shadow-[0_0_20px_rgba(34,211,238,0.6)] animate-[pulse_3s_ease-in-out_infinite] hover:scale-110 transition-transform ${className}`}
+      className={`object-contain transition-all duration-700 animate-[pulse_4s_ease-in-out_infinite] ${className}`}
       onError={(e) => e.target.style.display = 'none'}
     />
   );
@@ -23,7 +23,7 @@ export class ErrorBoundary extends React.Component {
           <ShieldAlert className="w-16 h-16 mb-4 animate-pulse text-red-600"/>
           <h1 className="text-2xl font-black uppercase tracking-widest text-white text-center">Fenda no Sistema</h1>
           <p className="mt-2 text-red-400/80 text-sm max-w-lg text-center break-words font-medium">{this.state.error?.message}</p>
-          <button onClick={() => window.location.reload()} className="mt-8 bg-blue-900/50 hover:bg-blue-700 border border-blue-500/50 text-white px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all">Restaurar Conexão</button>
+          <button onClick={() => window.location.reload()} className="mt-8 bg-zinc-900 border border-zinc-700 text-white px-8 py-3.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all">Restaurar Conexão</button>
         </div>
       );
     }
@@ -35,10 +35,8 @@ export function GlobalToast({ toast }) {
   if (!toast) return null;
   const isError = toast.type === 'error';
   const isSuccess = toast.type === 'success';
-  const isWarning = toast.type === 'warning';
   return (
-    <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[99999] px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider border flex items-center gap-3 animate-in slide-in-from-top-5 fade-out duration-300 w-max max-w-[90vw] backdrop-blur-xl shadow-2xl ${isError ? 'bg-red-950/90 text-red-200 border-red-600/50' : isWarning ? 'bg-amber-950/90 text-amber-200 border-amber-600/50' : isSuccess ? 'bg-[#050508]/95 text-amber-400 border-amber-500/50' : 'bg-[#020205]/95 text-blue-400 border-blue-900/50'}`}>
-      {isError && <AlertCircle className="w-4 h-4 text-red-500"/>}{isSuccess && <CheckCircle className="w-4 h-4 text-amber-400"/>}{isWarning && <ShieldAlert className="w-4 h-4 text-amber-500"/>}{!isError && !isSuccess && !isWarning && <Zap className="w-4 h-4 text-blue-400 animate-pulse"/>}
+    <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[99999] px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider border flex items-center gap-3 animate-in slide-in-from-top-5 duration-300 backdrop-blur-3xl shadow-2xl ${isError ? 'bg-red-950/90 text-red-200 border-red-600/50' : isSuccess ? 'bg-zinc-950/90 text-amber-400 border-amber-500/50' : 'bg-zinc-950/95 text-zinc-400 border-zinc-800'}`}>
       <span className='text-center'>{toast.text}</span>
     </div>
   );
@@ -46,70 +44,64 @@ export function GlobalToast({ toast }) {
 
 export function Footer() {
     return (
-        <footer className="w-full bg-[#0b0e14] border-t border-blue-900/20 py-12 mt-auto pb-24 md:pb-12 relative overflow-hidden flex flex-col items-center justify-center">
-            <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-64 h-64 bg-blue-900/10 rounded-full blur-[100px] pointer-events-none"></div>
-            <div className="max-w-7xl mx-auto px-4 text-center relative z-10 flex flex-col items-center justify-center w-full">
-                <div className="flex justify-center items-center gap-3 mb-5 relative">
-                    <AbyssalLogo className="w-10 h-10 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-                    <span className="font-black text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-100 via-white to-amber-500 tracking-[0.2em] uppercase">MANGÁS ABISSAL</span>
+        <footer className="w-full bg-[#050508] border-t border-zinc-900/50 py-12 mt-auto pb-24 md:pb-12 relative overflow-hidden flex flex-col items-center justify-center">
+            <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
+                <div className="flex justify-center items-center gap-3 mb-5">
+                    <AbyssalLogo className="w-10 h-10 grayscale opacity-50" />
+                    <span className="font-black text-xl text-zinc-500 tracking-[0.2em] uppercase">MANGÁS ABISSAL</span>
                 </div>
-                <p className="text-gray-500 text-[9px] uppercase font-black tracking-[0.2em] mb-4 text-center">Mangás Abissal - © 2026. O Vazio Resguarda.</p>
-                <div className="flex items-center justify-center gap-1.5 opacity-40 mx-auto">
-                    <Lock className="w-3 h-3 text-amber-500" />
-                    <span className="text-[8px] text-amber-600 uppercase tracking-widest font-black">Blindado no Vazio SSL</span>
-                </div>
+                <p className="text-zinc-600 text-[9px] uppercase font-black tracking-[0.2em]">O Vazio Resguarda - © 2026</p>
             </div>
         </footer>
     );
 }
 
-/* NOVA ABERTURA: FENDA SURREAL DO ABISMO */
+/* ABERTURA: ABISMO PROFUNDO (SEM NEON) */
 export function SplashScreen() {
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#030407] flex flex-col items-center justify-center overflow-hidden font-sans">
+    <div className="fixed inset-0 z-[9999] bg-[#020203] flex flex-col items-center justify-center overflow-hidden font-sans">
       <style>{`
-        @keyframes rasgo-abissal {
-          0% { transform: scaleY(0) scaleX(0.01); opacity: 0; box-shadow: 0 0 0px 0px rgba(192,38,211,0); }
-          40% { transform: scaleY(1) scaleX(0.05); opacity: 1; box-shadow: 0 0 50px 10px rgba(192,38,211,0.5); }
-          100% { transform: scaleY(1) scaleX(1); opacity: 1; box-shadow: 0 0 100px 30px rgba(34,211,238,0.3); background: transparent; }
+        @keyframes abismo-crescer {
+          0% { transform: scale(0); opacity: 0; filter: blur(50px); }
+          100% { transform: scale(4); opacity: 1; filter: blur(0); }
+        }
+        @keyframes flutuar-vazio {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-20px) scale(1.05); }
         }
       `}</style>
       
+      {/* O Abismo em camadas de profundidade */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div 
-           className="w-full max-w-lg h-[150%] bg-gradient-to-r from-transparent via-[#0b0e14] to-transparent z-10"
-           style={{ animation: 'rasgo-abissal 2s cubic-bezier(0.1, 0.8, 0.2, 1) forwards' }}
-        >
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/40 via-transparent to-transparent animate-pulse"></div>
-        </div>
+        <div className="w-[100px] h-[100px] bg-[#0a0a0c] rounded-full" style={{ animation: 'abismo-crescer 3s ease-in-out forwards' }}></div>
+        <div className="absolute w-[200px] h-[200px] border border-zinc-900/20 rounded-full animate-[spin_20s_linear_infinite]"></div>
       </div>
 
-      <div className="relative z-20 flex flex-col items-center w-full max-w-sm mx-auto text-center mt-12 animate-in zoom-in-50 duration-1000 delay-[1000ms] fill-mode-both">
-        <AbyssalLogo className="w-40 h-40 mx-auto mb-10 drop-shadow-[0_0_40px_rgba(34,211,238,0.8)]" />
-        <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-700 tracking-[0.3em] ml-[0.3em] text-center leading-tight uppercase drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-            MANGÁS<br/>ABISSAL
-        </h1>
-        <div className="mt-14 text-cyan-400 text-[10px] md:text-xs font-black tracking-[0.6em] uppercase animate-pulse text-shadow-sm border border-cyan-500/30 px-6 py-2 rounded-full bg-cyan-950/20 backdrop-blur-md">
-            RASGANDO O VAZIO...
-        </div>
+      <div className="relative z-20 flex flex-col items-center animate-[flutuar-vazio_4s_ease-in-out_infinite]">
+        <AbyssalLogo className="w-32 h-32 mb-12 grayscale opacity-80" />
+        <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-8"></div>
+        <h1 className="text-2xl font-black text-zinc-400 tracking-[0.5em] uppercase text-center ml-[0.5em]">ABISSAL</h1>
+        <div className="mt-16 text-zinc-600 text-[8px] font-black tracking-[0.8em] uppercase">Mergulhando no Vazio</div>
       </div>
     </div>
   );
 }
 
-/* NOVO COMPONENTE: TRANSIÇÃO DE CAPÍTULO COM NÚMERO */
+/* TRANSIÇÃO DE CAPÍTULO APRIMORADA */
 export function ChapterTransitionOverlay({ isVisible, chapterNumber }) {
     if (!isVisible) return null;
     return (
-        <div className="fixed inset-0 z-[99999] bg-[#050508] flex items-center justify-center animate-in fade-in zoom-in-95 duration-300">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-900/20 via-[#050508] to-[#050508]"></div>
+        <div className="fixed inset-0 z-[99999] bg-[#020203] flex items-center justify-center animate-in fade-in duration-500">
+            <div className="absolute inset-0 opacity-20">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[1px] bg-white animate-[scale-x-150_1s_ease-in-out]"></div>
+            </div>
             <div className="relative z-10 flex flex-col items-center">
-                <span className="text-gray-500 font-black tracking-[0.5em] text-sm uppercase mb-2 animate-pulse">Adentrando</span>
-                <h2 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-blue-700 drop-shadow-[0_0_30px_rgba(34,211,238,0.5)]">
+                <div className="text-zinc-600 font-black tracking-[1em] text-[10px] uppercase mb-8 animate-pulse">Próxima Camada</div>
+                <h2 className="text-9xl font-black text-white tracking-tighter animate-in slide-in-from-bottom-10 duration-700">
                     {chapterNumber}
                 </h2>
-                <div className="mt-8 w-32 h-1 bg-gray-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-cyan-500 animate-[shimmer_1s_infinite] w-full"></div>
+                <div className="mt-12 h-0.5 w-48 bg-zinc-900 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-white/20 animate-[slide-in-from-left_1.5s_infinite]"></div>
                 </div>
             </div>
         </div>
