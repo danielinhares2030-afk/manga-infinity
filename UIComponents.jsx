@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldAlert, AlertCircle, CheckCircle, Zap, Lock } from 'lucide-react';
 
 /* ÍCONE COM ANIMAÇÃO DE PULSAÇÃO ORGÂNICA */
@@ -56,33 +56,96 @@ export function Footer() {
     );
 }
 
-/* ABERTURA: O BURACO NEGRO ABISSAL (SURREAL E OTIMIZADO) */
+/* ABERTURA: FENDA DO ABISMO COM PEDRAS CAINDO E TREMOR (SOLO LEVELING STYLE) */
 export const SplashScreen = React.memo(() => {
-  return (
-    <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden font-sans">
-      <style>{`
-        @keyframes singularity {
-          0% { transform: scale(0) rotate(0deg); opacity: 0; filter: blur(20px); box-shadow: 0 0 0 rgba(34, 211, 238, 0); }
-          30% { transform: scale(1) rotate(180deg); opacity: 1; filter: blur(0px); box-shadow: 0 0 150px rgba(34, 211, 238, 0.8); }
-          60% { transform: scale(1.2) rotate(360deg); opacity: 1; box-shadow: inset 0 0 100px rgba(0, 0, 0, 1), 0 0 200px rgba(217, 70, 239, 0.6); }
-          100% { transform: scale(50) rotate(720deg); opacity: 1; background: #020204; box-shadow: none; }
-        }
-        @keyframes reveal-logo {
-          0%, 50% { opacity: 0; transform: translateY(50px) scale(0.8) tracking-normal; filter: blur(10px); }
-          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-        }
-      `}</style>
-      
-      {/* O Horizonte de Eventos */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-black border-[4px] border-cyan-400 rounded-full z-10 mix-blend-screen" style={{ animation: 'singularity 3s cubic-bezier(0.7, 0, 0.3, 1) forwards' }}></div>
+    const [isCracked, setIsCracked] = useState(false);
+    const [isShaking, setIsShaking] = useState(false);
 
-      <div className="relative z-20 flex flex-col items-center pointer-events-none" style={{ animation: 'reveal-logo 3.5s ease-out forwards' }}>
-        <AbyssalLogo className="w-40 h-40 mb-8 drop-shadow-[0_0_50px_rgba(34,211,238,0.8)] animate-[pulse_2s_infinite]" />
-        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-900 tracking-[0.6em] uppercase text-center ml-[0.6em] drop-shadow-2xl">ABISSAL</h1>
-        <div className="mt-12 text-cyan-400/80 text-[11px] font-black tracking-[1.5em] uppercase">Mergulhe no Vazio</div>
-      </div>
-    </div>
-  );
+    useEffect(() => {
+        // Começa fechado, abre depois de 400ms
+        const crackTimer = setTimeout(() => {
+            setIsCracked(true);
+            setIsShaking(true);
+        }, 400);
+
+        // O tremor da tela dura apenas o início da abertura
+        const shakeTimer = setTimeout(() => {
+            setIsShaking(false);
+        }, 1200); 
+
+        return () => {
+            clearTimeout(crackTimer);
+            clearTimeout(shakeTimer);
+        };
+    }, []);
+
+    // Gerando as pedras (fragmentos) que vão cair
+    const rocks = Array.from({ length: 15 }).map((_, i) => ({
+        id: i,
+        size: Math.random() * 25 + 10, // Entre 10px e 35px
+        left: 40 + Math.random() * 20, // Caem perto do centro (40% a 60%)
+        delay: Math.random() * 0.6, // Atraso aleatório no início
+        duration: Math.random() * 1.5 + 1, // Tempo de queda
+        xDrift: (Math.random() - 0.5) * 150 // Desvio horizontal
+    }));
+
+    return (
+        <div className={`fixed inset-0 z-[9999] bg-gradient-to-b from-black to-[#0a0514] w-full h-screen overflow-hidden font-sans ${isShaking ? 'animate-[shake_0.1s_ease-in-out_infinite]' : ''}`}>
+            <style>{`
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0) rotate(0deg); }
+                    25% { transform: translateX(-6px) rotate(-1deg); }
+                    75% { transform: translateX(6px) rotate(1deg); }
+                }
+                @keyframes fall {
+                    0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { transform: translateY(110vh) translateX(var(--x-drift)) rotate(720deg); opacity: 0; }
+                }
+                /* Recortes irregulares simulando pedra quebrada */
+                .clip-left { clip-path: polygon(0 0, 100% 0, 92% 10%, 100% 22%, 85% 35%, 100% 48%, 90% 60%, 100% 75%, 85% 88%, 100% 100%, 0 100%); }
+                .clip-right { clip-path: polygon(100% 0, 0 0, 8% 10%, 0 22%, 15% 35%, 0 48%, 10% 60%, 0 75%, 15% 88%, 0 100%, 100% 100%); }
+            `}</style>
+
+            {/* BRILHO DO CENTRO DO ABISMO (Aumenta quando abre) */}
+            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[120vh] bg-blue-900/80 blur-3xl transition-all duration-1000 ease-out ${isCracked ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
+            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15vw] h-[100vh] bg-fuchsia-600/60 blur-2xl transition-all duration-1000 ease-out delay-100 ${isCracked ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'}`}></div>
+
+            {/* CONTEÚDO REVELADO NO FUNDO (Logo e Título) */}
+            <div className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-[1500ms] ease-out ${isCracked ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+                <AbyssalLogo className="w-40 h-40 mb-8 drop-shadow-[0_0_50px_rgba(34,211,238,0.8)] animate-[pulse_2s_infinite]" />
+                <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-100 to-cyan-900 tracking-[0.6em] uppercase text-center ml-[0.6em] drop-shadow-[0_0_30px_rgba(34,211,238,0.4)]">ABISSAL</h1>
+                <div className="mt-12 text-cyan-400/80 text-[11px] font-black tracking-[1.5em] uppercase">O Vazio Desperta</div>
+            </div>
+
+            {/* PEDRAS CAINDO */}
+            {isCracked && rocks.map(rock => (
+                <div key={rock.id}
+                    className="absolute -top-10 bg-[#1a1a24] border border-[#2a2a35] rounded-sm shadow-[0_0_15px_rgba(0,0,0,0.9)] z-20"
+                    style={{
+                        width: rock.size,
+                        height: rock.size,
+                        left: `${rock.left}%`,
+                        animation: `fall ${rock.duration}s ease-in ${rock.delay}s forwards`,
+                        '--x-drift': `${rock.xDrift}px`
+                    }}
+                ></div>
+            ))}
+
+            {/* PAREDE ESQUERDA (Rachadura) */}
+            <div className={`absolute inset-y-0 left-0 w-[55%] bg-[#050508] clip-left transition-transform duration-1000 ease-out shadow-[20px_0_50px_rgba(0,0,0,1)] z-10 ${isCracked ? '-translate-x-[40%] md:-translate-x-[30%]' : 'translate-x-0'}`}>
+                {/* Reflexo luminoso na borda da pedra */}
+                <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-cyan-900/40 to-transparent"></div>
+            </div>
+
+            {/* PAREDE DIREITA (Rachadura) */}
+            <div className={`absolute inset-y-0 right-0 w-[55%] bg-[#050508] clip-right transition-transform duration-1000 ease-out shadow-[-20px_0_50px_rgba(0,0,0,1)] z-10 ${isCracked ? 'translate-x-[40%] md:translate-x-[30%]' : 'translate-x-0'}`}>
+                {/* Reflexo luminoso na borda da pedra */}
+                <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-cyan-900/40 to-transparent"></div>
+            </div>
+
+        </div>
+    );
 });
 
 /* TRANSIÇÃO DE CAPÍTULO: SALTO DIMENSIONAL */
