@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star, Play, Library, Share2, BookOpen, CheckCircle, Clock } from 'lucide-react';
 import { doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { APP_ID } from './constants';
+import { CommentsSection } from './CommentsSection'; // Integração dos Comentários
 
 export default function DetailsView({ manga, libraryData, historyData, user, userProfileData, onBack, onChapterClick, onRequireLogin, showToast, db }) {
     const [isSharing, setIsSharing] = useState(false);
     
-    // ESTADO LOCAL ADICIONADO PARA ATUALIZAÇÃO IMEDIATA DA NOTA
+    // ESTADO LOCAL PARA ATUALIZAÇÃO IMEDIATA DA NOTA
     const [localRating, setLocalRating] = useState(manga.rating || 5.0);
 
     // Sincroniza caso a nota mude de fora
@@ -207,6 +208,16 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         )}
                     </div>
                 </div>
+                
+                {/* INTEGRAÇÃO DOS COMENTÁRIOS */}
+                <CommentsSection 
+                    mangaId={manga.id} 
+                    user={user} 
+                    userProfileData={userProfileData} 
+                    onRequireLogin={onRequireLogin} 
+                    showToast={showToast} 
+                />
+
             </div>
         </div>
     );
