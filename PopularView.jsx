@@ -2,8 +2,9 @@ import React from 'react';
 import { Flame, Star, ArrowLeft } from 'lucide-react';
 
 export function PopularView({ mangas, onNavigate, dataSaver }) {
-    // Pega todos os mangás, organiza do maior Rating para o menor, e corta os top 15
+    // FILTRO ADICIONADO: Exige nota >= 4.0 para não exibir obras ruins
     const topPopulares = [...(mangas || [])]
+        .filter(m => (m.rating || 0) >= 4.0)
         .sort((a, b) => (b.rating || 0) - (a.rating || 0))
         .slice(0, 15);
 
