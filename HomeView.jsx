@@ -3,7 +3,7 @@ import { Star, Clock, ListFilter, BookmarkPlus, ChevronRight, Flame, Play, Chevr
 import { timeAgo } from './helpers';
 
 export function HomeView({ mangas, onNavigate, dataSaver }) {
-    const [filter, setFilter] = useState('Mangá');
+    const [filter, setFilter] = useState('Manhwa');
     const [currentSlide, setCurrentSlide] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12;
@@ -22,7 +22,7 @@ export function HomeView({ mangas, onNavigate, dataSaver }) {
     // Se não houver notas 4.8, pega as 5 melhores gerais por segurança
     const carouselItems = destaques.length > 0 ? destaques : [...(mangas || [])].sort((a,b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
 
-    const filterOptions = ['Mangá', 'Manhwa', 'Manhua', 'Shoujo'];
+    const filterOptions = ['Manhwa', 'Mangá', 'Manhua', 'Shoujo'];
     const filteredByPage = [...(mangas || [])].filter(m => {
         if (!m.type) return false;
         const mType = m.type.toLowerCase();
