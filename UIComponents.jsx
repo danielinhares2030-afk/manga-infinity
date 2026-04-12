@@ -56,32 +56,36 @@ export function Footer() {
     );
 }
 
-/* ABERTURA: ABISMO PROFUNDO (SEM NEON) */
+/* ABERTURA: O ABISMO SE ABRINDO (SURREAL) */
 export function SplashScreen() {
   return (
     <div className="fixed inset-0 z-[9999] bg-[#020203] flex flex-col items-center justify-center overflow-hidden font-sans">
       <style>{`
-        @keyframes abismo-crescer {
-          0% { transform: scale(0); opacity: 0; filter: blur(50px); }
-          100% { transform: scale(4); opacity: 1; filter: blur(0); }
+        @keyframes abismo-rasgando {
+          0% { transform: scaleY(0.01) scaleX(0); opacity: 0; box-shadow: 0 0 0 rgba(34, 211, 238, 0); }
+          40% { transform: scaleY(0.02) scaleX(1); opacity: 1; box-shadow: 0 0 50px rgba(34, 211, 238, 0.8); background: #22d3ee; }
+          70% { transform: scaleY(50) scaleX(50); opacity: 1; background: #050508; box-shadow: inset 0 0 100px rgba(34, 211, 238, 0.5); }
+          100% { transform: scaleY(100) scaleX(100); opacity: 1; background: #050508; box-shadow: none; }
         }
-        @keyframes flutuar-vazio {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50% { transform: translateY(-20px) scale(1.05); }
+        @keyframes abismo-conteudo {
+          0%, 60% { opacity: 0; filter: blur(30px); transform: translateY(20px) scale(0.9); }
+          100% { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+        }
+        @keyframes levitar {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-15px); }
         }
       `}</style>
       
-      {/* O Abismo em camadas de profundidade */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[100px] h-[100px] bg-[#0a0a0c] rounded-full" style={{ animation: 'abismo-crescer 3s ease-in-out forwards' }}></div>
-        <div className="absolute w-[200px] h-[200px] border border-zinc-900/20 rounded-full animate-[spin_20s_linear_infinite]"></div>
-      </div>
+      {/* O Rasgo no Vazio */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1 bg-white rounded-full z-10" style={{ animation: 'abismo-rasgando 2.5s cubic-bezier(0.8, 0, 0.2, 1) forwards' }}></div>
 
-      <div className="relative z-20 flex flex-col items-center animate-[flutuar-vazio_4s_ease-in-out_infinite]">
-        <AbyssalLogo className="w-32 h-32 mb-12 grayscale opacity-80" />
-        <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-8"></div>
-        <h1 className="text-2xl font-black text-zinc-400 tracking-[0.5em] uppercase text-center ml-[0.5em]">ABISSAL</h1>
-        <div className="mt-16 text-zinc-600 text-[8px] font-black tracking-[0.8em] uppercase">Mergulhando no Vazio</div>
+      <div className="relative z-20 flex flex-col items-center" style={{ animation: 'abismo-conteudo 3s ease-out forwards' }}>
+        <div style={{ animation: 'levitar 4s ease-in-out infinite' }}>
+            <AbyssalLogo className="w-32 h-32 mb-10 drop-shadow-[0_0_40px_rgba(34,211,238,0.6)]" />
+        </div>
+        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-cyan-900 tracking-[0.5em] uppercase text-center ml-[0.5em] drop-shadow-2xl">ABISSAL</h1>
+        <div className="mt-14 text-cyan-500/60 text-[10px] font-black tracking-[1em] uppercase animate-pulse">A Fenda Está Aberta</div>
       </div>
     </div>
   );
