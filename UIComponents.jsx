@@ -28,23 +28,31 @@ export const InfinityLogo = React.memo(({ className = "w-24 h-12" }) => {
 });
 
 /* ==========================================================================
-   ABERTURA: CALMA E SEM BUGS (Fade in/out simples e elegante)
+   ABERTURA: CALMA E SEM BUG BRANCO (Fade out suave corrigido)
    ========================================================================== */
 export const SplashScreen = React.memo(() => {
   const [visible, setVisible] = useState(true);
-  const [fade, setFade] = useState(false); // Controla o fade in das letras
+  const [fade, setFade] = useState(false); // Controla o fade in inicial
+  const [fadeOut, setFadeOut] = useState(false); // NOVO: Controla a saída suave
 
   useEffect(() => {
+    // 1. Inicia o brilho das letras
     const t1 = setTimeout(() => setFade(true), 100);
-    // A Splash inteira some aos 3000ms para o App.jsx carregar o Login limpo.
-    const t2 = setTimeout(() => setVisible(false), 3000); 
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    
+    // 2. Começa a apagar a tela devagar (resolve o pulo branco)
+    const t2 = setTimeout(() => setFadeOut(true), 2500); 
+    
+    // 3. Remove a tela do DOM totalmente
+    const t3 = setTimeout(() => setVisible(false), 3500); 
+    
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
   if (!visible) return null;
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-[#030305] flex flex-col items-center justify-center font-sans transition-opacity duration-1000 ease-in-out`}>
+    // A classe transition-opacity lidará com o fadeOut final
+    <div className={`fixed inset-0 z-[9999] bg-[#030305] flex flex-col items-center justify-center font-sans transition-opacity duration-1000 ease-in-out ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
       
       <div className={`flex flex-col items-center justify-center transition-all duration-[1500ms] ease-out ${fade ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         
