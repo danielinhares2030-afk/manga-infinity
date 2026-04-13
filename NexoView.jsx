@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Hexagon, ShoppingCart, Trophy, Timer, Star, Skull, Zap, Clock, Key, Loader2, ShieldAlert, Sparkles, User, ArrowRight } from 'lucide-react';
+import { Target, Hexagon, ShoppingCart, Trophy, Timer, Star, Skull, Zap, Clock, Key, Loader2, ShieldAlert, Sparkles, User, ArrowRight, Compass } from 'lucide-react';
 import { doc, updateDoc, collectionGroup, getDocs, query } from "firebase/firestore";
 import { db } from './firebase';
 import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmeticUrl } from './helpers';
@@ -16,7 +16,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     const [rankingList, setRankingList] = useState([]);
     const [loadingRank, setLoadingRank] = useState(false);
 
-    // Configurações de Rank adaptadas para a estética neon agressiva
     const rankConfigs = {
         'Rank E': { rxp: 30, rcoin: 15, pxp: 15, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500/30', glow: 'hover:shadow-[0_0_20px_rgba(156,163,175,0.2)]' },
         'Rank C': { rxp: 100, rcoin: 50, pxp: 50, pcoin: 25, time: 10, charLimit: 200, enigmaTries: 3, color: 'text-emerald-400', border: 'border-emerald-500/30', glow: 'hover:shadow-[0_0_20px_rgba(52,211,153,0.2)]' },
@@ -171,11 +170,9 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     return (
         <div className={`max-w-6xl mx-auto px-4 py-8 md:py-12 animate-in fade-in duration-700 relative pb-24 font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#020105]'}`}>
             
-            {/* FUNDO SURREAL GLOBAL */}
             <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-[pulse_4s_infinite_alternate]"></div>
             <div className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-fuchsia-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-[pulse_5s_infinite_alternate-reverse]"></div>
 
-            {/* MODAL DE CONFIRMAÇÃO AGRESSIVO */}
             {confirmModal && (
                 <div className="fixed inset-0 z-[3000] bg-[#020105]/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setConfirmModal(null)}>
                     <div className="bg-[#05030a] border border-fuchsia-500/50 p-8 rounded-3xl shadow-[0_0_50px_rgba(217,70,239,0.2)] max-w-md w-full text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -200,13 +197,13 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* NAVEGAÇÃO DE ABAS OUSADA */}
-            <div className="flex justify-center md:justify-start gap-4 mb-12 overflow-x-auto no-scrollbar pb-4 relative z-20">
+            {/* NAVEGAÇÃO DE ABAS CORRIGIDA: Justify-start garante que não corte no mobile */}
+            <div className="flex justify-start gap-4 mb-12 overflow-x-auto no-scrollbar pb-4 relative z-20 w-full snap-x">
                 {['Missões', 'Forja', 'Loja', 'Ranking'].map((tab) => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)} 
-                        className={`px-6 py-3.5 rounded-2xl font-black transition-all whitespace-nowrap flex items-center gap-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] relative overflow-hidden group
+                        className={`snap-start px-6 py-3.5 rounded-2xl font-black transition-all whitespace-nowrap flex items-center gap-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] relative overflow-hidden group
                         ${activeTab === tab ? 'text-white border-transparent shadow-[0_0_20px_rgba(34,211,238,0.3)]' : 'text-gray-500 border border-white/5 hover:text-cyan-400 hover:border-cyan-500/30'}`}
                     >
                         {activeTab === tab && <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-fuchsia-600 opacity-80"></div>}
@@ -221,7 +218,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 ))}
             </div>
 
-            {/* CONTEÚDO: MISSÕES */}
+            {/* O RESTANTE DO CONTEÚDO (Mantido Exatamente Igual) */}
             {activeTab === "Missões" && (
                 <div className="animate-in fade-in duration-500 relative z-10">
                     {userProfileData.activeMission ? (
@@ -241,7 +238,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                </div>
                             </div>
                             
-                            {/* Tipo: LEITURA */}
                             {userProfileData.activeMission.type === 'read' && (
                                 <div className="bg-[#020105]/80 p-8 rounded-[2rem] border border-white/5 mb-10 relative z-10 shadow-inner">
                                    <p className="text-gray-300 font-bold text-sm md:text-base mb-8 leading-relaxed uppercase tracking-wider">{userProfileData.activeMission.desc}</p>
@@ -262,7 +258,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                 </div>
                             )}
 
-                            {/* Tipo: BUSCA LOCAL */}
                             {userProfileData.activeMission.type === 'search_local' && (
                                 <div className="bg-[#020105]/80 p-8 rounded-[2rem] border border-white/5 mb-10 relative z-10 shadow-inner">
                                     <p className="text-cyan-100 font-bold text-sm leading-relaxed whitespace-pre-wrap tracking-wider uppercase">{userProfileData.activeMission.question}</p>
@@ -273,7 +268,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                 </div>
                             )}
                             
-                            {/* Tipo: ENIGMA */}
                             {userProfileData.activeMission.type === 'enigma' && (
                                 <div className="bg-[#020105]/80 p-8 rounded-[2rem] border border-white/5 mb-10 relative z-10 shadow-inner">
                                    <p className="text-cyan-100 font-bold text-sm leading-relaxed whitespace-pre-wrap mb-8 uppercase tracking-wider">{userProfileData.activeMission.question}</p>
@@ -347,7 +341,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* CONTEÚDO: FORJA (Agressivo e Surreal) */}
+            {/* CONTEÚDO: FORJA */}
             {activeTab === "Forja" && (
                 <div className="animate-in fade-in duration-500 max-w-2xl mx-auto mt-10 relative z-10">
                     <div className="bg-white/[0.02] backdrop-blur-2xl border border-cyan-500/30 p-10 md:p-16 rounded-[3rem] text-center shadow-[0_30px_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
