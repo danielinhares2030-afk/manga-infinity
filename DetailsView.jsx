@@ -3,11 +3,10 @@ import { ArrowLeft, Star, Play, Library, Share2, BookOpen, CheckCircle, Clock, S
 import { doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { APP_ID } from './constants';
 import { CommentsSection } from './CommentsSection';
+import { timeAgo } from './helpers'; // <--- IMPORTAÇÃO CORRIGIDA AQUI
 
 export default function DetailsView({ manga, libraryData, historyData, user, userProfileData, onBack, onChapterClick, onRequireLogin, showToast, db }) {
     const [isSharing, setIsSharing] = useState(false);
-    
-    // PROTEÇÃO ANTI-CRASH: Força converter para número. Se vier nulo, vira 5.0
     const [localRating, setLocalRating] = useState(Number(manga?.rating) || 5.0);
 
     useEffect(() => {
@@ -31,7 +30,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
         }
     };
 
-    // PROTEÇÃO: Se a obra sumir, não renderiza nada para não travar
     if (!manga) return null;
 
     const inLibrary = libraryData && libraryData[manga.id];
