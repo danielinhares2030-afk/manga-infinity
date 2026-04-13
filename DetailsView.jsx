@@ -1,39 +1,45 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, Play, Library, Share2, BookOpen, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Star, Play, Library, Share2, BookOpen, CheckCircle, Clock, Sparkles } from 'lucide-react';
 import { doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { APP_ID } from './constants';
-import { CommentsSection } from './CommentsSection'; // Integração dos Comentários
+import { CommentsSection } from './CommentsSection';
 
 export default function DetailsView({ manga, libraryData, historyData, user, userProfileData, onBack, onChapterClick, onRequireLogin, showToast, db }) {
     const [isSharing, setIsSharing] = useState(false);
     
-    // ESTADO LOCAL PARA ATUALIZAÇÃO IMEDIATA DA NOTA
+    // SISTEMA DE AVALIAÇÃO CORRIGIDO
+    // Usamos a nota do banco se existir, senão 5.0
     const [localRating, setLocalRating] = useState(manga.rating || 5.0);
 
-    // Sincroniza caso a nota mude de fora
+    // Sincroniza a nota sempre que o objeto manga mudar
     useEffect(() => {
         setLocalRating(manga.rating || 5.0);
     }, [manga.rating]);
 
     const handleRate = async (ratingValue) => {
-        if (!user) return showToast("Apenas Viajantes registados podem avaliar.", "warning");
+        if (!user) return showToast("Apenas leitores registrados podem avaliar.", "warning");
         
         try {
+            // Calcula a nova média simples (pode ser ajustado para média ponderada se preferir)
             const newRating = ((localRating + ratingValue) / 2).toFixed(1);
+            const finalRating = Number(newRating);
             
-            // ATUALIZAÇÃO OTIMISTA (Atualiza a UI na hora!)
-            setLocalRating(Number(newRating));
-            showToast(`Avaliação de ${ratingValue} estrelas registada no Vazio!`, "success");
+            // Atualiza a UI imediatamente para sensação de resposta rápida
+            setLocalRating(finalRating);
+            showToast(`Avaliação de ${ratingValue} estrelas registrada.`, "success");
 
-            // Envia para o banco em background
+            // Grava a nota permanentemente no Firebase
             const mangaRef = doc(db, 'obras', manga.id);
             await updateDoc(mangaRef, {
-                rating: Number(newRating)
+                rating: finalRating
             });
+            
+            // Opcional: Atualizar o objeto localmente para evitar flashes
+            manga.rating = finalRating; 
+            
         } catch (error) {
-            // Se falhar, reverte para o que estava na prop
             setLocalRating(manga.rating || 5.0);
-            showToast("Erro ao conectar com o Vazio. Tente novamente.", "error");
+            showToast("Erro de sincronização. Tente novamente.", "error");
         }
     };
 
@@ -73,112 +79,115 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
         : firstChapter;
 
     return (
-        <div className="min-h-screen bg-[#020204] text-gray-200 font-sans pb-24 animate-in fade-in duration-700 relative overflow-hidden">
+        <div className="min-h-screen bg-[#030305] text-gray-200 font-sans pb-24 animate-in fade-in duration-700 relative overflow-hidden">
             
-            {/* ELEMENTOS SURREAIS DE FUNDO */}
-            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-900/20 rounded-full blur-[150px] pointer-events-none mix-blend-screen animate-[pulse_8s_ease-in-out_infinite]"></div>
-            <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-fuchsia-900/10 rounded-full blur-[150px] pointer-events-none mix-blend-screen animate-[pulse_12s_ease-in-out_infinite_reverse]"></div>
+            {/* ELEMENTOS SURREAIS DE FUNDO OTIMIZADOS E SUAVES */}
+            <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen animate-[pulse_6s_ease-in-out_infinite]"></div>
+            <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen animate-[pulse_8s_ease-in-out_infinite_reverse]"></div>
 
-            <div className="relative h-72 md:h-96 w-full overflow-hidden">
-                <div className="absolute inset-0 bg-[#020204]">
-                    <img src={manga.coverUrl} className="w-full h-full object-cover opacity-20 blur-md scale-110" alt="Capa de Fundo" />
+            {/* HEADER COM A CAPA BORRADA */}
+            <div className="relative h-64 md:h-80 w-full overflow-hidden border-b border-white/5">
+                <div className="absolute inset-0 bg-[#030305]">
+                    <img src={manga.coverUrl} className="w-full h-full object-cover opacity-20 blur-xl scale-110" alt="Capa de Fundo" />
                 </div>
-                {/* Gradiente mais profundo pro surrealismo */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#020204] via-[#020204]/90 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent" />
                 
-                <button onClick={onBack} className="absolute top-4 md:top-6 left-4 md:left-6 z-10 p-3 bg-black/40 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/20 hover:border-cyan-400 hover:scale-110 transition-all duration-300 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                    <ArrowLeft className="w-6 h-6 text-white" />
+                <button onClick={onBack} className="absolute top-4 md:top-6 left-4 md:left-6 z-10 p-3 bg-white/5 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-colors shadow-lg">
+                    <ArrowLeft className="w-5 h-5 text-gray-300" />
                 </button>
             </div>
 
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-36 md:-mt-48 z-10">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-32 md:-mt-40 z-10">
                 <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
                     
-                    {/* CAPA FLUTUANTE SURREAL */}
-                    <div className="w-44 md:w-64 flex-shrink-0 relative group animate-[levitar_5s_ease-in-out_infinite]">
-                        <style>{`@keyframes levitar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
-                        <div className="absolute -inset-1 bg-gradient-to-b from-cyan-500 to-fuchsia-600 rounded-2xl blur opacity-20 group-hover:opacity-50 transition duration-1000"></div>
-                        <div className="aspect-[2/3] relative rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] border border-white/10 group-hover:border-cyan-400 transition-colors duration-500 z-10">
+                    {/* CAPA FLUTUANTE ELEGANTE */}
+                    <div className="w-44 md:w-56 flex-shrink-0 relative group animate-[levitar_6s_ease-in-out_infinite]">
+                        <style>{`@keyframes levitar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }`}</style>
+                        <div className="absolute -inset-2 bg-gradient-to-b from-indigo-500/20 to-cyan-500/20 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+                        <div className="aspect-[2/3] relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 z-10">
                             <img src={manga.coverUrl} alt={manga.title} className="w-full h-full object-cover" />
                         </div>
                         {manga.status && (
-                            <div className="absolute -top-4 -right-4 bg-[#050508] text-cyan-400 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.4)] border border-cyan-500 z-20">
+                            <div className="absolute -top-3 -right-3 bg-indigo-500/90 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-lg z-20 border border-white/10">
                                 {manga.status}
                             </div>
                         )}
                     </div>
 
-                    <div className="flex-1 text-center md:text-left mt-2 md:mt-16 relative z-10">
-                        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 leading-tight tracking-tighter mb-3 drop-shadow-2xl">{manga.title}</h1>
-                        <p className="text-sm text-cyan-400 font-bold uppercase tracking-[0.3em] mb-6 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">{manga.author || 'Autor Desconhecido'}</p>
+                    <div className="flex-1 text-center md:text-left mt-2 md:mt-12 relative z-10">
+                        <h1 className="text-3xl md:text-4xl font-black text-white leading-tight tracking-tight mb-2">{manga.title}</h1>
+                        <p className="text-xs text-indigo-300 font-medium uppercase tracking-[0.2em] mb-6">{manga.author || 'Autor Desconhecido'}</p>
                         
-                        <div className="flex items-center justify-center md:justify-start gap-1 mb-8 bg-[#0d0d12]/50 w-fit mx-auto md:mx-0 px-4 py-2 rounded-2xl border border-white/5 backdrop-blur-sm">
+                        {/* SISTEMA DE AVALIAÇÃO ELEGANTE */}
+                        <div className="flex items-center justify-center md:justify-start gap-1 mb-8 bg-white/5 w-fit mx-auto md:mx-0 px-5 py-2.5 rounded-full border border-white/5 backdrop-blur-md">
                             {[1, 2, 3, 4, 5].map((star) => (
-                                <button key={star} onClick={() => handleRate(star)} className="focus:outline-none hover:scale-125 transition-transform duration-300">
-                                    <Star className={`w-5 h-5 md:w-6 md:h-6 ${star <= Math.round(localRating) ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.8)]' : 'text-gray-700 hover:text-amber-400/50'}`} />
+                                <button key={star} onClick={() => handleRate(star)} className="focus:outline-none hover:scale-110 transition-transform duration-300 px-0.5">
+                                    <Star className={`w-5 h-5 ${star <= Math.round(localRating) ? 'text-amber-300 fill-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.5)]' : 'text-gray-600 hover:text-amber-300/50'}`} />
                                 </button>
                             ))}
-                            <span className="text-amber-400 font-black ml-3 text-xl drop-shadow-[0_0_10px_rgba(251,191,36,0.6)]">
+                            <span className="text-white font-bold ml-3 text-lg border-l border-white/10 pl-3">
                                 {localRating.toFixed(1)}
                             </span>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                        {/* BOTÕES DE AÇÃO REFINADOS */}
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                             <button 
                                 onClick={() => nextChapterToRead ? onChapterClick(manga, nextChapterToRead) : showToast("Nenhum capítulo disponível", "warning")} 
-                                className="flex-1 md:flex-none relative group overflow-hidden bg-gradient-to-r from-cyan-600 to-blue-700 text-white font-black px-8 py-4 rounded-xl shadow-[0_0_20px_rgba(8,145,178,0.4)] transition-all hover:scale-105 uppercase tracking-widest text-xs border border-cyan-400/30"
+                                className="flex-1 md:flex-none bg-white text-black hover:bg-gray-200 font-bold px-8 py-3.5 rounded-xl transition-colors text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
                             >
-                                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
-                                <span className="flex items-center justify-center gap-2 relative z-10"><Play className="w-5 h-5 fill-white" /> {lastRead ? 'Continuar Leitura' : 'Mergulhar na Obra'}</span>
+                                <Play className="w-4 h-4 fill-current" /> {lastRead ? 'Continuar Leitura' : 'Iniciar Leitura'}
                             </button>
                             
-                            <button onClick={handleLibraryToggle} className={`p-4 rounded-xl border font-black flex items-center justify-center transition-all duration-300 shadow-lg relative overflow-hidden group ${inLibrary ? 'bg-amber-950/40 border-amber-500/50 text-amber-400' : 'bg-[#13151f] border-white/10 text-gray-300 hover:border-cyan-500 hover:text-cyan-400'}`} title="Adicionar à Biblioteca">
-                                {inLibrary ? <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" /> : <Library className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                            <button onClick={handleLibraryToggle} className={`p-3.5 rounded-xl border flex items-center justify-center transition-colors shadow-sm group ${inLibrary ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`} title="Adicionar à Biblioteca">
+                                {inLibrary ? <CheckCircle className="w-5 h-5" /> : <Library className="w-5 h-5" />}
                             </button>
                             
-                            <button onClick={handleShare} className="p-4 bg-[#13151f] rounded-xl border border-white/10 text-gray-300 hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300 shadow-lg group" title="Compartilhar">
-                                <Share2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            <button onClick={handleShare} className="p-3.5 bg-white/5 rounded-xl border border-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-colors shadow-sm group" title="Compartilhar">
+                                <Share2 className="w-5 h-5" />
                             </button>
                         </div>
                     </div>
                 </div>
 
+                {/* GÊNEROS SUAVES */}
                 <div className="mt-10 flex flex-wrap justify-center md:justify-start gap-2 relative z-10">
                     {manga.genres?.map(genre => (
-                        <span key={genre} className="bg-[#050508]/80 backdrop-blur-md border border-white/10 text-cyan-100/80 px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-inner hover:border-cyan-500 hover:text-cyan-300 transition-colors cursor-default">
+                        <span key={genre} className="bg-white/5 border border-white/5 text-gray-300 px-4 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-[0.1em] hover:bg-white/10 transition-colors cursor-default">
                             {genre}
                         </span>
                     ))}
                 </div>
 
-                <div className="mt-10 relative z-10">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-cyan-900/20 to-fuchsia-900/20 blur-xl"></div>
-                    <div className="relative bg-[#0b0e14]/80 backdrop-blur-xl border border-white/5 p-6 md:p-8 rounded-[2rem] shadow-2xl">
-                        <h3 className="text-white font-black mb-4 uppercase tracking-[0.2em] text-sm flex items-center gap-2">
-                            <BookOpen className="w-4 h-4 text-cyan-400" /> Fragmentos da História
+                {/* SINOPSE COMO UM CARTÃO DE VIDRO */}
+                <div className="mt-8 relative z-10">
+                    <div className="bg-white/[0.02] border border-white/5 p-6 md:p-8 rounded-[2rem]">
+                        <h3 className="text-white font-bold mb-4 text-sm flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-indigo-400" /> Sinopse
                         </h3>
-                        <p className="text-gray-400 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-medium">
-                            {manga.synopsis || "Os registos do Vazio ainda não possuem informações sobre esta obra."}
+                        <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap font-light">
+                            {manga.synopsis || "Os arquivos estão silenciosos. Nenhuma descrição disponível no momento."}
                         </p>
                     </div>
                 </div>
 
+                {/* LISTA DE CAPÍTULOS LIMPA */}
                 <div className="mt-12 relative z-10">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-cyan-400" /> Capítulos
+                    <div className="flex items-center justify-between mb-6 px-2">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-indigo-400" /> Capítulos
                         </h3>
-                        <span className="text-[10px] text-cyan-400 font-black uppercase tracking-widest bg-cyan-950/40 px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.2)]">
-                            {chapters.length} Gravados
+                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-widest bg-white/5 px-3 py-1 rounded-md">
+                            {chapters.length} Lançados
                         </span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {chapters.length === 0 ? (
-                            <div className="col-span-full text-center py-12 bg-[#0b0e14]/50 backdrop-blur-md rounded-3xl border border-white/5">
-                                <BookOpen className="w-10 h-10 text-gray-700 mx-auto mb-4" />
-                                <p className="text-gray-500 font-black text-[10px] uppercase tracking-[0.2em]">Nenhum capítulo traduzido ainda.</p>
+                            <div className="col-span-full text-center py-16 bg-white/[0.02] rounded-3xl border border-white/5">
+                                <BookOpen className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+                                <p className="text-gray-500 font-medium text-xs">Nenhum capítulo disponível ainda.</p>
                             </div>
                         ) : (
                             chapters.map(chapter => {
@@ -187,21 +196,22 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                     <div 
                                         key={chapter.id} 
                                         onClick={() => onChapterClick(manga, chapter)}
-                                        className={`group cursor-pointer p-4 rounded-2xl border flex items-center justify-between transition-all duration-300 relative overflow-hidden ${isRead ? 'bg-[#050508]/60 border-white/5 opacity-60' : 'bg-[#0b0e14]/80 backdrop-blur-md border-white/10 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]'}`}
+                                        className={`cursor-pointer p-4 rounded-2xl flex items-center justify-between transition-colors duration-300 border ${isRead ? 'bg-white/[0.01] border-transparent opacity-60 hover:bg-white/[0.03]' : 'bg-white/[0.03] border-white/5 hover:border-indigo-500/30 hover:bg-white/[0.05]'}`}
                                     >
-                                        {!isRead && <div className="absolute inset-0 bg-gradient-to-r from-cyan-900/0 via-cyan-900/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>}
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg transition-all shadow-inner ${isRead ? 'bg-black text-gray-700 border border-white/5' : 'bg-[#050508] border border-cyan-500/30 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white'}`}>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-colors ${isRead ? 'bg-white/5 text-gray-500' : 'bg-white/10 text-white'}`}>
                                                 {chapter.number}
                                             </div>
                                             <div>
-                                                <h4 className={`font-black text-sm uppercase tracking-wider transition-colors ${isRead ? 'text-gray-600' : 'text-gray-200 group-hover:text-white'}`}>
+                                                <h4 className={`font-medium text-sm transition-colors ${isRead ? 'text-gray-500' : 'text-gray-200'}`}>
                                                     Capítulo {chapter.number}
                                                 </h4>
-                                                {chapter.title && <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1 line-clamp-1">{chapter.title}</p>}
+                                                <p className="text-[10px] text-gray-600 font-medium mt-0.5 flex items-center gap-1">
+                                                    <Clock className="w-3 h-3" /> {timeAgo(chapter.rawTime || Date.now())}
+                                                </p>
                                             </div>
                                         </div>
-                                        {isRead && <CheckCircle className="w-5 h-5 text-cyan-800 relative z-10" />}
+                                        {isRead && <CheckCircle className="w-4 h-4 text-emerald-500/70" />}
                                     </div>
                                 );
                             })
@@ -210,13 +220,15 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                 </div>
                 
                 {/* INTEGRAÇÃO DOS COMENTÁRIOS */}
-                <CommentsSection 
-                    mangaId={manga.id} 
-                    user={user} 
-                    userProfileData={userProfileData} 
-                    onRequireLogin={onRequireLogin} 
-                    showToast={showToast} 
-                />
+                <div className="mt-8">
+                    <CommentsSection 
+                        mangaId={manga.id} 
+                        user={user} 
+                        userProfileData={userProfileData} 
+                        onRequireLogin={onRequireLogin} 
+                        showToast={showToast} 
+                    />
+                </div>
 
             </div>
         </div>
