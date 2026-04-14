@@ -41,17 +41,15 @@ export const InfinityLogo = React.memo(({ className = "w-24 h-12" }) => {
 });
 
 /* ==========================================================================
-   SPLASH SCREEN: ESTILO ANIME CYBER
+   NOVA SPLASH SCREEN: PORTAL ANIME CYBER
    ========================================================================== */
 export const SplashScreen = React.memo(() => {
-  const [show, setShow] = useState(false);
-  const [slash, setSlash] = useState(false);
-  const [fadeOut, setFadeOut] = useState(false);
+  const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setShow(true), 100);
-    const t2 = setTimeout(() => setSlash(true), 900);
-    const t3 = setTimeout(() => setFadeOut(true), 2200);
+    const t1 = setTimeout(() => setPhase(1), 100);
+    const t2 = setTimeout(() => setPhase(2), 900);
+    const t3 = setTimeout(() => setPhase(3), 2400);
 
     return () => {
       clearTimeout(t1);
@@ -62,51 +60,77 @@ export const SplashScreen = React.memo(() => {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] bg-[#030305] flex flex-col items-center justify-center font-sans overflow-hidden transition-all duration-700 ${
-        fadeOut
-          ? 'opacity-0 scale-110 blur-md pointer-events-none'
-          : 'opacity-100 scale-100'
+      className={`fixed inset-0 z-[9999] overflow-hidden bg-black flex items-center justify-center transition-all duration-700 ${
+        phase === 3
+          ? "opacity-0 scale-125 blur-md pointer-events-none"
+          : "opacity-100 scale-100"
       }`}
     >
-      <style>{`body { background-color: #030305 !important; }`}</style>
+      {/* Fundo anime */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-950 via-[#030305] to-red-950"></div>
 
-      {/* Fundo vivo */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/20 via-black to-red-950/20 animate-pulse"></div>
+      {/* Luz ambiente */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.12),transparent_60%)]"></div>
 
-      {/* Partículas anime */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-12 left-10 w-1 h-1 bg-cyan-400 rounded-full animate-ping"></div>
-        <div className="absolute top-32 right-16 w-1 h-1 bg-red-500 rounded-full animate-ping delay-300"></div>
-        <div className="absolute bottom-24 left-1/3 w-1 h-1 bg-white rounded-full animate-ping delay-700"></div>
-      </div>
-
-      {/* Corte de espada */}
+      {/* Portal central */}
       <div
-        className={`absolute w-[140%] h-[3px] bg-gradient-to-r from-transparent via-red-500 to-transparent rotate-[-20deg] transition-all duration-700 ${
-          slash
-            ? 'translate-x-0 opacity-100 scale-x-100'
-            : '-translate-x-full opacity-0 scale-x-0'
+        className={`absolute rounded-full border-4 border-cyan-400/70 shadow-[0_0_40px_rgba(34,211,238,0.6)] transition-all duration-1000 ${
+          phase >= 1
+            ? "w-[280px] h-[280px] scale-100 opacity-100"
+            : "w-0 h-0 scale-0 opacity-0"
+        }`}
+      ></div>
+
+      {/* Anel externo girando */}
+      <div
+        className={`absolute rounded-full border border-red-500/60 transition-all duration-1000 ${
+          phase >= 1
+            ? "w-[380px] h-[380px] animate-spin opacity-100"
+            : "w-0 h-0 opacity-0"
+        }`}
+        style={{ animationDuration: "5s" }}
+      ></div>
+
+      {/* Segundo anel */}
+      <div
+        className={`absolute rounded-full border border-cyan-400/30 transition-all duration-1000 ${
+          phase >= 1
+            ? "w-[340px] h-[340px] animate-spin opacity-100"
+            : "w-0 h-0 opacity-0"
+        }`}
+        style={{
+          animationDuration: "3s",
+          animationDirection: "reverse",
+        }}
+      ></div>
+
+      {/* Energia */}
+      <div
+        className={`absolute rounded-full bg-cyan-400/20 blur-3xl transition-all duration-700 ${
+          phase >= 2
+            ? "w-44 h-44 opacity-100 scale-100"
+            : "w-0 h-0 opacity-0 scale-0"
         }`}
       ></div>
 
       {/* Logo */}
       <div
-        className={`flex flex-col items-center justify-center relative z-10 transition-all duration-1000 ease-out ${
-          show
-            ? 'opacity-100 scale-100 translate-y-0'
-            : 'opacity-0 scale-75 translate-y-6'
+        className={`relative z-10 flex flex-col items-center transition-all duration-1000 ${
+          phase >= 2
+            ? "opacity-100 scale-100 translate-y-0"
+            : "opacity-0 scale-50 translate-y-8"
         }`}
       >
-        <div className="animate-[pulse_2s_infinite]">
-          <InfinityLogo className="w-44 h-24 mb-3" />
+        <div className="animate-[pulse_1.5s_infinite]">
+          <InfinityLogo className="w-48 h-24 mb-3" />
         </div>
 
-        <h1 className="text-5xl sm:text-6xl font-black text-white tracking-tight uppercase italic drop-shadow-[0_0_20px_rgba(34,211,238,0.7)]">
+        <h1 className="text-5xl sm:text-6xl font-black italic text-white tracking-tight drop-shadow-[0_0_20px_rgba(34,211,238,0.8)]">
           NEXUS
         </h1>
 
-        <p className="text-[11px] text-cyan-400 font-black uppercase tracking-[0.5em] mt-2 animate-pulse">
-          Initializando Sistema
+        <p className="mt-2 text-cyan-400 text-[11px] tracking-[0.4em] uppercase animate-pulse">
+          Sistema Online
         </p>
       </div>
     </div>
