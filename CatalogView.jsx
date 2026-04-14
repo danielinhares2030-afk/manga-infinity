@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Database, BookOpen, Fingerprint } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCatalogState }) {
   const [search, setSearch] = useState('');
@@ -14,29 +14,20 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
       {/* Background Neon */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-cyan-600/10 blur-[150px] pointer-events-none rounded-full"></div>
 
-      {/* HEADER HUD FUTURISTA */}
+      {/* HEADER COM CONTADOR AO LADO DO TÍTULO */}
       <div className="mb-12 flex flex-col items-center text-center relative z-10">
-        
         <div className="w-16 h-1 bg-cyan-500 mb-6 shadow-[0_0_15px_#22d3ee]"></div>
-        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 uppercase drop-shadow-lg">
-          Arquivo <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Geral</span>
-        </h1>
         
-        {/* CONTADOR PIQUE PAINEL DE NAVE CYBERPUNK */}
-        <div className="mt-8 flex items-stretch justify-center bg-[#050508] border border-cyan-500/30 rounded-2xl p-1 shadow-[0_0_30px_rgba(34,211,238,0.1)] w-full max-w-sm">
-          <div className="flex-1 flex flex-col items-center justify-center bg-white/5 rounded-xl py-4 border border-white/5">
-            <Fingerprint className="w-4 h-4 text-gray-500 mb-2" />
-            <span className="text-3xl font-black text-white drop-shadow-md">{mangas.length}</span>
-            <span className="text-[8px] uppercase tracking-[0.3em] text-cyan-500/80 font-black mt-1">Registros</span>
-          </div>
-          
-          <div className="w-[1px] bg-gradient-to-b from-transparent via-cyan-500/50 to-transparent mx-1"></div>
-          
-          <div className="flex-1 flex flex-col items-center justify-center bg-cyan-950/30 rounded-xl py-4 border border-cyan-500/20 shadow-inner">
-            <Database className="w-4 h-4 text-cyan-500 mb-2 animate-pulse" />
-            <span className="text-3xl font-black text-cyan-400 drop-shadow-[0_0_10px_#22d3ee]">{filteredMangas.length}</span>
-            <span className="text-[8px] uppercase tracking-[0.3em] text-cyan-300 font-black mt-1">Filtrados</span>
-          </div>
+        <div className="flex flex-col md:flex-row items-center gap-4">
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase drop-shadow-lg">
+            Arquivo <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Geral</span>
+            </h1>
+            
+            {/* NOVO CONTADOR: Simples, Elegante, Pique Anime */}
+            <div className="flex items-center gap-3 bg-[#050508]/80 backdrop-blur-md border border-cyan-500/30 px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(34,211,238,0.1)]">
+                <span className="text-xl font-black text-white drop-shadow-[0_0_8px_#fff]">{mangas.length}</span>
+                <span className="text-[10px] uppercase font-black tracking-widest text-cyan-400">Registros</span>
+            </div>
         </div>
       </div>
 
