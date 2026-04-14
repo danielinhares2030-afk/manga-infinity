@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Hexagon, ShoppingCart, Trophy, Timer, Star, Skull, Zap, Clock, Key, Loader2, ShieldAlert, Sparkles, User, ArrowRight, Compass } from 'lucide-react';
+import { Target, Hexagon, ShoppingCart, Trophy, Timer, Star, Skull, Zap, Clock, Key, Loader2, ShieldAlert, Sparkles, User, ArrowRight } from 'lucide-react';
 import { doc, updateDoc, collectionGroup, getDocs, query } from "firebase/firestore";
 import { db } from './firebase';
 import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmeticUrl } from './helpers';
@@ -170,6 +170,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     return (
         <div className={`max-w-6xl mx-auto px-4 py-8 md:py-12 animate-in fade-in duration-700 relative pb-24 font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#020105]'}`}>
             
+            {/* FUNDO SURREAL GLOBAL */}
             <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-cyan-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-[pulse_4s_infinite_alternate]"></div>
             <div className="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-fuchsia-600/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen animate-[pulse_5s_infinite_alternate-reverse]"></div>
 
@@ -197,28 +198,28 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* NAVEGAÇÃO DE ABAS CORRIGIDA: Justify-start garante que não corte no mobile */}
-            <div className="flex justify-start gap-4 mb-12 overflow-x-auto no-scrollbar pb-4 relative z-20 w-full snap-x">
+            {/* NAVEGAÇÃO DE ABAS CORRIGIDA */}
+            <div className="flex justify-start gap-4 mb-12 overflow-x-auto no-scrollbar pb-4 relative z-20 w-full px-2 snap-x">
                 {['Missões', 'Forja', 'Loja', 'Ranking'].map((tab) => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)} 
-                        className={`snap-start px-6 py-3.5 rounded-2xl font-black transition-all whitespace-nowrap flex items-center gap-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] relative overflow-hidden group
-                        ${activeTab === tab ? 'text-white border-transparent shadow-[0_0_20px_rgba(34,211,238,0.3)]' : 'text-gray-500 border border-white/5 hover:text-cyan-400 hover:border-cyan-500/30'}`}
+                        className={`snap-start px-8 py-3.5 rounded-2xl font-black transition-all whitespace-nowrap flex items-center gap-3 text-[10px] sm:text-xs uppercase tracking-[0.2em] relative overflow-hidden group
+                        ${activeTab === tab ? 'text-white border-transparent shadow-[0_0_20px_rgba(34,211,238,0.3)]' : 'text-gray-500 border border-white/5 hover:text-cyan-400'}`}
                     >
                         {activeTab === tab && <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-fuchsia-600 opacity-80"></div>}
                         <div className="relative z-10 flex items-center gap-3">
-                            {tab === "Missões" && <Target className={`w-4 h-4 ${activeTab === tab ? 'text-white' : 'group-hover:text-cyan-400'}`}/>}
-                            {tab === "Forja" && <Hexagon className={`w-4 h-4 ${activeTab === tab ? 'text-white' : 'group-hover:text-cyan-400'}`}/>}
-                            {tab === "Loja" && <ShoppingCart className={`w-4 h-4 ${activeTab === tab ? 'text-white' : 'group-hover:text-cyan-400'}`}/>}
-                            {tab === "Ranking" && <Trophy className={`w-4 h-4 ${activeTab === tab ? 'text-white' : 'group-hover:text-cyan-400'}`}/>}
+                            {tab === "Missões" && <Target className="w-4 h-4"/>}
+                            {tab === "Forja" && <Hexagon className="w-4 h-4"/>}
+                            {tab === "Loja" && <ShoppingCart className="w-4 h-4"/>}
+                            {tab === "Ranking" && <Trophy className="w-4 h-4"/>}
                             {tab}
                         </div>
                     </button>
                 ))}
             </div>
 
-            {/* O RESTANTE DO CONTEÚDO (Mantido Exatamente Igual) */}
+            {/* CONTEÚDO: MISSÕES */}
             {activeTab === "Missões" && (
                 <div className="animate-in fade-in duration-500 relative z-10">
                     {userProfileData.activeMission ? (
@@ -261,10 +262,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                             {userProfileData.activeMission.type === 'search_local' && (
                                 <div className="bg-[#020105]/80 p-8 rounded-[2rem] border border-white/5 mb-10 relative z-10 shadow-inner">
                                     <p className="text-cyan-100 font-bold text-sm leading-relaxed whitespace-pre-wrap tracking-wider uppercase">{userProfileData.activeMission.question}</p>
-                                    <div className="mt-8 p-5 bg-cyan-950/30 rounded-2xl border border-cyan-500/30 flex items-start gap-4">
-                                        <Compass className="w-6 h-6 text-cyan-400 flex-shrink-0 mt-1" />
-                                        <p className="text-xs text-cyan-300/80 font-black leading-relaxed uppercase tracking-[0.2em]">Vasculhe o catálogo e acesse a página da obra para completar o ciclo.</p>
-                                    </div>
                                 </div>
                             )}
                             
@@ -310,9 +307,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                             const r = rankConfigs[rId];
                                             return (
                                                 <div key={rId} className={`bg-white/[0.02] backdrop-blur-md border ${r.border} ${r.glow} p-8 md:p-10 rounded-[2.5rem] flex flex-col justify-between transition-all duration-500 hover:-translate-y-2 group relative overflow-hidden`}>
-                                                    
                                                     <div className="absolute top-[-50px] right-[-50px] w-32 h-32 bg-white/5 blur-[30px] rounded-full group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
-
                                                     <div className="mb-10 relative z-10">
                                                         <h3 className={`text-3xl font-black tracking-tighter uppercase mb-8 ${r.color} drop-shadow-md`}>{rId}</h3>
                                                         <div className="space-y-4">
@@ -326,7 +321,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
                                                     <button onClick={() => setConfirmModal(rId)} className={`w-full py-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all bg-transparent border border-white/20 text-white hover:bg-white hover:text-black hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] relative z-10`}>
                                                         Firmar Pacto
                                                     </button>
@@ -345,21 +339,16 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
             {activeTab === "Forja" && (
                 <div className="animate-in fade-in duration-500 max-w-2xl mx-auto mt-10 relative z-10">
                     <div className="bg-white/[0.02] backdrop-blur-2xl border border-cyan-500/30 p-10 md:p-16 rounded-[3rem] text-center shadow-[0_30px_60px_rgba(0,0,0,0.8)] relative overflow-hidden">
-                        
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-600/20 blur-[100px] rounded-full pointer-events-none animate-pulse"></div>
-                        
                         <Hexagon className="w-20 h-20 mx-auto mb-10 text-cyan-400 opacity-90 animate-[spin_10s_linear_infinite] relative z-10 drop-shadow-[0_0_25px_#22d3ee]" />
-                        
                         <h2 className="text-3xl md:text-5xl font-black text-white mb-6 relative z-10 uppercase tracking-tighter drop-shadow-xl">Fornalha <span className="text-cyan-500">Cósmica</span></h2>
                         <p className="text-gray-400 text-sm mb-12 leading-relaxed font-medium relative z-10">Sintetize <b className="text-cyan-400 font-black">5 Cristais</b> encontrados durante a leitura. Recompensas massivas aguardam, mas a anomalia possui <span className="text-red-500 font-black">40% de chance</span> de desintegrar os materiais.</p>
-                        
                         <div className="bg-[#020105]/80 border border-white/10 rounded-3xl p-8 mb-12 shadow-inner relative z-10 max-w-xs mx-auto">
                             <span className="text-[10px] uppercase font-black text-gray-500 tracking-[0.3em] mb-4 block">Energia Armazenada</span>
                             <div className="flex items-center justify-center gap-4 text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
                                 {userProfileData.crystals || 0} <Hexagon className="w-10 h-10 text-cyan-500 drop-shadow-[0_0_10px_#22d3ee]" />
                             </div>
                         </div>
-
                         <button onClick={runSynthesis} disabled={synthesizing || (userProfileData.crystals || 0) < 5} className="w-full bg-transparent border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500 hover:text-black disabled:bg-transparent disabled:border-white/5 disabled:text-gray-600 font-black py-5 px-8 rounded-2xl transition-all duration-300 relative z-10 text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(34,211,238,0.2)] hover:shadow-[0_0_40px_rgba(34,211,238,0.6)] disabled:shadow-none">
                             {synthesizing ? <><Loader2 className="w-5 h-5 animate-spin" /> Fundindo Matéria...</> : 'Iniciar Fusão (Custa 5)'}
                         </button>
@@ -389,36 +378,25 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
                           return (
                             <div key={item.id} className={`bg-[#05030a] border p-6 rounded-[2rem] flex flex-col items-center text-center transition-all duration-500 group relative overflow-hidden ${isEquipped ? 'border-fuchsia-500/50 shadow-[0_0_30px_rgba(217,70,239,0.2)]' : 'border-white/5 hover:border-cyan-500/40 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)]'}`}>
-                              
                               {isEquipped && <div className="absolute inset-0 bg-fuchsia-500/5 pointer-events-none"></div>}
-
                               <div className={`w-28 h-28 rounded-2xl mb-6 bg-[#020105] flex items-center justify-center overflow-hidden border border-white/5 relative flex-shrink-0 shadow-inner ${(!item.preview && ['moldura', 'efeito'].includes(cat)) ? item.cssClass : ''}`}>
-                                
                                 {(cat === 'capa_fundo' || cat === 'tema_perfil') ? (
                                     cleanCosmeticUrl(item.preview) ? <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className="w-full h-full object-cover opacity-80" /> : <div className="w-full h-full bg-gradient-to-br from-cyan-900 to-fuchsia-900"></div>
                                 ) : null}
-
                                 {cat === 'particulas' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                
                                 {['moldura', 'efeito', 'particulas', 'badge'].includes(cat) && (
                                     <div className="w-14 h-14 rounded-full flex items-center justify-center relative z-0 bg-[#0a0a12]">
                                         <User className="w-6 h-6 text-gray-600" />
                                     </div>
                                 )}
-
                                 {cat === 'avatar' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${item.cssClass}`} />}
-                                
                                 {cat === 'efeito' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                
                                 {cat === 'moldura' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                
                                 {cat === 'badge' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute -bottom-2 -right-2 w-8 h-8 object-contain z-20 ${item.cssClass}`} style={{ pointerEvents: 'none' }} />}
-
                                 {(!['avatar', 'capa_fundo', 'tema_perfil', 'particulas', 'efeito', 'moldura', 'badge', 'nickname', 'fonte', 'font'].includes(cat)) && (
                                     <Sparkles className="w-8 h-8 text-gray-600 relative z-10"/>
                                 )}
                               </div>
-
                               <p className={`text-[8px] uppercase tracking-[0.2em] font-black mb-2 px-2 py-1 rounded bg-black/40 border border-white/5 relative z-10 ${getRarityColor(item.raridade)}`}>{item.categoria || item.type}</p>
                               <h4 className="text-white font-black mb-6 text-sm line-clamp-1 relative z-10">{item.nome || item.name}</h4>
                               
