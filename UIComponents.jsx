@@ -107,14 +107,18 @@ export function Footer() {
     );
 }
 
+/* ==========================================================================
+   TRANSIÇÃO DE CAPÍTULO CORRIGIDA: De volta ao arquivo para o Vercel não chiar
+   ========================================================================== */
 export const ChapterTransitionOverlay = React.memo(({ isVisible, chapterNumber }) => {
     if (!isVisible) return null;
     return (
         <div className="fixed inset-0 z-[99999] bg-[#030305] font-sans flex flex-col items-center justify-center animate-in fade-in duration-500">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.1)_0%,transparent_60%)] animate-pulse"></div>
             <div className="text-cyan-500/80 font-black tracking-[0.5em] text-[10px] uppercase mb-2 animate-pulse relative z-10">
                 Acessando Domínio
             </div>
-            <h2 className="text-6xl sm:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 tracking-tighter animate-in zoom-in-50 duration-500 relative z-10 drop-shadow-2xl">
+            <h2 className="text-6xl sm:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 tracking-tighter animate-in zoom-in-50 duration-500 relative z-10 drop-shadow-[0_0_20px_rgba(34,211,238,0.4)]">
               {chapterNumber}
             </h2>
         </div>
