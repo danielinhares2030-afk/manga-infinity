@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Bell, Dices, Hexagon, Infinity as InfinityIcon, Home as HomeIcon, LayoutGrid, Library, UserCircle, User, X, Trophy, BookOpen, Eye } from 'lucide-react';
 import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs, updateDoc, increment } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs, updateDoc, increment, where } from "firebase/firestore";
 import { app, auth, db } from './firebase'; 
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
 import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo, cleanCosmeticUrl } from './helpers';
@@ -73,7 +73,7 @@ function MangaInfinityApp() {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, "loja_itens"));
+    const q = query(collection(db, "loja_itens"), where("ativo", "==", true));
     const unsub = onSnapshot(q, (snap) => { if (!snap.empty) { const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() })); setShopItems(items); } else { setShopItems(FALLBACK_SHOP_ITEMS); } });
     return () => unsub();
   }, []);
