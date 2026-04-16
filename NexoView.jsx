@@ -198,7 +198,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* NAVEGAÇÃO DE ABAS CORRIGIDA */}
+            {/* NAVEGAÇÃO DE ABAS */}
             <div className="flex justify-start gap-4 mb-12 overflow-x-auto no-scrollbar pb-4 relative z-20 w-full px-2 snap-x">
                 {['Missões', 'Forja', 'Loja', 'Ranking'].map((tab) => (
                     <button 
@@ -356,12 +356,12 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* CONTEÚDO: LOJA */}
+            {/* CONTEÚDO: LOJA (ATUALIZADA) */}
             {activeTab === "Loja" && (
                 <div className="animate-in fade-in duration-500 relative z-10">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-8 mb-12 max-w-7xl mx-auto bg-white/[0.02] p-8 rounded-[2rem] border border-white/5 backdrop-blur-md">
                         <div className="text-center sm:text-left">
-                            <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">Mercado <span className="text-fuchsia-500">Astral</span></h3>
+                            <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">Mercado <span className="text-zinc-500">Astral</span></h3>
                             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Forje sua identidade visual no vazio.</p>
                         </div>
                         <div className="bg-black/60 border border-amber-500/30 text-amber-400 font-black px-8 py-4 rounded-2xl flex items-center gap-3 text-lg shadow-[0_0_20px_rgba(245,158,11,0.2)]">
@@ -370,43 +370,85 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                         </div>
                     </div>
                       
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 max-w-7xl mx-auto">
-                        {shopItems.map(item => {
-                          const hasItem = userProfileData.inventory?.includes(item.id);
-                          const isEquipped = userProfileData.equipped_items?.[item.categoria]?.id === item.id;
-                          const cat = (item.categoria || item.type || '').toLowerCase();
+                    {/* Grid da Loja de Cosméticos ATUALIZADA */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {shopItems
+                            .filter(item => item.ativo !== false)
+                            .map((item) => {
+                                
+                            const isOwned = userProfileData?.inventory?.includes(item.id);
+                            const isEquipped = userProfileData?.equipped_items?.[item.tipo]?.id === item.id;
+                            
+                            return (
+                                <div key={item.id} className={`relative flex flex-col bg-[#050508] border rounded-sm overflow-hidden group transition-all duration-500 shadow-lg ${isEquipped ? 'border-zinc-300' : 'border-zinc-900 hover:border-zinc-700'}`}>
+                                    
+                                    {/* VITRINE DO ITEM (Renderização Dinâmica) */}
+                                    <div className="relative w-full aspect-square bg-[#020203] flex items-center justify-center overflow-hidden p-4 border-b border-zinc-900/50">
+                                        
+                                        {/* Avatar ou Capa de Fundo */}
+                                        {(item.tipo === 'avatar' || item.tipo === 'capa_fundo') && item.url && (
+                                            <img 
+                                                src={item.url} 
+                                                alt={item.nome} 
+                                                className="w-full h-full object-cover grayscale-[0.4] group-hover:grayscale-0 transition-all duration-700" 
+                                            />
+                                        )}
 
-                          return (
-                            <div key={item.id} className={`bg-[#05030a] border p-6 rounded-[2rem] flex flex-col items-center text-center transition-all duration-500 group relative overflow-hidden ${isEquipped ? 'border-fuchsia-500/50 shadow-[0_0_30px_rgba(217,70,239,0.2)]' : 'border-white/5 hover:border-cyan-500/40 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)]'}`}>
-                              {isEquipped && <div className="absolute inset-0 bg-fuchsia-500/5 pointer-events-none"></div>}
-                              <div className={`w-28 h-28 rounded-2xl mb-6 bg-[#020105] flex items-center justify-center overflow-hidden border border-white/5 relative flex-shrink-0 shadow-inner ${(!item.preview && ['moldura', 'efeito'].includes(cat)) ? item.cssClass : ''}`}>
-                                {(cat === 'capa_fundo' || cat === 'tema_perfil') ? (
-                                    cleanCosmeticUrl(item.preview) ? <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className="w-full h-full object-cover opacity-80" /> : <div className="w-full h-full bg-gradient-to-br from-cyan-900 to-fuchsia-900"></div>
-                                ) : null}
-                                {cat === 'particulas' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                {['moldura', 'efeito', 'particulas', 'badge'].includes(cat) && (
-                                    <div className="w-14 h-14 rounded-full flex items-center justify-center relative z-0 bg-[#0a0a12]">
-                                        <User className="w-6 h-6 text-gray-600" />
+                                        {/* Animação CSS */}
+                                        {item.tipo === 'animacao_css' && item.codigo && (
+                                            <iframe 
+                                                srcDoc={item.codigo} 
+                                                title={item.nome}
+                                                className="w-full h-full border-none pointer-events-none scale-[1.2]" 
+                                                scrolling="no"
+                                            />
+                                        )}
+
+                                        {/* Nick Estilizado */}
+                                        {item.tipo === 'nick' && item.texto && (
+                                            <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-zinc-600 uppercase tracking-[0.2em] text-center drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                                                {item.texto}
+                                            </span>
+                                        )}
+
+                                        {/* Badge de Raridade */}
+                                        <div className="absolute top-3 left-3 px-3 py-1.5 bg-black/90 backdrop-blur-md border border-zinc-800 text-[8px] font-black text-zinc-400 uppercase tracking-[0.3em]">
+                                            {item.raridade || 'Comum'}
+                                        </div>
+                                        
+                                        {/* Badge de Equipado */}
+                                        {isEquipped && (
+                                            <div className="absolute top-3 right-3 px-3 py-1.5 bg-zinc-200 border border-white text-[8px] font-black text-black uppercase tracking-[0.3em]">
+                                                Equipado
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                {cat === 'avatar' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ${item.cssClass}`} />}
-                                {cat === 'efeito' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-0 m-auto w-full h-full object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                {cat === 'moldura' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-10 ${item.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                {cat === 'badge' && cleanCosmeticUrl(item.preview) && <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute -bottom-2 -right-2 w-8 h-8 object-contain z-20 ${item.cssClass}`} style={{ pointerEvents: 'none' }} />}
-                                {(!['avatar', 'capa_fundo', 'tema_perfil', 'particulas', 'efeito', 'moldura', 'badge', 'nickname', 'fonte', 'font'].includes(cat)) && (
-                                    <Sparkles className="w-8 h-8 text-gray-600 relative z-10"/>
-                                )}
-                              </div>
-                              <p className={`text-[8px] uppercase tracking-[0.2em] font-black mb-2 px-2 py-1 rounded bg-black/40 border border-white/5 relative z-10 ${getRarityColor(item.raridade)}`}>{item.categoria || item.type}</p>
-                              <h4 className="text-white font-black mb-6 text-sm line-clamp-1 relative z-10">{item.nome || item.name}</h4>
-                              
-                              {hasItem ? (
-                                <button onClick={() => equipItem(item)} className={`w-full font-black py-3 rounded-xl transition-all text-[10px] uppercase tracking-widest relative z-10 ${isEquipped ? 'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/50 hover:bg-fuchsia-500 hover:text-white' : 'bg-transparent text-gray-400 hover:text-cyan-400 hover:border-cyan-500/50 border border-white/10'}`}>{isEquipped ? 'Desequipar' : 'Equipar'}</button>
-                              ) : (
-                                <button onClick={() => buyItem(item)} className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black py-3 rounded-xl transition-transform hover:scale-105 text-[10px] uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.4)] relative z-10">Comprar • {item.preco || item.price}</button>
-                              )}
-                            </div>
-                          )
+
+                                    {/* INFORMAÇÕES E BOTÃO DE COMPRA/EQUIPAR */}
+                                    <div className="p-6 flex flex-col flex-1 justify-between gap-6">
+                                        <div>
+                                            <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-2">{item.nome}</h3>
+                                            <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">{item.tipo?.replace('_', ' ')}</p>
+                                        </div>
+                                        
+                                        {isOwned ? (
+                                            <button 
+                                                onClick={() => equipItem(item)}
+                                                className={`w-full py-4 text-[10px] font-black uppercase tracking-[0.4em] transition-all border ${isEquipped ? 'bg-zinc-900 border-zinc-700 text-white hover:bg-zinc-800' : 'bg-transparent border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500'}`}
+                                            >
+                                                {isEquipped ? 'Desequipar' : 'Equipar'}
+                                            </button>
+                                        ) : (
+                                            <button 
+                                                onClick={() => buyItem(item)} 
+                                                className="w-full py-4 bg-white text-black hover:bg-zinc-300 transition-colors text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                                            >
+                                                Comprar <span className="opacity-30">•</span> {item.preco} M
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
                         })}
                     </div>
                 </div>
@@ -416,38 +458,35 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
             {activeTab === "Ranking" && (
                 <div className="animate-in fade-in duration-500 max-w-5xl mx-auto relative z-10">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500 mb-4 uppercase tracking-tighter drop-shadow-xl">Hierarquia <span className="text-white">Global</span></h2>
+                        <h2 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-zinc-300 to-zinc-600 mb-4 uppercase tracking-tighter drop-shadow-xl">Hierarquia <span className="text-white">Global</span></h2>
                         <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em]">As entidades supremas da plataforma.</p>
                     </div>
                     
                     {loadingRank ? (
-                        <div className="flex flex-col items-center justify-center py-24"><Loader2 className="w-12 h-12 text-cyan-500 animate-spin mb-6 drop-shadow-[0_0_15px_#22d3ee]"/><p className="text-cyan-400 text-[10px] font-black uppercase tracking-[0.4em]">Sincronizando Matriz...</p></div>
+                        <div className="flex flex-col items-center justify-center py-24"><Loader2 className="w-12 h-12 text-zinc-500 animate-spin mb-6 drop-shadow-[0_0_15px_#22d3ee]"/><p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.4em]">Sincronizando Matriz...</p></div>
                     ) : rankingList.length === 0 ? (
                         <p className="text-center text-gray-600 py-20 font-black uppercase tracking-[0.2em] text-sm">O ranking aguarda os primeiros conquistadores.</p>
                     ) : (
                         <div className="space-y-4">
                             {rankingList.map((player, index) => (
-                                <div key={player.id} className={`bg-white/[0.02] backdrop-blur-md border p-5 sm:p-6 rounded-[2rem] flex items-center gap-4 sm:gap-8 transition-all duration-500 hover:scale-[1.02] ${index < 3 ? 'border-cyan-500/30 shadow-[0_0_25px_rgba(34,211,238,0.15)] bg-gradient-to-r from-cyan-900/10 to-transparent' : 'border-white/5 hover:bg-white/[0.05] hover:border-white/10'}`}>
+                                <div key={player.id} className={`bg-white/[0.02] backdrop-blur-md border p-5 sm:p-6 rounded-[2rem] flex items-center gap-4 sm:gap-8 transition-all duration-500 hover:scale-[1.02] ${index < 3 ? 'border-zinc-500/30 shadow-[0_0_25px_rgba(255,255,255,0.05)] bg-gradient-to-r from-zinc-900/30 to-transparent' : 'border-white/5 hover:bg-white/[0.05] hover:border-white/10'}`}>
                                     <div className={`w-8 sm:w-12 font-black text-center text-lg sm:text-2xl drop-shadow-md ${index === 0 ? 'text-amber-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-700' : 'text-gray-600'}`}>
                                         #{index + 1}
                                     </div>
                                     
-                                    <div className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center flex-shrink-0 group ${(!player.equipped_items?.moldura?.preview && player.equipped_items?.moldura) ? player.equipped_items.moldura.cssClass : ''}`}>
+                                    <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center flex-shrink-0 group">
                                         <div className="w-full h-full rounded-full overflow-hidden border border-white/10 relative z-10 bg-[#020105]">
-                                            <img src={cleanCosmeticUrl(player.avatarUrl) || `https://placehold.co/100x100/020105/22d3ee?text=${player.displayName?.charAt(0) || 'U'}`} className="w-full h-full object-cover z-0" onError={(e)=>e.target.src=`https://placehold.co/100x100/020105/22d3ee?text=${player.displayName?.charAt(0) || 'U'}`} />
+                                            <img src={cleanCosmeticUrl(player.avatarUrl) || `https://placehold.co/100x100/020105/ffffff?text=${player.displayName?.charAt(0) || 'U'}`} className="w-full h-full object-cover z-0" onError={(e)=>e.target.src=`https://placehold.co/100x100/020105/ffffff?text=${player.displayName?.charAt(0) || 'U'}`} />
                                         </div>
-                                        {cleanCosmeticUrl(player.equipped_items?.particulas?.preview) && <img src={cleanCosmeticUrl(player.equipped_items.particulas.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${player.equipped_items.particulas.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                        {cleanCosmeticUrl(player.equipped_items?.efeito?.preview) && <img src={cleanCosmeticUrl(player.equipped_items.efeito.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-0 m-auto w-full h-full object-contain z-20 ${player.equipped_items.efeito.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                        {cleanCosmeticUrl(player.equipped_items?.moldura?.preview) && <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-30 ${player.equipped_items.moldura.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
                                     </div>
 
                                     <div className="flex-1 min-w-0">
                                         <h4 className={`font-black text-base sm:text-lg truncate uppercase tracking-wider ${index < 3 ? 'text-white' : 'text-gray-300'}`}>{player.displayName || "Entidade Oculta"}</h4>
-                                        <p className="text-[10px] text-cyan-500 font-bold uppercase tracking-[0.2em] truncate mt-1">{getLevelTitle(player.level)}</p>
+                                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.2em] truncate mt-1">{getLevelTitle(player.level)}</p>
                                     </div>
                                     <div className="text-right flex-shrink-0 flex flex-col items-end">
                                         <div className="text-[10px] font-black text-white bg-black/50 border border-white/10 px-4 py-1.5 rounded-xl uppercase tracking-widest">Nível {player.level}</div>
-                                        <div className="text-[10px] text-fuchsia-400 font-black mt-2 uppercase tracking-widest">{player.xp} XP</div>
+                                        <div className="text-[10px] text-zinc-400 font-black mt-2 uppercase tracking-widest">{player.xp} XP</div>
                                     </div>
                                 </div>
                             ))}
