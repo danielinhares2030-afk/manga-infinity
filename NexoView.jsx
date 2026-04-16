@@ -356,7 +356,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* CONTEÚDO: LOJA (ATUALIZADA E BLINDADA) */}
+            {/* CONTEÚDO: LOJA (FOCO 100% NOS DADOS NOVOS) */}
             {activeTab === "Loja" && (
                 <div className="animate-in fade-in duration-500 relative z-10">
                     <div className="flex flex-col sm:flex-row justify-between items-center gap-8 mb-12 max-w-7xl mx-auto bg-white/[0.02] p-8 rounded-[2rem] border border-white/5 backdrop-blur-md">
@@ -374,18 +374,14 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                         {shopItems.filter(item => item.ativo !== false).map(item => {
                           const hasItem = userProfileData.inventory?.includes(item.id);
                           
-                          // Lógica Blindada - Puxa os dados de qualquer idioma/formato que o item antigo ou novo tenha
-                          const cat = String(item.tipo || item.type || item.categoria || '').toLowerCase();
-                          const itemName = item.nome || item.name || item.titulo || 'Item Desconhecido';
-                          const itemPrice = item.preco || item.price || item.valor || 0;
-                          const itemRarity = item.raridade || item.rarity || 'Comum';
-                          
-                          // Limpa a URL usando a função do próprio site para evitar o erro do "url('https...')"
-                          let rawUrl = item.url || item.preview || item.image || item.imagem || item.src || '';
-                          const itemUrl = cleanCosmeticUrl(rawUrl); 
-
-                          const itemCode = item.codigo || item.css || item.code || '';
-                          const itemText = item.texto || item.text || item.nick || '';
+                          // Lógica Simples e Direta (Lê apenas os dados novos gerados pelo seu Painel)
+                          const cat = item.tipo || '';
+                          const itemName = item.nome || 'Item Desconhecido';
+                          const itemPrice = item.preco || 0;
+                          const itemRarity = item.raridade || 'Comum';
+                          const itemUrl = item.url || '';
+                          const itemCode = item.codigo || '';
+                          const itemText = item.texto || '';
 
                           const isEquipped = userProfileData.equipped_items?.[cat]?.id === item.id;
 
@@ -393,22 +389,17 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                             <div key={item.id} className={`bg-[#05030a] border p-6 rounded-[2rem] flex flex-col items-center text-center transition-all duration-500 group relative overflow-hidden ${isEquipped ? 'border-fuchsia-500/50 shadow-[0_0_30px_rgba(217,70,239,0.2)]' : 'border-white/5 hover:border-cyan-500/40 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)]'}`}>
                               {isEquipped && <div className="absolute inset-0 bg-fuchsia-500/5 pointer-events-none"></div>}
                               
-                              {/* VITRINE DINÂMICA BLINDADA */}
                               <div className="w-28 h-28 rounded-2xl mb-6 bg-[#020105] flex items-center justify-center overflow-hidden border border-white/5 relative flex-shrink-0 shadow-inner">
                                 
                                 {itemCode ? (
-                                    /* Se tem código, é Animação CSS */
                                     <iframe srcDoc={itemCode} title={itemName} className="w-full h-full border-none pointer-events-none scale-110" scrolling="no" />
                                 ) : itemText ? (
-                                    /* Se tem texto, é Nickname */
                                     <span className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-zinc-500 uppercase tracking-widest text-center px-2">
                                         {itemText}
                                     </span>
                                 ) : itemUrl ? (
-                                    /* Se tem URL, é Imagem (Avatares, Molduras, Capas) */
-                                    <img src={itemUrl} alt={itemName} className={`w-full h-full transition-all duration-700 group-hover:scale-110 ${['avatar', 'capa_fundo', 'cover', 'profile'].includes(cat) ? 'object-cover grayscale-[0.4] group-hover:grayscale-0' : 'object-contain'}`} />
+                                    <img src={itemUrl} alt={itemName} className={`w-full h-full transition-all duration-700 group-hover:scale-110 ${['avatar', 'capa_fundo'].includes(cat) ? 'object-cover grayscale-[0.4] group-hover:grayscale-0' : 'object-contain'}`} />
                                 ) : (
-                                    /* Fallback em caso de item vazio/corrompido no banco de dados */
                                     <Sparkles className="w-8 h-8 text-gray-600 relative z-10"/>
                                 )}
                               </div>
@@ -454,13 +445,11 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                         #{index + 1}
                                     </div>
                                     
-                                    <div className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center flex-shrink-0 group ${(!player.equipped_items?.moldura?.preview && player.equipped_items?.moldura) ? player.equipped_items.moldura.cssClass : ''}`}>
+                                    {/* Exibição do Avatar no Ranking (Usa apenas a imagem) */}
+                                    <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center flex-shrink-0 group">
                                         <div className="w-full h-full rounded-full overflow-hidden border border-white/10 relative z-10 bg-[#020105]">
-                                            <img src={cleanCosmeticUrl(player.avatarUrl) || `https://placehold.co/100x100/020105/22d3ee?text=${player.displayName?.charAt(0) || 'U'}`} className="w-full h-full object-cover z-0" onError={(e)=>e.target.src=`https://placehold.co/100x100/020105/22d3ee?text=${player.displayName?.charAt(0) || 'U'}`} />
+                                            <img src={player.equipped_items?.avatar?.url || player.avatarUrl || `https://placehold.co/100x100/020105/22d3ee?text=${player.displayName?.charAt(0) || 'U'}`} className="w-full h-full object-cover z-0" onError={(e)=>e.target.src=`https://placehold.co/100x100/020105/22d3ee?text=${player.displayName?.charAt(0) || 'U'}`} />
                                         </div>
-                                        {cleanCosmeticUrl(player.equipped_items?.particulas?.preview) && <img src={cleanCosmeticUrl(player.equipped_items.particulas.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-10 ${player.equipped_items.particulas.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                        {cleanCosmeticUrl(player.equipped_items?.efeito?.preview) && <img src={cleanCosmeticUrl(player.equipped_items.efeito.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-0 m-auto w-full h-full object-contain z-20 ${player.equipped_items.efeito.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
-                                        {cleanCosmeticUrl(player.equipped_items?.moldura?.preview) && <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-30 ${player.equipped_items.moldura.cssClass}`} style={{ mixBlendMode: 'screen', WebkitMixBlendMode: 'screen', pointerEvents: 'none' }} />}
                                     </div>
 
                                     <div className="flex-1 min-w-0">
