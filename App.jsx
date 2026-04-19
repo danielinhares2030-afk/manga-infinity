@@ -72,9 +72,20 @@ function MangaInfinityApp() {
     fetchMangas();
   }, []);
 
+  // ALTERAÇÃO CIRÚRGICA: Lendo do diretório exato onde o Admin salva a loja.
+  // Removi o where("ativo", "==", true) porque o seu Painel Admin não cria esse campo
+  // e isso impedia a lista de exibir qualquer item.
   useEffect(() => {
-    const q = query(collection(db, "loja_itens"), where("ativo", "==", true));
-    const unsub = onSnapshot(q, (snap) => { if (!snap.empty) { const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() })); setShopItems(items); } else { setShopItems(FALLBACK_SHOP_ITEMS); } });
+    const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'loja_itens'));
+    const unsub = onSnapshot(q, (snap) => { 
+        if (!snap.empty) { 
+            const items = []; 
+            snap.forEach(d => items.push({ id: d.id, ...d.data() })); 
+            setShopItems(items); 
+        } else { 
+            setShopItems(FALLBACK_SHOP_ITEMS); 
+        } 
+    });
     return () => unsub();
   }, []);
 
