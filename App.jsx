@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Bell, Dices, Hexagon, Infinity as InfinityIcon, Home as HomeIcon, LayoutGrid, Library, UserCircle, User, X, Trophy, BookOpen, Eye } from 'lucide-react';
 import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs, updateDoc, increment, where } from "firebase/firestore";
+// Importações ajustadas (removido o 'where' que causava o bloqueio da loja)
+import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs, updateDoc, increment } from "firebase/firestore";
 import { app, auth, db } from './firebase'; 
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
 import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo, cleanCosmeticUrl } from './helpers';
@@ -57,26 +58,31 @@ function MangaInfinityApp() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [mangas]);
 
+  // ALINHAMENTO 1: Lendo as obras diretamente da raiz (como o Admin salva)
   useEffect(() => {
     const fetchMangas = async () => {
       try {
-        const obrasRef = collection(db, "obras"); const snap = await getDocs(obrasRef); const list = [];
+        const obrasRef = collection(db, "obras"); 
+        const snap = await getDocs(obrasRef); 
+        const list = [];
         for (const docSnap of snap.docs) {
-          const data = docSnap.data(); const capSnap = await getDocs(collection(db, `obras/${docSnap.id}/capitulos`)); const chapters = [];
+          const data = docSnap.data(); 
+          const capSnap = await getDocs(collection(db, `obras/${docSnap.id}/capitulos`)); 
+          const chapters = [];
           capSnap.forEach(c => { const cData = c.data(); chapters.push({ id: c.id, ...cData, rawTime: cData.createdAt || cData.timestamp || Date.now() }); });
-          chapters.sort((a,b) => b.number - a.number); list.push({ id: docSnap.id, ...data, chapters });
+          chapters.sort((a,b) => b.number - a.number); 
+          list.push({ id: docSnap.id, ...data, chapters });
         }
-        list.sort((a, b) => b.createdAt - a.createdAt); setMangas(list);
+        list.sort((a, b) => b.createdAt - a.createdAt); 
+        setMangas(list);
       } catch (error) { console.error(error); } finally { setLoadingMangas(false); }
     };
     fetchMangas();
   }, []);
 
-  // ALTERAÇÃO CIRÚRGICA: Lendo do diretório exato onde o Admin salva a loja.
-  // Removi o where("ativo", "==", true) porque o seu Painel Admin não cria esse campo
-  // e isso impedia a lista de exibir qualquer item.
+  // ALINHAMENTO 2: Lendo a loja diretamente da raiz E SEM o filtro "ativo == true"
   useEffect(() => {
-    const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'loja_itens'));
+    const q = query(collection(db, "loja_itens")); 
     const unsub = onSnapshot(q, (snap) => { 
         if (!snap.empty) { 
             const items = []; 
