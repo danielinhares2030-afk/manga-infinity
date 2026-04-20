@@ -382,7 +382,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
                         <div className="relative z-10">
                             <h3 className="text-3xl font-black text-white flex items-center gap-3 mb-2 uppercase tracking-tighter"><Wand2 className="w-8 h-8 text-purple-500" /> Forja Astral</h3>
-                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-8">Pague 5000 M e a IA criará uma relíquia mítica exclusiva para você.</p>
+                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-8">Pague 1000 M e a IA criará uma relíquia mítica exclusiva para você.</p>
 
                             {isGeneratingIA ? (
                                 <div className="flex flex-col items-center text-center animate-pulse py-10">
