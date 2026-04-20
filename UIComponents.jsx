@@ -17,26 +17,25 @@ export const SplashScreen = React.memo(() => {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFade(true), 100);
-    const t2 = setTimeout(() => setFadeOut(true), 1200); 
+    const t1 = setTimeout(() => setFade(true), 50);
+    // Tempo drasticamente reduzido para sumir mais rápido
+    const t2 = setTimeout(() => setFadeOut(true), 1000); 
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-[#020204] flex flex-col items-center justify-center font-sans transition-all duration-[800ms] ease-in-out ${fadeOut ? 'opacity-0 backdrop-blur-sm pointer-events-none' : 'opacity-100'}`}>
-      <style>{`body { background-color: #020204 !important; }`}</style>
+    <div className={`fixed inset-0 z-[9999] bg-[#0A0E17] flex flex-col items-center justify-center font-sans transition-opacity duration-300 ease-in-out ${fadeOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      {/* GARANTIA CONTRA FLASH BRANCO */}
+      <style>{`body, html { background-color: #0A0E17 !important; margin: 0; padding: 0; }`}</style>
       
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.05)_0%,transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(34,211,238,0.08)_0%,transparent_60%)]"></div>
 
-      <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[1000ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+      <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[800ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
         <InfinityLogo className="w-20 h-10 md:w-28 md:h-14 mb-8 opacity-80" />
         
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white/90 tracking-widest uppercase break-words w-full">
           MANGA <span className="text-cyan-400">INFINITY</span>
         </h1>
-        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.4em] mt-6 opacity-60">
-          Iniciando Interface
-        </p>
       </div>
     </div>
   );
@@ -48,7 +47,7 @@ export class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#030303] p-10 flex flex-col items-center justify-center font-sans border-t-[4px] border-cyan-500">
+        <div className="min-h-screen bg-[#0A0E17] p-10 flex flex-col items-center justify-center font-sans border-t-[4px] border-cyan-500">
           <AlertCircle className="w-16 h-16 mb-4 text-cyan-500 animate-pulse"/>
           <h1 className="text-2xl font-black uppercase tracking-widest text-white text-center">Erro no Sistema</h1>
           <p className="mt-2 text-gray-400 text-xs font-bold text-center max-w-lg">{this.state.error?.message}</p>
@@ -64,7 +63,7 @@ export function GlobalToast({ toast }) {
   if (!toast) return null;
   const colors = toast.type === 'error' ? 'bg-red-950/90 text-red-200 border-red-500/50 rounded-xl' : 
                  toast.type === 'success' ? 'bg-cyan-950/90 text-cyan-200 border-cyan-500/50 rounded-xl' : 
-                 'bg-[#08080a] text-gray-200 border-gray-500/50 rounded-xl';
+                 'bg-[#0F172A] text-gray-200 border-gray-500/50 rounded-xl';
   return (
     <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[99999] px-6 py-3.5 font-black text-[10px] uppercase tracking-[0.1em] border backdrop-blur-xl animate-in slide-in-from-top-5 fade-in duration-300 ${colors}`}>
       <span className='text-center'>{toast.text}</span>
@@ -74,7 +73,7 @@ export function GlobalToast({ toast }) {
 
 export function Footer() {
     return (
-        <footer className="w-full bg-[#030303] border-t border-white/5 py-12 mt-auto pb-24 md:pb-12 flex flex-col items-center justify-center">
+        <footer className="w-full bg-[#0A0E17] border-t border-white/5 py-12 mt-auto pb-24 md:pb-12 flex flex-col items-center justify-center">
             <div className="max-w-7xl mx-auto px-4 text-center flex flex-col items-center">
                 <InfinityLogo className="w-10 h-10 opacity-30 mb-4" />
                 <span className="font-black text-xs text-gray-600 tracking-[0.3em] uppercase">MANGA INFINITY</span>
@@ -86,11 +85,11 @@ export function Footer() {
 export const ChapterTransitionOverlay = React.memo(({ isVisible, chapterNumber }) => {
     if (!isVisible) return null;
     return (
-        <div className="fixed inset-0 z-[99999] bg-[#020204] font-sans flex flex-col items-center justify-center animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[99999] bg-[#0A0E17] font-sans flex flex-col items-center justify-center animate-in fade-in duration-300">
             <div className="text-cyan-500 font-black tracking-[0.5em] text-[10px] uppercase mb-2 animate-pulse relative z-10">
                 Acessando Capítulo
             </div>
-            <h2 className="text-6xl sm:text-8xl font-black text-white tracking-tighter animate-in zoom-in-50 duration-500 relative z-10">
+            <h2 className="text-6xl sm:text-8xl font-black text-white tracking-tighter animate-in zoom-in-50 duration-300 relative z-10">
               {chapterNumber}
             </h2>
         </div>
