@@ -74,7 +74,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
           </div>
       )}
 
-      {/* 1. CAPA (COVER) */}
       <div className="w-full h-[180px] md:h-[220px] bg-[#0f172a] relative group overflow-hidden border-b border-white/5">
         {cleanCosmeticUrl(eq.capa_fundo?.preview) ? ( 
             <img src={cleanCosmeticUrl(eq.capa_fundo.preview)} className={`w-full h-full object-cover object-center opacity-90 ${eq.capa_fundo.cssClass || ''}`} /> 
@@ -93,7 +92,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
         <input type="file" accept="image/*" ref={coverInputRef} className="hidden" onChange={(e) => handleImageUpload(e, 'cover')} />
       </div>
 
-      {/* 2. CABEÇALHO DO PERFIL */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
         
         <div className="flex flex-col md:flex-row md:items-start gap-4 mb-6 relative">
@@ -149,7 +147,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
           </form>
         )}
 
-        {/* 3. ESTATÍSTICAS */}
         <div className="mb-10 bg-[#111827] border border-white/5 p-6 rounded-2xl relative overflow-hidden shadow-lg">
             <div className="absolute top-[-20%] left-[-10%] w-[150px] h-[150px] bg-cyan-600/10 rounded-full blur-[80px] pointer-events-none"></div>
             
@@ -165,7 +162,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
             </div>
         </div>
 
-        {/* 4. ABAS */}
         <div className="mb-8 border-b border-white/5">
           <div className="flex gap-6 overflow-x-auto no-scrollbar snap-x px-1">
             {['Estatísticas', 'Histórico', 'Configurações'].map((tab) => (
@@ -180,7 +176,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
           </div>
         </div>
         
-        {/* ÁREA DE CONTEÚDO */}
         {activeTab === "Estatísticas" && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in">
             <div className="bg-[#111827] border border-white/5 p-6 rounded-2xl flex flex-col shadow-md">
