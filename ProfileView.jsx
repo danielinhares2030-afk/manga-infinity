@@ -6,6 +6,20 @@ import { auth, db } from './firebase';
 import { APP_ID } from './constants';
 import { compressImage, getLevelRequirement, getLevelTitle, cleanCosmeticUrl } from './helpers';
 
+// Componente para Ícones de Estatísticas em Hexágono (Único para Infinity)
+const HexStat = ({ icon: Icon, value, label, color }) => (
+  <div className="relative flex flex-col items-center justify-center snap-center flex-shrink-0 group">
+    <svg viewBox="0 0 100 100" className="w-20 h-20 opacity-10 group-hover:opacity-20 transition-opacity">
+      <path d="M50 5 L95 27.5 L95 72.5 L50 95 L5 72.5 L5 27.5 Z" fill="currentColor" className={color} />
+    </svg>
+    <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <Icon className={`w-5 h-5 mb-1 ${color}`} />
+      <span className="text-xl font-black text-white tracking-tighter">{value}</span>
+      <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest">{label}</span>
+    </div>
+  </div>
+);
+
 export function ProfileView({ user, userProfileData, historyData, libraryData, dataLoaded, userSettings, updateSettings, onLogout, onUpdateData, showToast, mangas, onNavigate }) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("Estatísticas"); 
@@ -42,243 +56,227 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const lidosSet = new Set(historyData.map(h => h.mangaId)); const obrasLidasIds = Array.from(lidosSet); const libraryMangaIds = Object.keys(libraryData); const libraryMangas = mangas.filter(m => libraryMangaIds.includes(m.id));
   const eq = userProfileData.equipped_items || {};
 
-  const activeAvatarSrc = (eq.avatar?.preview ? cleanCosmeticUrl(eq.avatar.preview) : null) || avatarBase64 || `https://placehold.co/150x150/0f0f0f/22d3ee?text=U`;
+  const activeAvatarSrc = (eq.avatar?.preview ? cleanCosmeticUrl(eq.avatar.preview) : null) || avatarBase64 || `https://placehold.co/150x150/020308/22d3ee?text=U`;
 
   return (
-    <div className={`animate-in fade-in duration-500 w-full pb-24 font-sans min-h-screen text-gray-200 bg-[#0f0f0f]`}>
+    <div className={`animate-in fade-in duration-500 w-full pb-24 font-sans min-h-screen text-gray-200 bg-[#020308]`}>
       
       {confirmAction && (
-          <div className="fixed inset-0 z-[3000] bg-black/80 flex items-center justify-center p-4 animate-in fade-in duration-300">
-              <div className="bg-[#1a1a1a] border border-white/10 p-6 rounded-2xl max-w-sm w-full text-center shadow-2xl">
+          <div className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+              <div className="bg-[#0b0c14] border border-cyan-500/20 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl">
                   <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-white mb-2">{confirmAction === 'history' ? 'Limpar Histórico?' : 'Reiniciar App?'}</h3>
-                  <p className="text-sm text-gray-400 mb-6">{confirmAction === 'history' ? 'Esta ação não pode ser desfeita.' : 'A interface será recarregada.'}</p>
-                  <div className="flex gap-3">
-                      <button onClick={() => setConfirmAction(null)} className="flex-1 bg-white/5 border border-white/10 text-white font-bold py-3 rounded-full hover:bg-white/10 transition-colors text-sm">Cancelar</button>
-                      <button onClick={executeConfirmAction} className="flex-1 bg-red-500/20 text-red-500 border border-red-500/30 font-bold py-3 rounded-full transition-colors hover:bg-red-500 hover:text-white text-sm">Confirmar</button>
+                  <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">Confirmar Ação?</h3>
+                  <p className="text-sm text-gray-400 mb-8 font-medium">{confirmAction === 'history' ? 'Isso apagará permanentemente seu histórico de leitura.' : 'O aplicativo será recarregado para limpar o cache.'}</p>
+                  <div className="flex gap-4">
+                      <button onClick={() => setConfirmAction(null)} className="flex-1 bg-transparent border border-white/10 text-gray-300 font-black py-3 rounded-xl hover:bg-white/5 transition-colors text-xs uppercase tracking-widest">Recuar</button>
+                      <button onClick={executeConfirmAction} className="flex-1 bg-red-600/20 text-red-500 border border-red-500/40 font-black py-3 rounded-xl transition-colors hover:bg-red-500 hover:text-white text-xs uppercase tracking-widest">Confirmar</button>
                   </div>
               </div>
           </div>
       )}
 
       {/* ========================================================= */}
-      {/* 1. CAPA DE FUNDO (Ponta a ponta, sem bordas redondas)     */}
+      {/* 1. CAPA (COVER) - Ocupando o topo, proporção moderna          */}
       {/* ========================================================= */}
-      <div className="w-full h-[200px] relative group bg-black">
+      <div className="w-full h-[180px] md:h-[220px] bg-[#0d0f1a] relative group overflow-hidden border-b border-white/5">
         {cleanCosmeticUrl(eq.capa_fundo?.preview) ? ( 
-            <img src={cleanCosmeticUrl(eq.capa_fundo.preview)} className="w-full h-full object-cover opacity-90" /> 
+            <img src={cleanCosmeticUrl(eq.capa_fundo.preview)} className={`w-full h-full object-cover object-center opacity-90 ${eq.capa_fundo.cssClass || ''}`} /> 
         ) : coverBase64 ? ( 
-            <img src={coverBase64} className="w-full h-full object-cover opacity-80" /> 
+            <img src={coverBase64} className="w-full h-full object-cover object-center opacity-80" /> 
         ) : ( 
-            <div className="w-full h-full bg-gradient-to-br from-cyan-900/30 to-indigo-900/30" /> 
+            <div className={`w-full h-full bg-gradient-to-br from-cyan-900/30 to-indigo-900/30 ${eq.capa_fundo?.cssClass || ''}`} /> 
         )}
         
+        {/* Gradiente sutil inferior */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#020308] via-transparent to-transparent" />
+        
         {isEditing && (
-            <button onClick={() => coverInputRef.current.click()} className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold z-10 hover:bg-white/20 transition-all border border-white/20">
-                <Camera className="w-4 h-4" /> Capa
+            <button onClick={() => coverInputRef.current.click()} className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full flex items-center gap-2 text-xs font-bold z-10 hover:bg-cyan-500 hover:text-black transition-all border border-white/20 shadow-lg">
+                <Camera className="w-4 h-4" /> Alterar Capa
             </button>
         )}
         <input type="file" accept="image/*" ref={coverInputRef} className="hidden" onChange={(e) => handleImageUpload(e, 'cover')} />
       </div>
 
       {/* ========================================================= */}
-      {/* 2. CABEÇALHO DO PERFIL (Avatar + Info + Botões)           */}
+      {/* 2. CARD DE CONTEÚDO INTEGRADO (Começa no avatar)            */}
       {/* ========================================================= */}
-      <div className="px-4 max-w-4xl mx-auto relative w-full">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
         
-        {/* Avatar alinhado à esquerda e sobrepondo a capa */}
-        <div className={`relative w-[100px] h-[100px] -mt-[50px] mb-3 flex-shrink-0 group ${(!eq.moldura?.preview && eq.moldura) ? eq.moldura.cssClass : ''}`}>
-          <div className="w-full h-full rounded-full bg-[#0f0f0f] border-4 border-[#0f0f0f] flex items-center justify-center relative z-10 overflow-hidden">
-             <img src={activeAvatarSrc} className={`w-full h-full object-cover ${eq.avatar?.cssClass || ''}`} alt="Avatar" />
+        {/* Estrutura Superior (Avatar + Nome na Esquerda, Botões na Direita) */}
+        <div className="flex flex-col md:flex-row md:items-start gap-4 mb-6 relative">
+          
+          {/* AVATAR: Redondo, overlapping capa na esquerda */}
+          <div className={`relative w-28 h-28 md:w-36 md:h-36 rounded-full flex items-center justify-center flex-shrink-0 -mt-14 md:-mt-16 group ${(!eq.moldura?.preview && eq.moldura) ? eq.moldura.cssClass : ''}`}>
+            <div className={`w-full h-full rounded-full bg-[#020308] flex items-center justify-center relative z-10 overflow-hidden shadow-xl ${!eq.moldura ? 'border-[5px] border-[#020308] shadow-[0_0_20px_rgba(34,211,238,0.3)]' : ''}`}>
+               <img src={activeAvatarSrc} className={`w-full h-full object-cover ${eq.avatar?.cssClass || ''}`} alt="Avatar" />
+            </div>
+            {cleanCosmeticUrl(eq.particulas?.preview) && ( <img src={cleanCosmeticUrl(eq.particulas.preview)} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-0 ${eq.particulas.cssClass || ''}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} /> )}
+            {cleanCosmeticUrl(eq.efeito?.preview) && ( <img src={cleanCosmeticUrl(eq.efeito.preview)} className={`absolute inset-0 m-auto w-full h-full object-contain z-20 ${eq.efeito.cssClass || ''}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} /> )}
+            {cleanCosmeticUrl(eq.moldura?.preview) && ( <img src={cleanCosmeticUrl(eq.moldura.preview)} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-30 ${eq.moldura.cssClass || ''}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} /> )}
+
+            {isEditing && <button onClick={() => avatarInputRef.current.click()} className="absolute bottom-1 right-1 bg-cyan-500 text-black p-2.5 rounded-full z-50 border-4 border-[#020308] hover:bg-cyan-400 transition-colors shadow-lg"><Camera className="w-4 h-4" /></button>}
+            <input type="file" accept="image/*" ref={avatarInputRef} className="hidden" onChange={(e) => handleImageUpload(e, 'avatar')} />
           </div>
-          {cleanCosmeticUrl(eq.particulas?.preview) && ( <img src={cleanCosmeticUrl(eq.particulas.preview)} className={`absolute inset-[-50%] m-auto w-[200%] h-[200%] object-contain z-0 ${eq.particulas.cssClass || ''}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} /> )}
-          {cleanCosmeticUrl(eq.efeito?.preview) && ( <img src={cleanCosmeticUrl(eq.efeito.preview)} className={`absolute inset-0 m-auto w-full h-full object-contain z-20 ${eq.efeito.cssClass || ''}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} /> )}
-          {cleanCosmeticUrl(eq.moldura?.preview) && ( <img src={cleanCosmeticUrl(eq.moldura.preview)} className={`absolute inset-[-15%] m-auto w-[130%] h-[130%] object-contain z-30 ${eq.moldura.cssClass || ''}`} style={{ mixBlendMode: 'screen', pointerEvents: 'none' }} /> )}
 
-          {isEditing && <button onClick={() => avatarInputRef.current.click()} className="absolute bottom-0 right-0 bg-[#1a1a1a] text-white p-2 rounded-full z-50 border-2 border-[#0f0f0f] hover:bg-gray-800 transition-colors"><Camera className="w-4 h-4" /></button>}
-          <input type="file" accept="image/*" ref={avatarInputRef} className="hidden" onChange={(e) => handleImageUpload(e, 'avatar')} />
-        </div>
-
-        {/* Informações do Usuário */}
-        <div className="mb-5">
-            <div className="flex items-center gap-3 mb-1">
-                <h1 className={`text-2xl font-bold tracking-tight text-white ${eq.nickname?.cssClass || ''}`}>{name || 'Usuário'}</h1>
-                <span className="bg-cyan-900/60 text-cyan-400 font-bold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    {getLevelTitle(level)}
-                </span>
+          {/* Nome e Nível Alinhados à Esquerda (Layout Manhastro) */}
+          <div className="flex-1 md:pt-4 text-left">
+            <h1 className={`text-2xl md:text-3xl font-black tracking-tight drop-shadow-md flex items-center gap-3 ${eq.nickname ? eq.nickname.cssClass : 'text-white'}`}>
+                {name || 'Usuário'}
+            </h1>
+            <p className="text-gray-500 font-medium text-xs mt-0.5 drop-shadow-sm">{user.email}</p>
+            
+            {/* Tag de Nível Compacta */}
+            <div className="mt-3 bg-[#0d0f1a] border border-white/5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full">
+                <Trophy className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-xs font-bold text-white uppercase tracking-wider">{level} • {getLevelTitle(level)}</span>
             </div>
-            <p className="text-gray-400 text-sm">{user.email}</p>
-            {bio && !isEditing && <p className="text-gray-300 text-sm mt-3">{bio}</p>}
-            <p className="text-gray-400 text-sm mt-3"><strong className="text-white">{currentXp}</strong> XP <span className="mx-2">•</span> <strong className="text-white">LVL {level}</strong></p>
-        </div>
+          </div>
 
-        {/* Botões de Ação */}
-        {isEditing ? (
-            <form onSubmit={handleSave} className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 mb-6">
-              <div className="space-y-4">
-                <div>
-                   <label className="block text-xs font-bold text-gray-400 mb-1">Nome</label>
-                   <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-[#0f0f0f] border border-white/10 rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-cyan-500 transition-colors"/>
-                </div>
-                <div>
-                   <label className="block text-xs font-bold text-gray-400 mb-1">Biografia</label>
-                   <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="w-full bg-[#0f0f0f] border border-white/10 rounded-xl px-4 py-3 text-white text-sm resize-none outline-none focus:border-cyan-500 transition-colors"></textarea>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setIsEditing(false)} className="flex-1 bg-transparent border border-white/20 text-white font-bold py-3 rounded-full hover:bg-white/5 transition-all text-sm">Cancelar</button>
-                <button type="submit" disabled={loading} className="flex-1 bg-cyan-600 text-white font-bold py-3 rounded-full hover:bg-cyan-500 transition-all text-sm flex justify-center">{loading ? <Loader2 className="w-5 h-5 animate-spin"/> : 'Salvar'}</button>
-              </div>
-            </form>
-        ) : (
-            <div className="flex gap-3 items-center">
-                <button onClick={() => setIsEditing(true)} className="flex-1 bg-transparent border border-white/20 text-white font-bold py-2.5 rounded-full text-sm hover:bg-white/5 transition-colors flex justify-center items-center gap-2">
-                    <Edit3 className="w-4 h-4" /> Editar perfil
-                </button>
-                <button onClick={() => setActiveTab("Configurações")} className="bg-transparent border border-white/20 text-white p-2.5 rounded-full hover:bg-white/5 transition-colors">
-                    <Settings className="w-5 h-5" />
-                </button>
-            </div>
-        )}
-      </div>
-
-      {/* ========================================================= */}
-      {/* 3. ABAS (Estilo sublinhado)                               */}
-      {/* ========================================================= */}
-      <div className="max-w-4xl mx-auto w-full mt-4 border-b border-white/10">
-        <div className="flex gap-6 overflow-x-auto no-scrollbar px-4">
-          {['Estatísticas', 'Histórico', 'Biblioteca', 'Configurações'].map((tab) => (
-            <button 
-                key={tab} 
-                onClick={() => setActiveTab(tab)} 
-                className={`pb-3 font-bold whitespace-nowrap text-sm transition-colors relative
-                ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
-            >
-              {tab}
-              {activeTab === tab && (
-                  <div className="absolute bottom-0 left-0 w-full h-[3px] bg-cyan-500 rounded-t-full"></div>
-              )}
+          {/* Botões de Ação na Direita (Layout Manhastro) */}
+          <div className="flex gap-2 w-full md:w-auto md:pt-4 justify-start md:justify-end">
+            <button onClick={() => setIsEditing(!isEditing)} className="flex-1 md:flex-none bg-transparent border border-white/10 text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-cyan-500 hover:text-black hover:border-cyan-500 transition-all flex items-center justify-center gap-2">
+                <Edit3 className="w-4 h-4" /> {isEditing ? 'Cancelar' : 'Editar'}
             </button>
-          ))}
+            <button onClick={onLogout} className="bg-red-500/10 text-red-400 p-2.5 rounded-full hover:bg-red-600 hover:text-white transition-all border border-red-500/20 shadow-lg">
+                <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* ========================================================= */}
-      {/* 4. ÁREA DE CONTEÚDO                                       */}
-      {/* ========================================================= */}
-      <div className="max-w-4xl mx-auto px-4 mt-6">
         
-        {activeTab === "Estatísticas" && (
-            <div className="animate-in fade-in">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">Estatísticas</h2>
-                    <Trophy className="w-5 h-5 text-cyan-500" />
-                </div>
-                
-                <div className="bg-[#141414] rounded-[24px] p-6 border border-white/5">
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="flex items-center gap-4 bg-[#1a1a1a] p-4 rounded-2xl">
-                            <div className="w-12 h-12 rounded-xl bg-cyan-900/30 flex items-center justify-center">
-                                <Library className="w-6 h-6 text-cyan-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-white">{!dataLoaded ? <Loader2 className="w-4 h-4 animate-spin"/> : Object.keys(libraryData).length}</h3>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Obras Salvas</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4 bg-[#1a1a1a] p-4 rounded-2xl">
-                            <div className="w-12 h-12 rounded-xl bg-indigo-900/30 flex items-center justify-center">
-                                <BookOpen className="w-6 h-6 text-indigo-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-white">{!dataLoaded ? <Loader2 className="w-4 h-4 animate-spin"/> : historyData.length}</h3>
-                                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Caps. Lidos</p>
-                            </div>
-                        </div>
-                    </div>
+        {/* Área de Biografia */}
+        {bio && !isEditing && <p className="text-gray-300 text-sm mb-8 font-medium bg-[#080911] p-4 rounded-xl border border-white/5 whitespace-pre-wrap">{bio}</p>}
 
-                    {/* Progresso do Nível dentro das Estatísticas */}
-                    <div className="mt-6 bg-[#1a1a1a] p-5 rounded-2xl">
-                        <div className="flex justify-between items-end mb-2">
-                            <div>
-                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Poder de Caçador</span>
-                                <span className="text-sm font-bold text-white">LVL {level}</span>
-                            </div>
-                            <span className="text-sm font-bold text-white">{currentXp} <span className="text-gray-500 text-xs">/ {xpNeeded}</span></span>
-                        </div>
-                        <div className="w-full h-2 bg-black rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-1000" style={{ width: `${progressPercent}%` }}></div>
-                        </div>
-                    </div>
-                </div>
+        {/* Formulário de Edição (Estilo Integrado) */}
+        {isEditing && (
+          <form onSubmit={handleSave} className="bg-[#080911] border border-cyan-500/20 rounded-2xl p-6 mb-8 animate-in fade-in shadow-xl">
+            <div className="space-y-5">
+              <div>
+                 <label className="block text-[10px] font-black text-gray-500 mb-1.5 uppercase tracking-widest">Nome de Exibição</label>
+                 <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-[#020308] border border-white/5 rounded-xl px-4 py-3.5 text-white text-sm font-medium outline-none focus:border-cyan-500 transition-colors shadow-inner"/>
+              </div>
+              <div>
+                 <label className="block text-[10px] font-black text-gray-500 mb-1.5 uppercase tracking-widest">Biografia</label>
+                 <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="w-full bg-[#020308] border border-white/5 rounded-xl px-4 py-3.5 text-white text-sm font-medium resize-none outline-none focus:border-cyan-500 transition-colors shadow-inner"></textarea>
+              </div>
             </div>
+            <button type="submit" disabled={loading} className="mt-6 bg-cyan-500 text-black text-xs font-black px-8 py-3.5 rounded-full w-full flex justify-center hover:bg-cyan-400 transition-all uppercase tracking-widest shadow-lg">{loading ? <Loader2 className="w-4 h-4 animate-spin"/> : 'Salvar Alterações'}</button>
+          </form>
+        )}
+
+        {/* ========================================================= */}
+        {/* 3. ESTATÍSTICAS (Hex Stat único para Infinity)           */}
+        {/* ========================================================= */}
+        <div className="mb-10 bg-[#080911] border border-white/5 p-6 rounded-2xl relative overflow-hidden">
+            <div className="absolute top-[-20%] left-[-10%] w-[150px] h-[150px] bg-cyan-600/10 rounded-full blur-[80px] pointer-events-none"></div>
+            
+            <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1 snap-x justify-start md:justify-around">
+                <HexStat icon={Library} value={!dataLoaded ? '--' : Object.keys(libraryData).length} label="Favoritos" color="text-cyan-400" />
+                <HexStat icon={BookOpen} value={!dataLoaded ? '--' : historyData.length} label="Lidos" color="text-indigo-400" />
+                <HexStat icon={Zap} value={`${progressPercent}%`} label="EXP LVL" color="text-amber-400" />
+                <HexStat icon={LayoutTemplate} value={getLevelTitle(level).split(' ')[0]} label="Patente" color="text-fuchsia-400" />
+            </div>
+            
+            {/* Barra de EXP Sleek e Neon */}
+            <div className="w-full h-1 bg-[#020308] rounded-full overflow-hidden mt-6 border border-white/5 relative">
+                 <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(34,211,238,0.6)]" style={{ width: `${progressPercent}%` }}></div>
+            </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* 4. ABAS (Estilo clean com sublinhado Manhastro/Twitter)   */}
+        {/* ========================================================= */}
+        <div className="mb-8 border-b border-white/5">
+          <div className="flex gap-1 overflow-x-auto no-scrollbar snap-x px-1">
+            {['Estatísticas', 'Histórico', 'Biblioteca', 'Configurações'].map((tab) => (
+              <button key={tab} onClick={() => setActiveTab(tab)} className={`snap-start px-5 pb-3 font-black transition-all whitespace-nowrap text-[11px] sm:text-xs uppercase tracking-[0.2em] flex items-center gap-2 relative group
+              ${activeTab === tab ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                {tab}
+                {activeTab === tab && (
+                    <div className="absolute bottom-[-1px] left-1/2 -translate-x-1/2 w-[70%] h-[3px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-t-full shadow-[0_0_10px_rgba(34,211,238,0.5)]"></div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        {/* ÁREA DE CONTEÚDO (Mantida) */}
+        {activeTab === "Estatísticas" && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in">
+            <div className="bg-[#0d0f1a] border border-white/5 p-6 rounded-2xl flex flex-col shadow-lg">
+                <div className="flex justify-between items-center mb-1"><span className="text-[9px] text-gray-500 uppercase font-bold">Salvos</span> <Library className="w-3 h-3 text-cyan-500/50"/></div>
+                <span className="text-3xl font-black text-white">{!dataLoaded ? <Loader2 className="w-5 h-5 animate-spin"/> : Object.keys(libraryData).length}</span>
+            </div>
+            <div className="bg-[#0d0f1a] border border-white/5 p-6 rounded-2xl flex flex-col shadow-lg">
+                <div className="flex justify-between items-center mb-1"><span className="text-[9px] text-gray-500 uppercase font-bold">Capítulos</span> <BookOpen className="w-3 h-3 text-indigo-500/50"/></div>
+                <span className="text-3xl font-black text-white">{!dataLoaded ? <Loader2 className="w-5 h-5 animate-spin"/> : historyData.length}</span>
+            </div>
+            <div className="bg-[#0d0f1a] border border-white/5 p-6 rounded-2xl flex flex-col shadow-lg">
+                <div className="flex justify-between items-center mb-1"><span className="text-[9px] text-gray-500 uppercase font-bold">Iniciadas</span> <Compass className="w-3 h-3 text-indigo-500/50"/></div>
+                <span className="text-3xl font-black text-white">{!dataLoaded ? <Loader2 className="w-5 h-5 animate-spin"/> : obrasLidasIds.length}</span>
+            </div>
+            <div className="bg-[#0d0f1a] border border-white/5 p-6 rounded-2xl flex flex-col shadow-lg">
+                <div className="flex justify-between items-center mb-1"><span className="text-[9px] text-gray-500 uppercase font-bold">Total XP</span> <Zap className="w-3 h-3 text-amber-500/50"/></div>
+                <span className="text-3xl font-black text-white">{currentXp}</span>
+            </div>
+          </div>
         )}
 
         {activeTab === "Histórico" && (
-            <div className="animate-in fade-in">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">Histórico de Leitura</h2>
-                </div>
-                <div className="bg-[#141414] rounded-[24px] p-6 border border-white/5">
-                    {historyData.length === 0 ? (
-                        <div className="text-center py-10"><History className="w-10 h-10 mx-auto text-gray-600 mb-3"/><p className="text-gray-500 text-sm font-medium">Nenhuma leitura recente.</p></div>
-                    ) : (
-                       <div className="flex flex-col gap-4">
-                          {historyData.slice(0, 15).map(hist => {
-                              const mg = mangas.find(m => m.id === hist.mangaId);
-                              return (
-                                  <div key={hist.id} onClick={() => { if(mg) onNavigate('details', mg); }} className="flex items-center gap-4 cursor-pointer hover:bg-white/5 p-2 rounded-xl transition-colors">
-                                      <div className="w-12 h-16 rounded-lg overflow-hidden bg-[#1a1a1a] flex-shrink-0 border border-white/5">{mg ? <img src={mg.coverUrl} className="w-full h-full object-cover" /> : <BookOpen className="w-5 h-5 m-auto mt-5 text-gray-700"/>}</div>
-                                      <div className="flex-1"><h4 className="font-bold text-sm text-white line-clamp-1">{hist.mangaTitle}</h4><p className="text-gray-400 text-xs mt-1">Capítulo {hist.chapterNumber}</p></div>
-                                      <p className="text-xs text-gray-600 font-medium">{new Date(hist.timestamp).toLocaleDateString()}</p>
-                                  </div>
-                              )
-                          })}
-                          <button onClick={() => setConfirmAction('history')} className="mt-4 w-full py-3 bg-transparent border border-red-500/20 text-red-500 font-bold text-sm rounded-full hover:bg-red-500/10 transition-colors flex justify-center items-center gap-2"><Trash2 className="w-4 h-4"/> Limpar Histórico</button>
-                       </div>
-                    )}
-                </div>
+            <div className="bg-[#080911] p-6 rounded-2xl border border-white/5 shadow-lg animate-in fade-in">
+                {historyData.length === 0 ? (
+                    <div className="text-center py-10"><History className="w-10 h-10 mx-auto text-gray-600 mb-3"/><p className="text-gray-500 text-sm font-medium">Nenhuma leitura recente.</p></div>
+                ) : (
+                   <div className="flex flex-col gap-4">
+                      {historyData.slice(0, 15).map(hist => {
+                          const mg = mangas.find(m => m.id === hist.mangaId);
+                          return (
+                              <div key={hist.id} onClick={() => { if(mg) onNavigate('details', mg); }} className="bg-[#020308] border border-white/5 p-4 rounded-xl flex items-center gap-4 cursor-pointer hover:bg-[#0d0f1a] transition-colors group">
+                                  <div className="w-12 h-16 rounded-lg overflow-hidden bg-black flex-shrink-0 border border-white/5">{mg ? <img src={mg.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <BookOpen className="w-5 h-5 m-auto mt-5 text-gray-700"/>}</div>
+                                  <div className="flex-1"><h4 className="font-bold text-sm text-white line-clamp-1 group-hover:text-cyan-400">{hist.mangaTitle}</h4><p className="text-gray-400 text-xs mt-1">Capítulo {hist.chapterNumber}</p></div>
+                                  <p className="text-[10px] text-gray-600 font-bold uppercase">{new Date(hist.timestamp).toLocaleDateString()}</p>
+                              </div>
+                          )
+                      })}
+                      <button onClick={() => setConfirmAction('history')} className="mt-4 w-full py-3 bg-transparent border border-red-500/20 text-red-500 font-bold text-[10px] uppercase tracking-widest rounded-full hover:bg-red-950 transition-colors flex justify-center items-center gap-2"><Trash2 className="w-4 h-4"/> Limpar Histórico</button>
+                   </div>
+                )}
             </div>
         )}
 
         {activeTab === "Biblioteca" && (
-            <div className="animate-in fade-in">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">Sua Biblioteca</h2>
-                </div>
-                <div className="bg-[#141414] rounded-[24px] p-6 border border-white/5">
-                    {libraryMangas.length === 0 ? (
-                        <div className="text-center py-10"><Library className="w-10 h-10 mx-auto text-gray-600 mb-3"/><p className="text-gray-500 text-sm font-medium">Nenhuma obra salva.</p></div>
-                    ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                            {libraryMangas.map(mg => (
-                                <div key={mg.id} onClick={() => onNavigate('details', mg)} className="cursor-pointer group">
-                                    <div className="aspect-[2/3] w-full rounded-xl overflow-hidden relative border border-white/5 bg-[#1a1a1a]">
-                                        <img src={mg.coverUrl} className="w-full h-full object-cover" />
-                                        <div className="absolute top-2 right-2 bg-black/80 px-2 py-1 rounded border border-white/10">
-                                            <span className="text-[10px] font-bold text-white">{libraryData[mg.id]}</span>
-                                        </div>
+            <div className="bg-[#080911] p-6 rounded-2xl border border-white/5 shadow-lg animate-in fade-in">
+                {libraryMangas.length === 0 ? (
+                    <div className="text-center py-10"><Library className="w-10 h-10 mx-auto text-gray-600 mb-3"/><p className="text-gray-500 text-sm font-medium">Sua estante está vazia.</p></div>
+                ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {libraryMangas.map(mg => (
+                            <div key={mg.id} onClick={() => onNavigate('details', mg)} className="cursor-pointer group">
+                                <div className="aspect-[2/3] w-full rounded-xl overflow-hidden relative border border-white/5 bg-black">
+                                    <img src={mg.coverUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                    <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
+                                        <span className="text-[10px] font-bold text-cyan-400">{libraryData[mg.id].toUpperCase()}</span>
                                     </div>
-                                    <h4 className="font-bold text-xs text-gray-300 line-clamp-1 mt-2 px-1">{mg.title}</h4>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                                <h4 className="font-bold text-xs text-gray-300 line-clamp-1 mt-2 px-1 group-hover:text-white">{mg.title}</h4>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         )}
 
         {activeTab === "Configurações" && (
             <div className="animate-in fade-in space-y-4">
-                <div className="bg-[#141414] border border-white/5 rounded-[24px] p-6">
-                  <h3 className="text-lg font-bold text-white mb-6">Opções do Aplicativo</h3>
+                <div className="bg-[#080911] border border-white/5 rounded-2xl p-6">
+                  <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-tight flex items-center gap-2"><Settings className="w-5 h-5 text-cyan-400"/> Preferências do App</h3>
                   
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <p className="text-sm font-bold text-white">Modo de Leitura</p>
-                      <p className="text-xs text-gray-500 mt-1">Como os capítulos serão exibidos.</p>
+                      <p className="text-xs text-gray-500 mt-1">Sua orientação de página preferida.</p>
                     </div>
-                    <select value={userSettings?.readMode || 'Cascata'} onChange={(e) => { updateSettings({ readMode: e.target.value }); showToast("Atualizado.", "success"); }} className="bg-[#1a1a1a] border border-white/10 text-white text-sm font-bold rounded-xl px-4 py-2 outline-none focus:border-cyan-500">
+                    <select value={userSettings?.readMode || 'Cascata'} onChange={(e) => { updateSettings({ readMode: e.target.value }); showToast("Preferência atualizada.", "success"); }} className="bg-[#020308] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:border-cyan-500">
                       <option value="Cascata">Cascata</option>
                       <option value="Paginação">Páginas</option>
                     </select>
@@ -287,41 +285,33 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <p className="text-sm font-bold text-white">Economia de Dados</p>
-                      <p className="text-xs text-gray-500 mt-1">Carregar imagens em menor qualidade.</p>
+                      <p className="text-xs text-gray-500 mt-1">Carregar imagens em qualidade reduzida.</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" checked={userSettings?.dataSaver || false} onChange={(e) => { updateSettings({ dataSaver: e.target.checked }); showToast("Atualizado.", "success"); }} />
-                      <div className="w-11 h-6 bg-[#1a1a1a] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 peer-checked:after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                      <input type="checkbox" className="sr-only peer" checked={userSettings?.dataSaver || false} onChange={(e) => { updateSettings({ dataSaver: e.target.checked }); showToast("Preferência atualizada.", "success"); }} />
+                      <div className="w-11 h-6 bg-[#020308] border border-white/10 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 peer-checked:after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-white">Tema Visual</p>
-                      <p className="text-xs text-gray-500 mt-1">Padrão de cores do site.</p>
+                      <p className="text-xs text-gray-500 mt-1">Padrão de cores da interface.</p>
                     </div>
-                    <select value={userSettings?.theme || 'Escuro'} onChange={(e) => { updateSettings({ theme: e.target.value }); showToast("Tema aplicado.", "success"); }} className="bg-[#1a1a1a] border border-white/10 text-white text-sm font-bold rounded-xl px-4 py-2 outline-none focus:border-cyan-500">
+                    <select value={userSettings?.theme || 'Escuro'} onChange={(e) => { updateSettings({ theme: e.target.value }); showToast("Tema aplicado.", "success"); }} className="bg-[#020308] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-2.5 outline-none focus:border-cyan-500">
                       <option value="Escuro">Escuro</option>
                       <option value="Amoled">AMOLED</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="bg-[#141414] border border-white/5 rounded-[24px] p-6">
+                <div className="bg-[#080911] border border-white/5 rounded-2xl p-6">
                     <button onClick={() => setConfirmAction('cache')} className="flex items-center justify-between w-full text-left group">
                         <div>
-                            <p className="text-sm font-bold text-white">Limpar Cache</p>
-                            <p className="text-xs text-gray-500 mt-1">Resolve lentidão e deslogamentos.</p>
+                            <p className="text-sm font-bold text-white group-hover:text-cyan-400">Limpar Cache Temporário</p>
+                            <p className="text-xs text-gray-500 mt-1">Resolve lentidões e força atualização dos dados.</p>
                         </div>
-                        <RefreshCw className="w-5 h-5 text-gray-500 group-hover:text-white group-hover:rotate-180 transition-all duration-500" />
-                    </button>
-                    <div className="w-full h-[1px] bg-white/5 my-6"></div>
-                    <button onClick={onLogout} className="flex items-center justify-between w-full text-left group">
-                        <div>
-                            <p className="text-sm font-bold text-red-500">Sair da Conta</p>
-                            <p className="text-xs text-gray-500 mt-1">Desconectar do dispositivo atual.</p>
-                        </div>
-                        <LogOut className="w-5 h-5 text-red-500 group-hover:translate-x-1 transition-transform" />
+                        <RefreshCw className="w-5 h-5 text-gray-600 group-hover:text-cyan-400 group-hover:rotate-180 transition-all duration-500" />
                     </button>
                 </div>
             </div>
