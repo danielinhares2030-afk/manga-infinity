@@ -589,7 +589,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                             </p>
                         </div>
                         <button onClick={() => setShowIAModal(true)} className="w-full md:w-auto px-8 py-5 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-purple-600/30 uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 flex-shrink-0 hover:scale-[1.02]">
-                            <Sparkles className="w-5 h-5"/> Forjar • 5000 M
+                            <Sparkles className="w-5 h-5"/> Forjar • 1000 M
                         </button>
                     </div>
 
