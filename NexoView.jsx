@@ -1,9 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Hexagon, ShoppingCart, Trophy, Timer, Star, Skull, Zap, Clock, Key, Loader2, ShieldAlert, Sparkles, User, ArrowRight } from 'lucide-react';
-import { doc, updateDoc, collectionGroup, getDocs, query } from "firebase/firestore";
+import { Target, Hexagon, ShoppingCart, Trophy, Timer, Star, Skull, Zap, Clock, Key, Loader2, ShieldAlert, Sparkles, User, ArrowRight, Wand2, Image as ImageIcon } from 'lucide-react';
+import { doc, updateDoc, collectionGroup, getDocs, query, setDoc, arrayUnion } from "firebase/firestore";
 import { db } from './firebase';
 import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmeticUrl } from './helpers';
 import { APP_ID } from './constants';
+
+const CLOUD_NAME = "dxrppfkrq";
+const UPLOAD_PRESET = "obra_upload";
+const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+const REMOVE_BG_API_KEY = "k85TdHmAtNJQheMuUPujyV7k";
+
+async function uploadToCloudinary(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+  const res = await fetch(UPLOAD_URL, { method: "POST", body: formData });
+  if (!res.ok) throw new Error("Erro no Cloudinary. Verifique o seu preset.");
+  const data = await res.json();
+  return data.secure_url;
+}
+
+function applyCloudinaryTransform(url, transformCode) {
+  if (!url || !url.includes('/upload/') || transformCode === 'none') return url;
+  return url.replace('/upload/', `/upload/${transformCode}/`);
+}
+
+async function removeBackgroundWithRemoveBg(imageBlob) {
+  const formData = new FormData();
+  formData.append('image_file', imageBlob);
+  formData.append('size', 'auto');
+  const response = await fetch('https://api.remove.bg/v1.0/removebg', {
+    method: 'POST',
+    headers: { 'X-Api-Key': REMOVE_BG_API_KEY },
+    body: formData
+  });
+  if (!response.ok) throw new Error("Erro na API Remove.bg");
+  return await response.blob();
+}
 
 export function NexoView({ user, userProfileData, showToast, mangas, onNavigate, onLevelUp, synthesizeCrystal, shopItems, buyItem, equipItem }) {
     const [activeTab, setActiveTab] = useState("Missões");
@@ -15,6 +48,12 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     
     const [rankingList, setRankingList] = useState([]);
     const [loadingRank, setLoadingRank] = useState(false);
+
+    const [showIAModal, setShowIAModal] = useState(false);
+    const [iaPrompt, setIaPrompt] = useState("");
+    const [iaCategory, setIaCategory] = useState("avatar");
+    const [isGeneratingIA, setIsGeneratingIA] = useState(false);
+    const [iaStatus, setIaStatus] = useState("");
 
     const rankConfigs = {
         'Rank E': { rxp: 30, rcoin: 15, pxp: 15, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500/30' },
@@ -165,11 +204,153 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         }, 1500);
     };
 
+    const handlePlayerGenerateIA = async (e) => {
+        e.preventDefault();
+        const COST = 5000;
+        
+        if ((userProfileData.coins || 0) < COST) {
+            return showToast(`Essência insuficiente. A Forja Astral exige ${COST} M.`, "error");
+        }
+        
+        setIsGeneratingIA(true);
+        setIaStatus("A Inteligência Artificial está arquitetando...");
+
+        try {
+            const apiKey = ""; 
+            const textModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const imageModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
+
+            const finalPrompt = iaPrompt.trim() === '' ? 'Invente um tema mágico e incrivelmente estiloso.' : iaPrompt;
+
+            let regrasEspecificas = "";
+            if (categoria === 'capa_fundo') {
+                regrasEspecificas = "- CAPA_FUNDO: Apenas cenário épico. PROIBIDO desenhar personagens. ImagePrompt: 'Scenery, landscape, background only, NO CHARACTERS'.";
+            } else if (categoria === 'moldura') {
+                regrasEspecificas = "- MOLDURA: O objeto DEVE ser um ANEL VAZADO GIGANTE tocando as bordas da tela! ZERO MARGENS! Fundo externo e o miolo interno 100% PRETO SÓLIDO (#000000). ImagePrompt: '2D UI asset, single hollow circular ring, glowing avatar frame border, HUGE, TOUCHING THE ABSOLUTE EDGES OF THE CANVAS, ZERO MARGINS, PURE FLAT SOLID BLACK BACKGROUND #000000, pure flat black empty hole in the center #000000, NO vignettes'. REGRAS CSS: 1) PROIBIDO usar 'background' ou 'background-color'. 2) NUNCA use 'transform' ou 'scale' nos keyframes para molduras (use apenas filter, hue-rotate, opacity, drop-shadow).";
+            } else if (categoria === 'avatar') {
+                regrasEspecificas = "- AVATAR: Desenhe APENAS o rosto/busto do personagem. Fundo 100% BRANCO SÓLIDO E VAZIO (#FFFFFF). PROIBIDO desenhar fundos, auras ou formas ao redor. FIDELIDADE MÁXIMA: Descreva as características físicas do personagem em INGLÊS no imagePrompt. ImagePrompt OBRIGATÓRIO: 'Close-up portrait of [DESCREVA AS CARACTERÍSTICAS EM INGLÊS], perfectly centered, authentic 2D anime style, clean face, PURE SOLID WHITE BACKGROUND #FFFFFF, completely empty background'. REGRA CSS: DEVE conter um 'background' (ex: linear-gradient) no CSS para colorir o fundo.";
+            } else if (categoria === 'nickname') {
+                regrasEspecificas = "- NICKNAME: Apenas efeito de texto no CSS. NÃO GERE IMAGEM! O ImagePrompt DEVE ser EXATAMENTE 'NONE'. REGRA CSS: PROIBIDO usar 'background' no CSS, use apenas color, text-shadow, etc.";
+            }
+
+            let regraRaridade = `A 'raridade' deve ser escolhida pela IA. Use EXATAMENTE: "comum", "raro", "epico", "lendario" ou "mitico".`;
+            if (raridadeSelecionada !== 'aleatorio') {
+                regraRaridade = `MUITO IMPORTANTE: A 'raridade' DEVE SER EXATAMENTE: "${raridadeSelecionada}".`;
+            }
+
+            const systemInstruction = `Você é o mestre forjador de cosméticos de um App de Mangá. Crie um item da categoria '${categoria}'.
+            Pedido do usuário: '${finalPrompt}'.
+            
+            REGRAS OBRIGATÓRIAS DE IMAGEM:
+            ${regrasEspecificas}
+
+            REGRAS CRÍTICAS DE CSS E ANIMAÇÃO (LEIA COM ATENÇÃO): 
+            1. O campo 'css' DEVE conter APENAS as propriedades CSS separadas por ponto e vírgula. NÃO use chaves {}, NÃO use seletores. (Ex: 'color: red; box-shadow: 0 0 10px blue;').
+            2. ANIMAÇÕES (MUITO IMPORTANTE): Se o usuário sugerir animação (ex: "animado", "piscando", "brilhando", "girando"), você É OBRIGADO a:
+               - No campo 'css', adicionar a propriedade 'animation'. (Ex: 'animation: efeitoMagico 2s infinite alternate;')
+               - No campo 'keyframes', escrever a regra '@keyframes' COMPLETA e com o MESMO NOME usado no CSS. (Ex: '@keyframes efeitoMagico { 0% { opacity: 0.5; } 100% { opacity: 1; } }')
+            3. Se o usuário NÃO pedir animação, deixe o campo 'keyframes' completamente vazio ("").
+            
+            ${regraRaridade}`;
+
+            const response = await fetch(textModelUrl, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: iaPrompt }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                nome: { type: "STRING" },
+                                descricao: { type: "STRING" },
+                                raridade: { type: "STRING" },
+                                css: { type: "STRING", description: "APENAS propriedades CSS (ex: 'color: red; animation: piscar 2s infinite;'). SEM CHAVES." },
+                                keyframes: { type: "STRING", description: "A regra @keyframes completa (ex: '@keyframes piscar { ... }'). Vazio se não houver animação pedida." },
+                                imagePrompt: { type: "STRING" }
+                            },
+                            required: ["nome", "descricao", "raridade", "css", "keyframes", "imagePrompt"]
+                        }
+                    }
+                })
+            });
+
+            const textData = await response.json();
+            const aiResult = JSON.parse(textData.candidates[0].content.parts[0].text);
+
+            let finalImageUrl = "";
+            
+            if (aiResult.imagePrompt && aiResult.imagePrompt !== "NONE") {
+                setIaStatus('Materializando a arte visual...');
+                const imgRes = await fetch(imageModelUrl, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ instances: { prompt: aiResult.imagePrompt }, parameters: { sampleCount: 1 } })
+                });
+                const imgData = await imgRes.json();
+                
+                if(imgData.predictions && imgData.predictions[0]) {
+                    const base64Image = `data:image/png;base64,${imgData.predictions[0].bytesBase64Encoded}`;
+                    const resBlob = await fetch(base64Image);
+                    let blob = await resBlob.blob();
+
+                    if (iaCategory === 'avatar') {
+                        setIaStatus('Recortando impurezas (Remove.bg)...');
+                        try {
+                            blob = await removeBackgroundWithRemoveBg(blob);
+                        } catch(removeErr) {
+                            console.warn("Remove.bg failed:", removeErr);
+                        }
+                    }
+
+                    const file = new File([blob], `forge_${Date.now()}.png`, { type: "image/png" });
+                    
+                    setIaStatus('Imortalizando no banco de dados...');
+                    finalImageUrl = await uploadToCloudinary(file);
+                } else {
+                    throw new Error("A entidade visual foi bloqueada pelos filtros de segurança da IA.");
+                }
+            }
+
+            const uniqueId = "item_" + Date.now() + Math.floor(Math.random()*1000);
+
+            await setDoc(doc(db, "loja_itens", uniqueId), {
+                nome: aiResult.nome,
+                categoria: iaCategory,
+                descricao: aiResult.descricao,
+                raridade: "mitico",
+                preco: 99999, 
+                cssClass: uniqueId,
+                css: aiResult.css,
+                animacao: aiResult.keyframes || "",
+                preview: finalImageUrl,
+                criador: user.uid,
+                createdAt: Date.now()
+            });
+
+            const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+            await updateDoc(profileRef, {
+                coins: (userProfileData.coins || 0) - COST,
+                inventory: arrayUnion(uniqueId)
+            });
+
+            showToast("Cosmético forjado com perfeição e adicionado ao seu inventário!", "success");
+            setShowIAModal(false);
+            setIaPrompt('');
+        } catch(err) {
+            showToast("Falha na Forja: " + err.message, "error");
+        } finally {
+            setIsGeneratingIA(false);
+            setIaStatus("");
+        }
+    };
+
     const equipped = userProfileData.equipped_items || {};
 
     return (
         <div className={`max-w-6xl mx-auto px-4 py-8 md:py-12 animate-in fade-in duration-700 relative pb-24 font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#020105]'}`}>
             
+            {/* MODAL DE CONFIRMAÇÃO DE MISSÃO */}
             {confirmModal && (
                 <div className="fixed inset-0 z-[3000] bg-[#020105]/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300" onClick={() => setConfirmModal(null)}>
                     <div className="bg-[#05030a] border border-cyan-500/50 p-8 rounded-[2rem] shadow-2xl max-w-md w-full text-center relative overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -187,6 +368,58 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                             <button onClick={() => triggerForgeMission(confirmModal)} className="flex-1 bg-cyan-500 text-black rounded-xl font-black py-4 transition-all hover:bg-cyan-400 text-xs uppercase tracking-widest">
                                 Aceitar
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL DA FORJA IA DO JOGADOR */}
+            {showIAModal && (
+                <div className="fixed inset-0 z-[4000] bg-[#020105]/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+                    <div className="bg-[#05030a] border border-purple-500/50 p-8 rounded-[2.5rem] shadow-2xl max-w-lg w-full relative overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-600/20 rounded-full blur-[80px] pointer-events-none"></div>
+                        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-600/20 rounded-full blur-[80px] pointer-events-none"></div>
+
+                        <div className="relative z-10">
+                            <h3 className="text-3xl font-black text-white flex items-center gap-3 mb-2 uppercase tracking-tighter"><Wand2 className="w-8 h-8 text-purple-500" /> Forja Astral</h3>
+                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-8">Pague 5000 M e a IA criará uma relíquia mítica exclusiva para você.</p>
+
+                            {isGeneratingIA ? (
+                                <div className="flex flex-col items-center text-center animate-pulse py-10">
+                                    <div className="w-20 h-20 mb-6 bg-purple-900/30 rounded-full flex items-center justify-center border border-purple-500/50">
+                                        <Wand2 className="w-10 h-10 text-purple-400 animate-spin" style={{ animationDuration: '3s' }}/>
+                                    </div>
+                                    <h2 className="text-2xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400 uppercase tracking-tighter">Canalizando Magia...</h2>
+                                    <p className="text-gray-500 mt-3 font-bold text-xs uppercase tracking-widest">{iaStatus}</p>
+                                </div>
+                            ) : (
+                                <form onSubmit={handlePlayerGenerateIA} className="space-y-6">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3">Categoria da Relíquia</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {['avatar', 'moldura', 'capa_fundo', 'nickname'].map(cat => (
+                                                <button type="button" key={cat} onClick={()=>setIaCategory(cat)} className={`py-3 text-xs font-black rounded-xl border transition-all uppercase tracking-widest ${iaCategory === cat ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-600/30' : 'bg-gray-900/50 text-gray-500 border-white/5 hover:text-white'}`}>
+                                                    {cat.replace('_', ' ')}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Descrição (Opcional)</label>
+                                        <textarea value={iaPrompt} onChange={e=>setIaPrompt(e.target.value)} placeholder="Ex: Cabelos de fogo azul e olhos brilhantes, estilo anime..." rows="3" className="w-full bg-black/40 p-4 rounded-2xl border border-white/10 text-white outline-none focus:border-purple-500 resize-none transition-colors text-sm font-medium" />
+                                    </div>
+
+                                    <div className="flex gap-4 pt-4 border-t border-white/10">
+                                        <button type="button" onClick={() => setShowIAModal(false)} className="flex-1 bg-transparent border border-white/10 text-gray-400 font-black py-4 rounded-xl hover:bg-white/5 hover:text-white transition-colors text-xs uppercase tracking-widest">
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" className="flex-[2] bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-black py-4 transition-all shadow-lg shadow-purple-600/30 text-xs uppercase tracking-widest hover:scale-[1.02]">
+                                            Sintetizar • 5000 M
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -340,10 +573,27 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* CONTEÚDO: LOJA (FILTRADA) */}
+            {/* CONTEÚDO: LOJA */}
             {activeTab === "Loja" && (
-                <div className="animate-in fade-in duration-500 relative z-10">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-8 mb-12 max-w-7xl mx-auto bg-white/[0.02] rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
+                <div className="animate-in fade-in duration-500 relative z-10 max-w-7xl mx-auto">
+                    
+                    <div className="mb-10 bg-gradient-to-r from-purple-900/40 to-cyan-900/20 border border-purple-500/40 rounded-[2.5rem] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group hover:border-purple-400 transition-colors">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-purple-500/20 transition-all duration-700"></div>
+                        <div className="relative z-10 text-center md:text-left">
+                            <h4 className="text-2xl md:text-3xl font-black text-white flex items-center justify-center md:justify-start gap-3 mb-3 uppercase tracking-tighter">
+                                <Wand2 className="w-8 h-8 text-purple-400"/> Forja Astral (IA)
+                            </h4>
+                            <p className="text-gray-400 text-xs md:text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
+                                Utilize a Inteligência Artificial para conjurar um cosmético mítico e exclusivo. <br className="hidden md:block" />
+                                O item será depositado diretamente no seu inventário!
+                            </p>
+                        </div>
+                        <button onClick={() => setShowIAModal(true)} className="w-full md:w-auto px-8 py-5 bg-purple-600 hover:bg-purple-500 text-white font-black rounded-2xl transition-all shadow-lg shadow-purple-600/30 uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 flex-shrink-0 hover:scale-[1.02]">
+                            <Sparkles className="w-5 h-5"/> Forjar • 5000 M
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-8 mb-12 bg-white/[0.02] rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md">
                         <div className="text-center sm:text-left">
                             <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">Cosméticos <span className="text-cyan-400">Astral</span></h3>
                             <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Forje sua identidade visual.</p>
@@ -354,9 +604,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                         </div>
                     </div>
                       
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 max-w-7xl mx-auto">
-                        
-                        {/* FILTRO CORRIGIDO PARA ACEITAR "capa" e "tema_perfil" ALÉM DA IA */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                         {shopItems.filter(item => {
                             const cat = (item.categoria || item.type || '').toLowerCase();
                             return ['avatar', 'nickname', 'capa_fundo', 'capa', 'moldura', 'tema_perfil'].includes(cat);
@@ -368,7 +616,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                           return (
                             <div key={item.id} className={`bg-[#05030a] border rounded-[2rem] p-6 flex flex-col items-center text-center transition-all duration-500 group relative overflow-hidden ${isEquipped ? 'border-cyan-500 bg-cyan-950/20' : 'border-white/5 hover:border-cyan-500/40'}`}>
                               
-                              {/* INJEÇÃO MÁGICA DA IA AQUI: Lê o CSS e as Animações geradas */}
+                              {/* Aqui injetamos o código da IA, garantindo que o keyframes seja carregado junto */}
                               {(item.css || item.animacao || item.keyframes) && (
                                  <style dangerouslySetInnerHTML={{__html: `
                                     .${item.cssClass || 'custom-ia-class'} { ${item.css || ''} }
@@ -376,30 +624,24 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                  `}} />
                               )}
 
-                              {/* AQUI APLICAMOS A CLASSE GERADA PELA IA */}
                               <div className={`w-28 h-28 rounded-2xl mb-6 bg-[#020105] flex items-center justify-center overflow-hidden border border-white/5 relative flex-shrink-0 ${cat === 'avatar' ? (item.cssClass || 'custom-ia-class') : ''}`}>
                                 
-                                {/* Renderização de Capa/Fundo corrigida */}
                                 {(cat === 'capa_fundo' || cat === 'capa' || cat === 'tema_perfil') && cleanCosmeticUrl(item.preview) && (
                                     <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`w-full h-full object-cover opacity-80 ${item.cssClass || 'custom-ia-class'}`} />
                                 )}
 
-                                {/* Renderização de Moldura */}
                                 {cat === 'moldura' && cleanCosmeticUrl(item.preview) && (
-                                    <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-0 w-full h-full object-cover z-20 pointer-events-none ${item.cssClass || 'custom-ia-class'}`} style={{ mixBlendMode: 'screen' }} />
+                                    <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`absolute inset-0 w-full h-full object-cover z-20 pointer-events-none rounded-full scale-[1.15] ${item.cssClass || 'custom-ia-class'}`} style={{ mixBlendMode: 'screen' }} />
                                 )}
 
-                                {/* Renderização de Avatar */}
                                 {cat === 'avatar' && cleanCosmeticUrl(item.preview) && (
                                     <img src={cleanCosmeticUrl(item.preview)} onError={(e)=>e.target.style.display='none'} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 relative z-10`} />
                                 )}
 
-                                {/* Renderização de Nickname animado */}
                                 {cat === 'nickname' && (
                                     <div className={`font-black text-xl z-20 ${item.cssClass || 'custom-ia-class'}`}>NomeAqui</div>
                                 )}
 
-                                {/* Fallback se não tiver imagem e não for nickname */}
                                 {(!item.preview && !['nickname'].includes(cat)) && (
                                     <Sparkles className="w-8 h-8 text-gray-600 relative z-10"/>
                                 )}
@@ -442,7 +684,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                     
                                     <div className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center flex-shrink-0 group`}>
                                         
-                                        {/* INJEÇÃO DO CSS DA IA NO RANKING (Moldura e Avatar) */}
                                         {player.equipped_items?.avatar?.css && (
                                             <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.avatar.cssClass || 'custom-avatar'} { ${player.equipped_items.avatar.css} } \n ${player.equipped_items.avatar.animacao || player.equipped_items.avatar.keyframes || ''}`}} />
                                         )}
@@ -455,12 +696,11 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                         </div>
                                         
                                         {player.equipped_items?.moldura?.preview && (
-                                            <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-10%] w-[120%] h-[120%] object-cover z-20 pointer-events-none mix-blend-screen max-w-none ${player.equipped_items.moldura.cssClass || 'custom-moldura'}`} />
+                                            <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-10%] w-[120%] h-[120%] object-cover z-20 pointer-events-none max-w-none rounded-full ${player.equipped_items.moldura.cssClass || 'custom-moldura'}`} />
                                         )}
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        {/* INJEÇÃO DO CSS DA IA NO RANKING (Nickname) */}
                                         {player.equipped_items?.nickname?.css && (
                                             <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.nickname.cssClass || 'custom-nick'} { ${player.equipped_items.nickname.css} } \n ${player.equipped_items.nickname.animacao || player.equipped_items.nickname.keyframes || ''}`}} />
                                         )}
