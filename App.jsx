@@ -73,8 +73,17 @@ function MangaInfinityApp() {
   }, []);
 
   useEffect(() => {
-    const q = query(collection(db, "loja_itens"), where("ativo", "==", true));
-    const unsub = onSnapshot(q, (snap) => { if (!snap.empty) { const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() })); setShopItems(items); } else { setShopItems(FALLBACK_SHOP_ITEMS); } });
+    // CORREÇÃO AQUI: Removido o where("ativo", "==", true) que estava escondendo seus itens
+    const q = query(collection(db, "loja_itens"));
+    const unsub = onSnapshot(q, (snap) => { 
+        if (!snap.empty) { 
+            const items = []; 
+            snap.forEach(d => items.push({ id: d.id, ...d.data() })); 
+            setShopItems(items); 
+        } else { 
+            setShopItems(FALLBACK_SHOP_ITEMS); 
+        } 
+    });
     return () => unsub();
   }, []);
 
@@ -277,13 +286,12 @@ function MangaInfinityApp() {
                       <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Nível {userProfileData.level || 1}</span>
                     </div>
                     
-                    {/* AVATAR COM MOLDURA NA NAVBAR */}
-                    <div className={`relative w-10 h-10 flex items-center justify-center flex-shrink-0 group ${(!eq.moldura?.preview && eq.moldura) ? eq.moldura.cssClass : ''}`}>
-                        <div className={`w-9 h-9 rounded-full overflow-hidden bg-[#161a25] flex items-center justify-center relative z-10 ${!eq.moldura ? 'border border-white/10 group-hover:border-cyan-400' : ''}`}>
-                            <img src={activeAvatarSrc} className={`w-full h-full object-cover transition-colors duration-300 ${eq.avatar?.cssClass || ''}`} alt="Avatar" onError={(e) => e.target.src = `https://placehold.co/100x100/0A0E17/22d3ee?text=U`} />
+                    <div className="relative w-10 h-10 flex items-center justify-center flex-shrink-0 group">
+                        <div className="w-9 h-9 rounded-full overflow-hidden bg-[#161a25] flex items-center justify-center relative z-10 border-[2px] border-[#0A0E17] group-hover:border-cyan-400 transition-colors">
+                            <img src={activeAvatarSrc} className="w-full h-full object-cover" alt="Avatar" onError={(e) => e.target.src = `https://placehold.co/100x100/0A0E17/22d3ee?text=U`} />
                         </div>
-                        {/* MOLDURA ADICIONADA AQUI (w-140% para abrigar a borda externa) */}
-                        {cleanCosmeticUrl(eq.moldura?.preview) && ( <img src={cleanCosmeticUrl(eq.moldura.preview)} className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] max-w-none object-contain object-center z-30 pointer-events-none ${eq.moldura.cssClass || ''}`} /> )}
+                        
+                        {cleanCosmeticUrl(eq.moldura?.preview) && ( <img src={cleanCosmeticUrl(eq.moldura.preview)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] max-w-none object-contain object-center z-30 pointer-events-none" /> )}
                     </div>
                   </div>
                 ) : ( <button onClick={() => navigateTo('login')} className="bg-white text-black hover:bg-cyan-500 hover:text-white rounded-xl font-black px-4 py-1.5 transition-colors duration-300 text-sm">Entrar</button> )}
