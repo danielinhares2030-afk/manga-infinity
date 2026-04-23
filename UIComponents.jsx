@@ -4,7 +4,7 @@ import { AlertCircle } from 'lucide-react';
 export const InfinityLogo = React.memo(({ className = "w-24 h-12" }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
-      <svg viewBox="0 0 100 100" className="relative z-10 w-full h-full drop-shadow-[0_0_20px_rgba(34,211,238,0.6)]">
+      <svg viewBox="0 0 100 100" className="relative z-10 w-full h-full drop-shadow-[0_0_20px_rgba(34,211,238,0.6)] animate-[pulse_2s_ease-in-out_infinite]">
         <path d="M50 5 L95 50 L50 95 L5 50 Z" fill="none" stroke="rgba(34,211,238,0.1)" strokeWidth="2" />
         <path d="M50 5 L95 50 L50 95 L5 50 Z" fill="none" stroke="url(#auraGradient)" strokeWidth="4" />
         <defs>
@@ -23,8 +23,8 @@ export const SplashScreen = React.memo(() => {
   const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFade(true), 100);
-    const t2 = setTimeout(() => setFadeOut(true), 1500); 
+    const t1 = setTimeout(() => setFade(true), 100); // Surge rápido
+    const t2 = setTimeout(() => setFadeOut(true), 1500); // Sai rápido
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -32,18 +32,18 @@ export const SplashScreen = React.memo(() => {
     <div className={`fixed inset-0 z-[9999] bg-[#020408] flex flex-col items-center justify-center font-sans transition-all duration-500 ease-in-out ${fadeOut ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'}`}>
       <style>{`body, html { background-color: #020408 !important; margin: 0; padding: 0; }`}</style>
       
-      {/* EFEITO DE AURA DE PODER (AZUL E VERDE) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] bg-cyan-500/10 blur-[120px] rounded-full animate-[pulse_3s_ease-in-out_infinite_alternate]"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] bg-emerald-500/10 blur-[100px] rounded-full animate-[pulse_2s_ease-in-out_infinite_alternate-reverse]"></div>
+      {/* AURA DE FUNDO AGRESSIVA */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-cyan-600/10 blur-[150px] rounded-full animate-[pulse_3s_ease-in-out_infinite_alternate]"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-emerald-600/10 blur-[130px] rounded-full animate-[pulse_2s_ease-in-out_infinite_alternate-reverse]"></div>
 
       <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[1000ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-4'}`}>
-        <InfinityLogo className="w-24 h-12 md:w-32 md:h-16 mb-8" />
+        <InfinityLogo className="w-24 h-12 md:w-32 md:h-16 mb-10" />
         
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-emerald-300 tracking-[0.15em] uppercase drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-emerald-300 tracking-[0.2em] uppercase drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]">
           MANGA <span className="font-bold text-cyan-400">INFINITY</span>
         </h1>
         
-        <div className="mt-8 flex items-center gap-3 opacity-60">
+        <div className="mt-12 flex items-center gap-3 opacity-60">
             <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
             <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" style={{animationDelay: '0.2s'}}></div>
             <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping" style={{animationDelay: '0.4s'}}></div>
