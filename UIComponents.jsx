@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 
-// ÍCONE MAIOR E COM ANIMAÇÃO DE FLUTUAÇÃO/BRILHO
-export const InfinityLogo = React.memo(({ className = "w-24 h-12" }) => {
+// ÍCONE GIGANTE E COM PROPORÇÃO QUADRADA CORRETA
+export const InfinityLogo = React.memo(({ className = "w-32 h-32" }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
-      {/* Injeção da animação personalizada para flutuar e brilhar */}
       <style>{`
         @keyframes floatMagico {
           0%, 100% { 
             transform: translateY(0px) scale(1); 
-            filter: drop-shadow(0 0 10px rgba(147,51,234,0.5)); /* Brilho Roxo */
+            filter: drop-shadow(0 0 10px rgba(147,51,234,0.5));
           }
           50% { 
             transform: translateY(-8px) scale(1.05); 
-            filter: drop-shadow(0 0 25px rgba(52,211,153,0.8)); /* Brilho Verde Forte */
+            filter: drop-shadow(0 0 25px rgba(52,211,153,0.8));
           }
         }
       `}</style>
@@ -30,38 +29,35 @@ export const InfinityLogo = React.memo(({ className = "w-24 h-12" }) => {
 
 export const SplashScreen = React.memo(() => {
   const [fade, setFade] = useState(false);
-  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFade(true), 50); // Surge imediatamente
-    // TEMPO REDUZIDO DRASTICAMENTE: De 1500ms para 1300ms
-    const t2 = setTimeout(() => setFadeOut(true), 1300); 
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t1 = setTimeout(() => setFade(true), 50); 
+    // REMOVIDO o timer que forçava a tela a ficar invisível antes do App carregar
+    return () => clearTimeout(t1);
   }, []);
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-[#050505] flex flex-col items-center justify-center font-sans transition-all duration-300 ease-in-out ${fadeOut ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'}`}>
+    <div className={`fixed inset-0 z-[9999] bg-[#050505] flex flex-col items-center justify-center font-sans transition-all duration-500 ease-in-out opacity-100 scale-100`}>
       <style>{`body, html { background-color: #050505 !important; margin: 0; padding: 0; }`}</style>
       
-      {/* AURAS MÁGICAS (Azul, Roxo e Verde) */}
+      {/* AURAS MÁGICAS */}
       <div className="absolute top-[20%] left-[10%] w-[50vw] h-[50vw] bg-blue-600/15 blur-[120px] rounded-full animate-[pulse_4s_ease-in-out_infinite_alternate]"></div>
       <div className="absolute bottom-[20%] right-[10%] w-[50vw] h-[50vw] bg-purple-600/15 blur-[120px] rounded-full animate-[pulse_5s_ease-in-out_infinite_alternate-reverse]"></div>
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] bg-emerald-500/10 blur-[150px] rounded-full"></div>
 
       <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[600ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-4'}`}>
         
-        {/* TAMANHO DO LOGO AUMENTADO AQUI (w-40 h-40 ou md:w-48 md:h-48) */}
-        <InfinityLogo className="w-40 h-40 md:w-48 md:h-48 mb-6" />
+        {/* ÍCONE ENORME NA ABERTURA */}
+        <InfinityLogo className="w-48 h-48 md:w-56 md:h-56 mb-4" />
         
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(147,51,234,0.3)]">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(147,51,234,0.3)] mt-2">
           MANGA <span className="font-bold text-white">INFINITY</span>
         </h1>
         
-        {/* Loading de "ignição" com Azul, Roxo e Verde */}
-        <div className="mt-10 flex items-center gap-3 opacity-80">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
-            <div className="w-2 h-2 bg-purple-400 rounded-full animate-ping" style={{animationDelay: '0.2s'}}></div>
-            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" style={{animationDelay: '0.4s'}}></div>
+        <div className="mt-12 flex items-center gap-3 opacity-80">
+            <div className="w-3 h-3 bg-blue-400 rounded-full animate-ping"></div>
+            <div className="w-3 h-3 bg-purple-400 rounded-full animate-ping" style={{animationDelay: '0.2s'}}></div>
+            <div className="w-3 h-3 bg-emerald-400 rounded-full animate-ping" style={{animationDelay: '0.4s'}}></div>
         </div>
       </div>
     </div>
@@ -103,7 +99,7 @@ export function Footer() {
         <footer className="w-full bg-[#050505] border-t border-white/5 py-12 mt-auto pb-24 md:pb-12 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
             <div className="max-w-7xl mx-auto px-4 text-center flex flex-col items-center relative z-10">
-                <InfinityLogo className="w-10 h-10 opacity-20 mb-4 grayscale" />
+                <InfinityLogo className="w-16 h-16 opacity-30 mb-4" />
                 <span className="font-black text-xs text-gray-700 tracking-[0.3em] uppercase">MANGA INFINITY</span>
             </div>
         </footer>
