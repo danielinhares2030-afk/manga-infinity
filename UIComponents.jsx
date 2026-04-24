@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 
-// ÍCONE GIGANTE E COM PROPORÇÃO QUADRADA CORRETA
+// NOVO ÍCONE MÁGICO (Cristal + Infinito + Cores: Azul, Roxo e Verde)
 export const InfinityLogo = React.memo(({ className = "w-32 h-32" }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
@@ -9,20 +9,46 @@ export const InfinityLogo = React.memo(({ className = "w-32 h-32" }) => {
         @keyframes floatMagico {
           0%, 100% { 
             transform: translateY(0px) scale(1); 
-            filter: drop-shadow(0 0 10px rgba(147,51,234,0.5));
+            filter: drop-shadow(0 0 15px rgba(147,51,234,0.6)); /* Brilho Roxo */
           }
           50% { 
             transform: translateY(-8px) scale(1.05); 
-            filter: drop-shadow(0 0 25px rgba(52,211,153,0.8));
+            filter: drop-shadow(0 0 25px rgba(52,211,153,0.8)); /* Brilho Verde Forte */
           }
         }
       `}</style>
-      <img
-        src="https://i.ibb.co/wZY7fwc6/file-00000000e3f8720e8d9b33e24649f78c.png"
-        alt="Manga Infinity Logo"
-        className="relative z-10 w-full h-full object-contain"
-        style={{ animation: 'floatMagico 3s ease-in-out infinite' }}
-      />
+      <svg viewBox="0 0 150 100" className="relative z-10 w-full h-full" style={{ animation: 'floatMagico 3s ease-in-out infinite' }}>
+        <defs>
+          <linearGradient id="crystalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#10b981" /> {/* Verde */}
+            <stop offset="50%" stopColor="#a855f7" /> {/* Roxo */}
+            <stop offset="100%" stopColor="#3b82f6" /> {/* Azul */}
+          </linearGradient>
+          <linearGradient id="infinityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" /> {/* Azul */}
+            <stop offset="50%" stopColor="#a855f7" /> {/* Roxo */}
+            <stop offset="100%" stopColor="#10b981" /> {/* Verde */}
+          </linearGradient>
+        </defs>
+        
+        {/* Cristal Central Traseiro */}
+        <polygon points="75,5 90,50 75,95 60,50" fill="url(#crystalGrad)" opacity="0.9" />
+        <polygon points="75,5 82,50 75,95 68,50" fill="#ffffff" opacity="0.3" />
+        
+        {/* Símbolo do Infinito com bordas arredondadas */}
+        <path d="M 75 50 C 50 15, 15 15, 15 50 C 15 85, 50 85, 75 50 C 100 15, 135 15, 135 50 C 135 85, 100 85, 75 50 Z" 
+              fill="none" stroke="url(#infinityGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 75 50 C 50 15, 15 15, 15 50 C 15 85, 50 85, 75 50 C 100 15, 135 15, 135 50 C 135 85, 100 85, 75 50 Z" 
+              fill="none" stroke="#ffffff" strokeWidth="2" opacity="0.5" strokeLinecap="round" strokeLinejoin="round" />
+        
+        {/* Cristal Central Frontal (Menor e Vazado) */}
+        <polygon points="75,20 82,50 75,80 68,50" fill="none" stroke="#ffffff" strokeWidth="1.5" />
+        <circle cx="75" cy="50" r="3" fill="#ffffff" />
+        
+        {/* Estrelas mágicas flutuantes */}
+        <path d="M 30 20 L 32 28 L 40 30 L 32 32 L 30 40 L 28 32 L 20 30 L 28 28 Z" fill="#10b981" opacity="0.8" />
+        <path d="M 120 70 L 121 75 L 126 76 L 121 77 L 120 82 L 119 77 L 114 76 L 119 75 Z" fill="#3b82f6" opacity="0.8" />
+      </svg>
     </div>
   );
 });
@@ -32,7 +58,6 @@ export const SplashScreen = React.memo(() => {
 
   useEffect(() => {
     const t1 = setTimeout(() => setFade(true), 50); 
-    // REMOVIDO o timer que forçava a tela a ficar invisível antes do App carregar
     return () => clearTimeout(t1);
   }, []);
 
@@ -47,7 +72,7 @@ export const SplashScreen = React.memo(() => {
 
       <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[600ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-4'}`}>
         
-        {/* ÍCONE ENORME NA ABERTURA */}
+        {/* NOVO ÍCONE DE ABERTURA */}
         <InfinityLogo className="w-48 h-48 md:w-56 md:h-56 mb-4" />
         
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(147,51,234,0.3)] mt-2">
