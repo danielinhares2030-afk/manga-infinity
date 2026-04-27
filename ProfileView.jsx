@@ -181,4 +181,39 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
         {activeTab === 'Configurações Astral' && (
             <CosmicCard>
                 <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-5">
-                    <div className="bg-[#050505]/60 p-3.5 rounded-2xl border border-white/10"><SettingsIcon className="w-6 h-6
+                    <div className="bg-[#050505]/60 p-3.5 rounded-2xl border border-white/10"><SettingsIcon className="w-6 h-6 text-cyan-400" /></div>
+                    <div>
+                        <h2 className="text-2xl font-black text-white tracking-tighter uppercase drop-shadow-md">Parâmetros da Jornada</h2>
+                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-0.5">Ajuste a sua conexão astral</p>
+                    </div>
+                </div>
+                <div className='bg-[#050505]/60 border border-white/5 rounded-2xl p-5 mb-5 flex items-center justify-between'>
+                    <div className='flex flex-col'>
+                        <span className='font-black text-sm text-white'>Modo de Leitura</span>
+                        <span className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1'>Como você consome as memórias</span>
+                    </div>
+                    <select value={userSettings.readMode} onChange={(e) => updateSettings({ readMode: e.target.value })} className="bg-[#0a0f1c] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 outline-none focus:border-cyan-500">
+                        {['Cascata', 'Página'].map(opt => <option key={opt}>{opt}</option>)}
+                    </select>
+                </div>
+                
+                <div className='bg-[#050505]/60 border border-white/5 rounded-2xl p-5 mb-10 flex items-center justify-between'>
+                    <div className='flex flex-col'>
+                        <span className='font-black text-sm text-white'>Tema da Matriz</span>
+                        <span className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1'>Aparência visual do sistema</span>
+                    </div>
+                    <select value={userSettings.theme} onChange={(e) => updateSettings({ theme: e.target.value })} className="bg-[#0a0f1c] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 outline-none focus:border-cyan-500">
+                        {['Escuro', 'Gelo'].map(opt => <option key={opt}>{opt}</option>)}
+                    </select>
+                </div>
+
+                <button onClick={onLogout} className="w-full mt-10 bg-[#050505] border border-white/10 text-rose-300 rounded-xl font-black py-4 transition-all hover:bg-rose-900/50 hover:border-rose-500/50 tracking-widest text-xs flex justify-center items-center gap-2">
+                    <LogOut className="w-4 h-4"/> Encerrar Conexão Astral
+                </button>
+            </CosmicCard>
+        )}
+
+      </div>
+    </div>
+  );
+}
