@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { getAuth } from "firebase/auth";
 import { app, auth, db } from './firebase'; 
 import { Compass, Hexagon, Trophy, Clock, LogOut, ChevronRight, Dices, SlidersHorizontal as SettingsIcon } from 'lucide-react';
-import { timeAgo, calculateLevel, cleanCosmeticUrl } from './helpers';
+import { timeAgo, cleanCosmeticUrl } from './helpers';
 
 // CARD MÁGICO / GLASSMORPHISM PARA PERFIL
 const CosmicCard = ({ children, className = "" }) => (
@@ -15,7 +15,7 @@ const CosmicCard = ({ children, className = "" }) => (
 // PÍLULA DE ESTATÍSTICA (Nível/XP)
 const StatPill = ({ icon: Icon, value, label, gradientClass }) => (
     <div className={`backdrop-blur-md p-4 rounded-3xl border border-white/5 flex items-center gap-4 ${gradientClass}`}>
-        <div className="bg-[#050505]/60 border border-white/10 rounded-2xl p-3 flexitems-center justify-center">
+        <div className="bg-[#050505]/60 border border-white/10 rounded-2xl p-3 flex items-center justify-center">
             <Icon className="w-5 h-5 text-white/70" />
         </div>
         <div className="flex flex-col flex-1">
@@ -29,9 +29,13 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const [activeTab, setActiveTab] = useState('Leituras Recentes');
 
   const totalFavorites = useMemo(() => Object.values(libraryData).filter(status => status === 'Favoritos').length, [libraryData]);
-  const levelInfo = calculateLevel(userProfileData.xp || 0);
-  const xpNeededForNext = levelInfo.xpForNextLevel - levelInfo.xpInCurrentLevel;
-  const xpProgress = levelInfo.xpForNextLevel > 0 ? (levelInfo.xpInCurrentLevel / levelInfo.xpForNextLevel) * 100 : 100;
+  
+  // Matemática do XP Resolvida Localmente (Sem depender do helpers.js)
+  const currentLvl = userProfileData.level || 1;
+  const currentXp = userProfileData.xp || 0;
+  const xpTarget = currentLvl * 1000; // Exemplo: Nível 1 precisa de 1000, Nível 2 de 2000...
+  const xpNeededForNext = Math.max(0, xpTarget - currentXp);
+  const xpProgress = Math.min(100, (currentXp / xpTarget) * 100);
 
   const eq = userProfileData.equipped_items || {};
   const activeAvatarSrc = cleanCosmeticUrl(eq.avatar?.preview) || cleanCosmeticUrl(userProfileData.avatarUrl) || user?.photoURL || `https://placehold.co/100x100/0A0E17/22d3ee?text=U`;
@@ -90,13 +94,13 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
 
         {/* ESTATÍSTICAS ALQUÍMICAS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <StatPill icon={Hexagon} value={`Nível ${levelInfo.currentLevel}`} label="Matriz Atual" gradientClass="from-emerald-950/80 to-emerald-950/20 shadow-[0_0_20px_rgba(16,185,129,0.15)] border-emerald-500/20" />
+            <StatPill icon={Hexagon} value={`Nível ${currentLvl}`} label="Matriz Atual" gradientClass="from-emerald-950/80 to-emerald-950/20 shadow-[0_0_20px_rgba(16,185,129,0.15)] border-emerald-500/20" />
             
             <div className={`backdrop-blur-md p-4 rounded-3xl border border-white/5 flex items-center gap-4 from-cyan-950/80 to-cyan-950/20 shadow-[0_0_20px_rgba(34,211,238,0.15)] border-cyan-500/20`}>
                 <div className="flex-1">
                     <div className="flex items-end justify-between mb-2">
-                        <span className="text-3xl font-black text-white leading-none tracking-tight">{Math.floor(levelInfo.xpInCurrentLevel / 1000)}k XP</span>
-                        <span className="text-[10px] font-black text-cyan-300/60 uppercase tracking-widest">{Math.floor(xpNeededForNext / 1000)}k p/ {levelInfo.currentLevel + 1}</span>
+                        <span className="text-xl md:text-2xl font-black text-white leading-none tracking-tight">{currentXp} XP</span>
+                        <span className="text-[9px] font-black text-cyan-300/60 uppercase tracking-widest">{xpNeededForNext} p/ {currentLvl + 1}</span>
                     </div>
                     <div className="w-full h-1.5 bg-[#050505]/60 rounded-full overflow-hidden border border-white/5 shadow-inner">
                         <div className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 rounded-full" style={{ width: `${xpProgress}%` }}></div>
@@ -119,7 +123,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
             ))}
         </div>
 
-        {/* CONTEÚDO DAS ABAS COM VISUAL POLIDO */}
+        {/* CONTEÚDO DAS ABAS */}
         {activeTab === 'Leituras Recentes' && (
             <CosmicCard>
                 <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-5">
@@ -177,39 +181,4 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
         {activeTab === 'Configurações Astral' && (
             <CosmicCard>
                 <div className="flex items-center gap-3 mb-6 border-b border-white/5 pb-5">
-                    <div className="bg-[#050505]/60 p-3.5 rounded-2xl border border-white/10"><SettingsIcon className="w-6 h-6 text-cyan-400" /></div>
-                    <div>
-                        <h2 className="text-2xl font-black text-white tracking-tighter uppercase drop-shadow-md">Parâmetros da Jornada</h2>
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-0.5">Ajuste a sua conexão astral</p>
-                    </div>
-                </div>
-                <div className='bg-[#050505]/60 border border-white/5 rounded-2xl p-5 mb-5 flex items-center justify-between'>
-                    <div className='flex flex-col'>
-                        <span className='font-black text-sm text-white'>Modo de Leitura</span>
-                        <span className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1'>Como você consome as memórias</span>
-                    </div>
-                    <select value={userSettings.readMode} onChange={(e) => updateSettings({ readMode: e.target.value })} className="bg-[#0a0f1c] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 outline-none focus:border-cyan-500">
-                        {['Cascata', 'Página'].map(opt => <option key={opt}>{opt}</option>)}
-                    </select>
-                </div>
-                
-                <div className='bg-[#050505]/60 border border-white/5 rounded-2xl p-5 mb-10 flex items-center justify-between'>
-                    <div className='flex flex-col'>
-                        <span className='font-black text-sm text-white'>Tema da Matriz</span>
-                        <span className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1'>Aparência visual do sistema</span>
-                    </div>
-                    <select value={userSettings.theme} onChange={(e) => updateSettings({ theme: e.target.value })} className="bg-[#0a0f1c] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 outline-none focus:border-cyan-500">
-                        {['Escuro', 'Gelo'].map(opt => <option key={opt}>{opt}</option>)}
-                    </select>
-                </div>
-
-                <button onClick={onLogout} className="w-full mt-10 bg-[#050505] border border-white/10 text-rose-300 rounded-xl font-black py-4 transition-all hover:bg-rose-900/50 hover:border-rose-500/50 tracking-widest text-xs flex justify-center items-center gap-2">
-                    <LogOut className="w-4 h-4"/> Encerrar Conexão Astral
-                </button>
-            </CosmicCard>
-        )}
-
-      </div>
-    </div>
-  );
-}
+                    <div className="bg-[#050505]/60 p-3.5 rounded-2xl border border-white/10"><SettingsIcon className="w-6 h-6
