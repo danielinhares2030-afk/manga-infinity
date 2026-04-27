@@ -1,53 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 
-// NOVO ÍCONE MÁGICO (Cristal + Infinito + Cores: Azul, Roxo e Verde)
+// NOVO ÍCONE MÁGICO SURREAL (NEXO CÓSMICO DE INFINITO)
 export const InfinityLogo = React.memo(({ className = "w-32 h-32" }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
       <style>{`
+        @keyframes flowCosmic {
+          0%, 100% { stroke-dashoffset: 200; filter: drop-shadow(0 0 10px rgba(59,130,246,0.6)); }
+          50% { stroke-dashoffset: 0; filter: drop-shadow(0 0 20px rgba(168,85,247,0.8)); }
+        }
+        @keyframes ringSpin {
+          0% { transform: rotate(0deg) scale(1); }
+          100% { transform: rotate(360deg) scale(1.05); }
+        }
         @keyframes floatMagico {
-          0%, 100% { 
-            transform: translateY(0px) scale(1); 
-            filter: drop-shadow(0 0 15px rgba(147,51,234,0.6)); /* Brilho Roxo */
-          }
-          50% { 
-            transform: translateY(-8px) scale(1.05); 
-            filter: drop-shadow(0 0 25px rgba(52,211,153,0.8)); /* Brilho Verde Forte */
-          }
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
         }
       `}</style>
-      <svg viewBox="0 0 150 100" className="relative z-10 w-full h-full" style={{ animation: 'floatMagico 3s ease-in-out infinite' }}>
+      <svg viewBox="0 0 160 120" className="relative z-10 w-full h-full" style={{ animation: 'floatMagico 3s ease-in-out infinite' }}>
         <defs>
-          <linearGradient id="crystalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#10b981" /> {/* Verde */}
-            <stop offset="50%" stopColor="#a855f7" /> {/* Roxo */}
-            <stop offset="100%" stopColor="#3b82f6" /> {/* Azul */}
-          </linearGradient>
-          <linearGradient id="infinityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="cosmicGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#3b82f6" /> {/* Azul */}
-            <stop offset="50%" stopColor="#a855f7" /> {/* Roxo */}
-            <stop offset="100%" stopColor="#10b981" /> {/* Verde */}
+            <stop offset="100%" stopColor="#a855f7" /> {/* Roxo */}
+          </linearGradient>
+          <linearGradient id="crystalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="50%" stopColor="#10b981" /> {/* Verde Esmeralda */}
+            <stop offset="100%" stopColor="#059669" />
           </linearGradient>
         </defs>
         
-        {/* Cristal Central Traseiro */}
-        <polygon points="75,5 90,50 75,95 60,50" fill="url(#crystalGrad)" opacity="0.9" />
-        <polygon points="75,5 82,50 75,95 68,50" fill="#ffffff" opacity="0.3" />
+        {/* Anéis Orbitais Místicos (Animação ringSpin) */}
+        <ellipse cx="80" cy="60" rx="70" ry="15" fill="none" stroke="rgba(251,191,36,0.3)" strokeWidth="1" strokeDasharray="10 5" style={{ transformOrigin: '80px 60px', animation: 'ringSpin 15s linear infinite' }} />
+        <ellipse cx="80" cy="60" rx="70" ry="15" fill="none" stroke="rgba(168,85,247,0.2)" strokeWidth="0.5" strokeDasharray="5 15" style={{ transformOrigin: '80px 60px', animation: 'ringSpin 10s linear infinite reverse' }} />
+
+        {/* Cristal Central do Nexo (Surreal) */}
+        <polygon points="80,10 95,60 80,110 65,60" fill="url(#crystalGrad)" opacity="0.95" filter="drop-shadow(0 0 15px rgba(16,185,129,0.7))" />
+        <polygon points="80,25 88,60 80,95 72,60" fill="none" stroke="#ffffff" strokeWidth="1.5" opacity="0.6" />
+        <circle cx="80" cy="60" r="4" fill="#fbbf24" filter="drop-shadow(0 0 10px rgba(251,191,36,0.8))" />
         
-        {/* Símbolo do Infinito com bordas arredondadas */}
-        <path d="M 75 50 C 50 15, 15 15, 15 50 C 15 85, 50 85, 75 50 C 100 15, 135 15, 135 50 C 135 85, 100 85, 75 50 Z" 
-              fill="none" stroke="url(#infinityGrad)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M 75 50 C 50 15, 15 15, 15 50 C 15 85, 50 85, 75 50 C 100 15, 135 15, 135 50 C 135 85, 100 85, 75 50 Z" 
-              fill="none" stroke="#ffffff" strokeWidth="2" opacity="0.5" strokeLinecap="round" strokeLinejoin="round" />
-        
-        {/* Cristal Central Frontal (Menor e Vazado) */}
-        <polygon points="75,20 82,50 75,80 68,50" fill="none" stroke="#ffffff" strokeWidth="1.5" />
-        <circle cx="75" cy="50" r="3" fill="#ffffff" />
-        
-        {/* Estrelas mágicas flutuantes */}
-        <path d="M 30 20 L 32 28 L 40 30 L 32 32 L 30 40 L 28 32 L 20 30 L 28 28 Z" fill="#10b981" opacity="0.8" />
-        <path d="M 120 70 L 121 75 L 126 76 L 121 77 L 120 82 L 119 77 L 114 76 L 119 75 Z" fill="#3b82f6" opacity="0.8" />
+        {/* Símbolo do Infinito Formado por Fluxos Cósmicos (Animação flowCosmic) */}
+        <path d="M 80 60 C 55 10, 10 10, 10 60 C 10 110, 55 110, 80 60 C 105 10, 150 10, 150 60 C 150 110, 105 110, 80 60 Z" 
+              fill="none" stroke="url(#cosmicGrad)" strokeWidth="8" strokeLinecap="round" strokeDasharray="200" 
+              style={{ animation: 'flowCosmic 6s linear infinite' }}/>
+        <path d="M 80 60 C 55 10, 10 10, 10 60 C 10 110, 55 110, 80 60 C 105 10, 150 10, 150 60 C 150 110, 105 110, 80 60 Z" 
+              fill="none" stroke="#ffffff" strokeWidth="2.5" opacity="0.7" strokeLinecap="round" strokeDasharray="150" 
+              style={{ animation: 'flowCosmic 4s linear infinite reverse' }} />
+
+        {/* Partículas Mágicas Flutuantes */}
+        <circle cx="20" cy="20" r="2" fill="#fbbf24" opacity="0.7" />
+        <circle cx="140" cy="100" r="1.5" fill="#10b981" opacity="0.6" />
+        <circle cx="150" cy="30" r="2.5" fill="#3b82f6" opacity="0.8" />
+        <circle cx="30" cy="100" r="2" fill="#a855f7" opacity="0.7" />
       </svg>
     </div>
   );
@@ -72,7 +78,7 @@ export const SplashScreen = React.memo(() => {
 
       <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[600ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-4'}`}>
         
-        {/* NOVO ÍCONE DE ABERTURA */}
+        {/* NOVO ÍCONE DE ABERTURA SURREAL */}
         <InfinityLogo className="w-48 h-48 md:w-56 md:h-56 mb-4" />
         
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 tracking-[0.2em] uppercase drop-shadow-[0_0_15px_rgba(147,51,234,0.3)] mt-2">
