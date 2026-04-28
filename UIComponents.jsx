@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-// LOGO MANGAKAGE (Usando o seu mascote oficial com animação)
+// LOGO MANGAKAGE (Usando o seu mascote oficial com animação e aura SVG)
 export const KageLogo = React.memo(({ className = "w-48 h-48" }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
@@ -18,12 +18,39 @@ export const KageLogo = React.memo(({ className = "w-48 h-48" }) => {
         }
       `}</style>
       
-      {/* Aura Sombria Pulsante atrás do mascote */}
-      <div className="absolute inset-0 bg-red-600/15 blur-[40px] rounded-full animate-pulse"></div>
+      {/* NOVA AURA DE ENERGIA EM SVG */}
+      <svg 
+        viewBox="0 0 200 200" 
+        className="absolute inset-0 w-full h-full scale-[1.4] z-0 pointer-events-none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <radialGradient id="auraGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#991b1b" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+          </radialGradient>
+          <filter id="blurFilter" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+        </defs>
+        
+        {/* Núcleo pulsante da aura */}
+        <circle cx="100" cy="100" r="70" fill="url(#auraGlow)" className="animate-pulse" filter="url(#blurFilter)" />
+        
+        {/* Anéis de energia giratórios para dar movimento */}
+        <g className="origin-center animate-[spin_8s_linear_infinite]">
+          <circle cx="100" cy="100" r="65" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="15 10 5 20" opacity="0.4" filter="url(#blurFilter)" />
+          <circle cx="100" cy="100" r="55" fill="none" stroke="#dc2626" strokeWidth="2" strokeDasharray="30 20 10 20" opacity="0.5" filter="url(#blurFilter)" />
+        </g>
+        <g className="origin-center animate-[spin_12s_linear_infinite_reverse]">
+           <circle cx="100" cy="100" r="75" fill="none" stroke="#b91c1c" strokeWidth="1" strokeDasharray="10 40 50 15" opacity="0.6" filter="url(#blurFilter)" />
+        </g>
+      </svg>
       
-      {/* O Seu Mascote Oficial (Atualizado) */}
+      {/* O Seu Mascote Oficial (Nova URL) */}
       <img 
-        src="https://i.ibb.co/FkdtzwwR/Generate-cone-de-ninja-japon-s-radical-com-aura-de-energia-poderosa-tipo-20260428-131119-0000.png" 
+        src="https://i.ibb.co/j9yXk5dP/Gemini-Generated-Image-gj2yhugj2yhugj2y.png" 
         alt="Mangakage Mascot" 
         className="relative z-10 w-full h-full object-contain"
         style={{ animation: 'kageFloat 4s ease-in-out infinite' }}
@@ -44,16 +71,14 @@ export const SplashScreen = React.memo(() => {
     <div className={`fixed inset-0 z-[9999] bg-[#030305] flex flex-col items-center justify-center font-sans transition-all duration-500`}>
       <style>{`body, html { background-color: #030305 !important; margin: 0; padding: 0; }`}</style>
       
-      {/* AURAS DAS SOMBRAS */}
+      {/* AURAS DAS SOMBRAS DO FUNDO */}
       <div className="absolute top-[20%] left-[10%] w-[50vw] h-[50vw] bg-red-900/20 blur-[120px] rounded-full animate-[pulse_4s_ease-in-out_infinite_alternate]"></div>
       <div className="absolute bottom-[20%] right-[10%] w-[50vw] h-[50vw] bg-rose-900/15 blur-[120px] rounded-full animate-[pulse_5s_ease-in-out_infinite_alternate-reverse]"></div>
 
       <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[700ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
         
-        {/* MASCOTE NA ENTRADA (Agora com o nome na imagem) */}
+        {/* MASCOTE NA ENTRADA */}
         <KageLogo className="w-64 h-64 md:w-80 md:h-80" />
-        
-        {/* O texto "MANGAKAGE" que ficava aqui foi removido */}
         
         <div className="mt-12 flex items-center gap-3 opacity-60">
             <div className="w-2.5 h-2.5 bg-red-700 rounded-full animate-ping"></div>
