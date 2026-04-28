@@ -11,8 +11,8 @@ export function LibraryView({ mangas, user, libraryData, onNavigate, onRequireLo
       <div className="flex flex-col items-center justify-center py-32 animate-in fade-in duration-300 relative z-10 min-h-[70vh]">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-red-600/10 blur-[80px] rounded-full pointer-events-none"></div>
         <Lock className="w-16 h-16 text-red-900/50 mb-4 animate-pulse drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]" />
-        <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-widest drop-shadow-md">Acervo Oculto</h2>
-        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-8 text-center">Apenas ninjas registrados podem selar tomos.</p>
+        <h2 className="text-2xl font-black text-white mb-2 uppercase tracking-widest drop-shadow-md">Biblioteca Oculta</h2>
+        <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-8 text-center">Apenas ninjas registrados podem selar obras.</p>
         <button onClick={onRequireLogin} className="bg-gradient-to-r from-red-700 to-red-500 text-white font-black px-10 py-4 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-[0_0_25px_rgba(220,38,38,0.5)] hover:scale-105 transition-all duration-300 uppercase tracking-widest text-xs flex items-center gap-2">
             <Flame className="w-4 h-4" /> Alistar-se nas Sombras
         </button>
@@ -31,8 +31,8 @@ export function LibraryView({ mangas, user, libraryData, onNavigate, onRequireLo
               <Library className="w-6 h-6 text-red-500" />
           </div>
           <div>
-              <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter drop-shadow-md">Sua Guarda</h2>
-              <p className="text-[10px] sm:text-xs text-red-500/80 font-bold uppercase tracking-widest mt-1">Os tomos selados pelo seu sangue.</p>
+              <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter drop-shadow-md">Sua biblioteca</h2>
+              <p className="text-[10px] sm:text-xs text-red-500/80 font-bold uppercase tracking-widest mt-1">As obras selados pelo seu sangue.</p>
           </div>
       </div>
 
@@ -59,7 +59,7 @@ export function LibraryView({ mangas, user, libraryData, onNavigate, onRequireLo
          <div className="flex flex-col items-center justify-center py-20 bg-[#0a0a0c]/50 rounded-3xl border border-white/5 border-dashed mt-8 shadow-inner">
             <Moon className="w-12 h-12 text-red-900/40 mb-4 animate-pulse" />
             <p className="text-gray-500 font-black text-xs uppercase tracking-widest text-center px-4 leading-relaxed">
-                O vazio prevalece nas sombras.<br/> Nenhum tomo foi selado como "{activeStatus}".
+                O vazio prevalece nas sombras.<br/> Nenhum obra foi selado como "{activeStatus}".
             </p>
         </div>
       ) : (
