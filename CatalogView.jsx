@@ -1,19 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Infinity as InfinityIcon, Clock, Star, ChevronDown, LayoutGrid, List, SlidersHorizontal, Hexagon } from 'lucide-react';
+import { Search, Clock, Star, ChevronDown, LayoutGrid, List, SlidersHorizontal, Hexagon } from 'lucide-react';
 import { timeAgo } from './helpers';
+import { InfinityLogo } from './UIComponents';
 
-// Dropdown Customizado Cósmico
-const StyledDropdown = ({ label, value, options, onChange, Icon }) => {
+// Dropdown Customizado Cósmico (Filtros Bonitos)
+const StyledDropdown = ({ label, value, options, onChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     return (
         <div className="flex flex-col gap-1.5 flex-1 group relative">
             <label className="text-[9px] font-black text-cyan-500 uppercase tracking-widest">{label}</label>
-            <button onClick={() => setIsOpen(!isOpen)} className="w-full bg-[#050505] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 outline-none focus:border-cyan-500 flex items-center justify-between group-hover:border-white/20">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full bg-[#050505] border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-3 outline-none focus:border-cyan-500 flex items-center justify-between group-hover:border-white/20 transition-colors">
                 <span className='line-clamp-1'>{value}</span>
                 <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {isOpen && (
-                <div className="absolute top-[calc(100%+6px)] left-0 w-full bg-[#0a0f1c] border border-white/10 rounded-xl py-2 shadow-xl z-50 animate-in fade-in zoom-in-95 no-scrollbar max-h-60 overflow-y-auto">
+                <div className="absolute top-[calc(100%+6px)] left-0 w-full bg-[#0a0f1c] border border-cyan-500/30 rounded-xl py-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 no-scrollbar max-h-60 overflow-y-auto">
                     {options.map(opt => (
                         <button key={opt} onClick={() => { onChange(opt); setIsOpen(false); }} className={`w-full text-left px-4 py-2.5 text-xs font-medium transition-colors ${value === opt ? 'bg-cyan-500 text-black font-bold' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}>
                             {opt}
@@ -104,7 +105,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-8">
                 
-                {/* CABEÇALHO COM NOVO CONTADOR ALQUÍMICO */}
+                {/* CABEÇALHO COM CONTADOR ALQUÍMICO */}
                 <div className="flex items-center gap-4 mb-6">
                     <div className="bg-[#0a0f1c] p-2.5 rounded-xl border border-cyan-500/20 shadow-[0_0_15px_rgba(34,211,238,0.2)] flex-shrink-0">
                         <InfinityLogo className="w-6 h-6 text-cyan-400" />
@@ -112,7 +113,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     <h1 className="text-3xl font-black text-white tracking-tighter uppercase flex items-center drop-shadow-md">
                         Catálogo
                     </h1>
-                    {/* Contador Estilo Alquimia (Dourado/Místico) - Mantido das rodadas anteriores */}
+                    {/* Contador Estilo Alquimia (Dourado/Místico) */}
                     <div className="ml-auto flex items-center gap-1.5 bg-gradient-to-r from-[#1a1405] to-[#0f0c03] border-l-2 border-r-2 border-amber-500 px-3 py-1.5 shadow-[0_0_15px_rgba(245,158,11,0.15)] relative overflow-hidden flex-shrink-0">
                         <Hexagon className="w-3.5 h-3.5 text-amber-400 animate-[spin_10s_linear_infinite]" />
                         <span className="text-amber-400 text-[11px] font-black uppercase tracking-[0.2em] relative z-10">
@@ -122,7 +123,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     </div>
                 </div>
 
-                {/* BARRA DE BUSCA (A Lógica e visual melhorados) */}
+                {/* BARRA DE BUSCA */}
                 <div className="relative mb-4 group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Search className="h-5 w-5 text-gray-500 group-focus-within:text-cyan-400 transition-colors" />
@@ -153,7 +154,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     </div>
                 </div>
 
-                {/* PAINEL DE FILTROS AVANÇADOS (Pílulas Grosseiras FORAM EMBORA) */}
+                {/* PAINEL DE FILTROS AVANÇADOS (SEM PÍLULAS GROSSEIRAS) */}
                 {showFilters && (
                     <div className="bg-[#0a0f1c]/95 backdrop-blur-xl border border-cyan-500/20 rounded-xl p-5 mb-6 shadow-2xl animate-in slide-in-from-top-2 no-scrollbar">
                         {/* 4 Colunas com StyledDropdowns (Visual Premium) */}
@@ -166,7 +167,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     </div>
                 )}
 
-                {/* PÍLULAS DE ACESSO RÁPIDO (Mantendo estrutura da referência e estética Cósmica) */}
+                {/* PÍLULAS DE ACESSO RÁPIDO */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-6 mb-2">
                     {typeOptions.map(opt => (
                         <button 
@@ -223,7 +224,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                             </div>
                         </div>
                     )) : (
-                        <div className="col-span-full py-20 flex flex-col items-center justify-center bg-[#0a0f1c]/50 rounded-xl border border-white/5 border-dashed">
+                        <div className="col-span-full py-20 flex flex-col items-center justify-center bg-[#0a0f1c]/50 rounded-3xl border border-white/5 border-dashed">
                             <SlidersHorizontal className="w-12 h-12 text-gray-600 mx-auto mb-4 animate-pulse" />
                             <p className="text-gray-400 font-black text-xs uppercase tracking-widest text-center px-4 leading-relaxed">A matriz não revelou nenhum resultado com estes filtros.<br />Tente refinar sua busca astral.</p>
                         </div>
