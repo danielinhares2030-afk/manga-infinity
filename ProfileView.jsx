@@ -1,72 +1,61 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Compass, History, Library, Camera, Edit3, LogOut, Loader2, BookOpen, AlertTriangle, Trophy, Zap, Trash2, RefreshCw, LayoutTemplate, Settings, Flame, Scroll, Users, Shield, ChevronRight, Swords, Moon, Lock } from 'lucide-react';
+import { Compass, History, Library, Camera, Edit3, LogOut, Loader2, BookOpen, AlertTriangle, Trophy, Zap, Trash2, RefreshCw, LayoutTemplate, Settings, Flame, Scroll, Users, Shield, ChevronRight, Swords, Moon, Lock, Eye, Bookmark, Hexagon, Crown, Ghost } from 'lucide-react';
 import { updateProfile } from "firebase/auth";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
 import { auth, db } from './firebase';
 import { APP_ID } from './constants';
 import { compressImage, getLevelRequirement, getLevelTitle, cleanCosmeticUrl, timeAgo } from './helpers';
 
-// CARTÃO SOMBRIO KAGE
+// CARTÃO SOMBRIO KAGE (Menos redondo, mais afiado)
 const ShadowCard = ({ children, className = "" }) => (
-  <div className={`bg-[#0a0a0c]/90 border border-red-600/30 rounded-3xl p-6 md:p-8 shadow-[0_0_40px_rgba(220,38,38,0.1)] relative overflow-hidden backdrop-blur-xl ${className}`}>
+  <div className={`bg-[#0a0a0c]/90 border border-red-600/30 rounded-xl p-5 md:p-7 shadow-[0_0_40px_rgba(220,38,38,0.1)] relative overflow-hidden backdrop-blur-xl ${className}`}>
      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-red-600/60 to-transparent"></div>
      <div className="relative z-10">{children}</div>
   </div>
 );
 
-// NOVO COMPONENTE DE EMBLEMA EQUIPÁVEL (Visual Surreal, Premium e Rápido)
+// NOVO COMPONENTE DE EMBLEMA EQUIPÁVEL (Compacto, sombrio e agressivo)
 const AchievementBadge = ({ badge, isEquipped, onEquip }) => (
-  <div className={`flex flex-col items-center p-6 border transition-all duration-300 relative group rounded-2xl ${
+  <div className={`flex flex-col items-center p-3 sm:p-4 border transition-all duration-300 relative group rounded-lg overflow-hidden ${
     badge.condition 
       ? isEquipped
-        ? 'bg-gradient-to-b from-red-950/40 to-[#050505] border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.25)]'
-        : 'bg-[#0a0a0c] border-white/10 hover:border-red-600/50 hover:bg-[#0f0f13] shadow-lg hover:-translate-y-1'
-      : 'bg-[#030305] border-white/5 opacity-60 grayscale'
+        ? 'bg-gradient-to-br from-red-950/50 to-[#030305] border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-[1.02]'
+        : 'bg-[#0a0a0c]/80 border-white/5 hover:border-red-600/50 hover:bg-[#0f0f13] shadow-md hover:-translate-y-1'
+      : 'bg-[#030305]/50 border-white/5 opacity-50 grayscale'
   }`}>
-    {/* Glow de fundo intenso se equipado */}
-    {isEquipped && <div className="absolute inset-0 bg-red-600/10 blur-[30px] rounded-full pointer-events-none"></div>}
-    
-    {/* Linha Neon Superior se equipado */}
+    {/* Brilho intenso no topo se equipado */}
     {isEquipped && <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_15px_rgba(220,38,38,1)]"></div>}
     
-    {/* Container do Ícone com Aura */}
-    <div className={`w-16 h-16 mb-4 rounded-xl flex items-center justify-center relative transition-transform duration-300 group-hover:scale-110 ${
-        badge.condition ? (isEquipped ? 'bg-red-900/30 border border-red-500/50 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-white/5 border border-white/10') : 'bg-transparent'
+    {/* Container do Ícone Compacto */}
+    <div className={`w-12 h-12 mb-3 rounded-lg flex items-center justify-center relative transition-transform duration-300 group-hover:scale-110 ${
+        badge.condition ? (isEquipped ? 'bg-red-900/40 border border-red-500/50 shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'bg-black/50 border border-white/10') : 'bg-transparent'
     }`}>
-        <badge.icon className={`w-8 h-8 ${badge.condition ? badge.colorClass : 'text-gray-600'} drop-shadow-lg z-10`} />
+        <badge.icon className={`w-6 h-6 ${badge.condition ? badge.colorClass : 'text-gray-600'} drop-shadow-lg z-10`} />
     </div>
 
-    <span className={`font-black text-[11px] uppercase tracking-widest text-center line-clamp-1 mb-2 z-10 ${
-        badge.condition ? (isEquipped ? 'text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]' : 'text-white') : 'text-gray-500'
+    <span className={`font-black text-[10px] sm:text-[11px] uppercase tracking-widest text-center line-clamp-1 mb-1 z-10 ${
+        badge.condition ? (isEquipped ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]' : 'text-white') : 'text-gray-500'
     }`}>
         {badge.title}
     </span>
     
-    <span className="text-[10px] text-gray-400 font-bold text-center line-clamp-2 mb-6 px-1 leading-relaxed z-10 h-8">
+    <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold text-center line-clamp-2 mb-4 px-1 leading-tight z-10 h-6">
         {badge.description}
     </span>
     
     {badge.condition ? (
-        <button onClick={() => onEquip(badge)} className={`w-full py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 z-10 ${
+        <button onClick={() => onEquip(badge)} className={`w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-300 z-10 ${
             isEquipped 
-            ? 'bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:bg-red-500 hover:scale-[1.02]' 
-            : 'bg-transparent border border-red-600/30 text-red-500 hover:bg-red-900/40 hover:border-red-500 hover:scale-[1.02]'
+            ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:bg-red-500' 
+            : 'bg-transparent border border-red-600/30 text-red-500 hover:bg-red-900/40 hover:border-red-500'
         }`}>
             {isEquipped ? 'Equipado' : 'Equipar'}
         </button>
     ) : (
-        <div className="w-full py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-black/40 border border-white/5 text-gray-600 flex justify-center items-center gap-2 z-10">
+        <div className="w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-black/40 border border-white/5 text-gray-600 flex justify-center items-center gap-1.5 z-10">
             <Lock className="w-3 h-3" /> Oculto
         </div>
     )}
-  </div>
-);
-
-const KageStat = ({ icon: Icon, value, label, color }) => (
-  <div className="relative flex flex-col items-center justify-center w-24 h-24 flex-shrink-0 group bg-black/40 rounded-2xl border border-white/5 hover:border-red-600/30 transition-colors">
-    <Icon className={`w-5 h-5 mb-2 ${color} drop-shadow-md group-hover:scale-110 transition-transform duration-300`} />
-    <span className="text-lg font-black text-white tracking-tighter truncate w-full px-2">{value}</span>
-    <span className="text-[8px] text-gray-400 uppercase font-black tracking-widest mt-0.5 truncate w-full px-1">{label}</span>
   </div>
 );
 
@@ -114,13 +103,13 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const crystalsCount = userProfileData.crystals || 0;
   const coinsCount = userProfileData.coins || 0;
 
-  // Lista Mestra de Emblemas (Sem a palavra tomo)
+  // Lista Mestra de Emblemas (Novos Nomes e Ícones Insanos)
   const badgesList = [
-    { id: 'iniciado', icon: Scroll, title: "Iniciado Sangrento", description: "Lê 10 capítulos no sistema.", condition: readCount >= 10, colorClass: "text-red-500" },
-    { id: 'guardiao', icon: Users, title: "Guardião das Sombras", description: "Venera 5 obras favoritas.", condition: favCount >= 5, colorClass: "text-amber-500" },
-    { id: 'coletor', icon: Moon, title: "Lâmina do Nexo", description: "Acumula 50 cristais nexo.", condition: crystalsCount >= 50, colorClass: "text-purple-500" },
-    { id: 'ouro', icon: Flame, title: "Ouro Carmesim", description: "Coleta 1000 moedas astrais.", condition: coinsCount >= 1000, colorClass: "text-rose-500" },
-    { id: 'mestre', icon: Shield, title: "Mestre Kage", description: "Alcança o absurdo Nível 10.", condition: level >= 10, colorClass: "text-white" }
+    { id: 'iniciado', icon: Eye, title: "Olho do Corvo", description: "Desvenda 10 capítulos no sistema.", condition: readCount >= 10, colorClass: "text-red-500" },
+    { id: 'guardiao', icon: Bookmark, title: "Pacto Sombrio", description: "Sela 5 obras em sua guarda.", condition: favCount >= 5, colorClass: "text-purple-500" },
+    { id: 'coletor', icon: Hexagon, title: "Cristal do Abismo", description: "Consome 50 cristais nexo.", condition: crystalsCount >= 50, colorClass: "text-blue-500" },
+    { id: 'ouro', icon: Crown, title: "Avareza Escarlate", description: "Acumula 1000 moedas astrais.", condition: coinsCount >= 1000, colorClass: "text-amber-500" },
+    { id: 'mestre', icon: Ghost, title: "Espectro Kage", description: "Transcreve a alma ao Nível 10.", condition: level >= 10, colorClass: "text-rose-500" }
   ];
 
   // Lógica de Equipar Emblema
@@ -153,26 +142,22 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   return (
     <div className={`animate-in fade-in duration-300 w-full pb-24 font-sans min-h-screen text-gray-200 bg-[#030305] overflow-x-hidden`}>
       
-      {/* Fundo Mágico / Cósmico Kage */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/15 via-[#030305] to-[#000000] pointer-events-none z-0"></div>
 
-      {/* Modal de Confirmação */}
       {confirmAction && (
           <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-              <div className="bg-[#0a0a0c] border border-red-600/50 p-8 rounded-2xl max-w-sm w-full text-center shadow-[0_0_40px_rgba(220,38,38,0.2)]">
+              <div className="bg-[#0a0a0c] border border-red-600/50 p-8 rounded-xl max-w-sm w-full text-center shadow-[0_0_40px_rgba(220,38,38,0.2)]">
                   <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
                   <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tight">Confirmar Ação?</h3>
-                  {/* Palavra Tomo removida aqui também */}
                   <p className="text-sm text-gray-400 mb-8 font-medium">{confirmAction === 'history' ? 'O registro do tempo será apagado permanentemente.' : 'A matriz será recarregada para limpar o fluxo.'}</p>
                   <div className="flex gap-4">
-                      <button onClick={() => setConfirmAction(null)} className="flex-1 bg-[#050505] border border-white/10 text-gray-300 font-black py-3 rounded-xl hover:bg-white/5 transition-colors text-xs uppercase tracking-widest">Recuar</button>
-                      <button onClick={executeConfirmAction} className="flex-1 bg-red-600/20 text-red-500 border border-red-500/40 font-black py-3 rounded-xl transition-colors hover:bg-red-500 hover:text-white text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(239,68,68,0.3)]">Confirmar</button>
+                      <button onClick={() => setConfirmAction(null)} className="flex-1 bg-[#050505] border border-white/10 text-gray-300 font-black py-3 rounded-lg hover:bg-white/5 transition-colors text-xs uppercase tracking-widest">Recuar</button>
+                      <button onClick={executeConfirmAction} className="flex-1 bg-red-600/20 text-red-500 border border-red-500/40 font-black py-3 rounded-lg transition-colors hover:bg-red-500 hover:text-white text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(239,68,68,0.3)]">Confirmar</button>
                   </div>
               </div>
           </div>
       )}
 
-      {/* HEADER: CAPA IMERSIVA COM FADE PROFUNDO */}
       <div className="w-full h-[240px] md:h-[320px] bg-[#050505] relative group overflow-hidden border-b border-red-900/40 z-0">
         {cleanCosmeticUrl(eq.capa_fundo?.preview) ? ( 
             <img src={cleanCosmeticUrl(eq.capa_fundo.preview)} className={`w-full h-full object-cover object-center opacity-70 mix-blend-screen ${eq.capa_fundo.cssClass || ''}`} /> 
@@ -182,7 +167,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
             <div className={`w-full h-full bg-gradient-to-br from-red-950 to-black ${eq.capa_fundo?.cssClass || ''}`} /> 
         )}
         
-        {/* Fades Sombrios Avançados */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#030305] via-[#030305]/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-transparent" />
         <div className="absolute inset-0 bg-red-900/10 mix-blend-overlay"></div>
@@ -197,12 +181,9 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
         
-        {/* BLOCO SUPERIOR: AVATAR + INFO */}
         <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-10 mb-10 relative -mt-24 md:-mt-28">
           
           <div className={`relative w-40 h-40 md:w-48 md:h-48 rounded-full flex items-center justify-center flex-shrink-0 group ${(!eq.moldura?.preview && eq.moldura) ? eq.moldura.cssClass : ''}`}>
-            
-            {/* Auras de Poder do Avatar */}
             <div className="absolute -inset-4 rounded-full border border-red-600/20 border-dashed animate-[spin_20s_linear_infinite]"></div>
             <div className="absolute -inset-1 rounded-full border-[3px] border-red-600/60 shadow-[0_0_30px_rgba(220,38,38,0.5)]"></div>
 
@@ -218,8 +199,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
             <input type="file" accept="image/*" ref={avatarInputRef} className="hidden" onChange={(e) => handleImageUpload(e, 'avatar')} />
           </div>
 
-          {/* Área de Informações do Kage (Glassmorphism Premium) */}
-          <div className="flex-1 bg-[#0a0a0c]/60 backdrop-blur-md border border-white/5 p-6 rounded-3xl shadow-xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6 relative z-20 mb-2 md:mb-0 text-center md:text-left">
+          <div className="flex-1 bg-[#0a0a0c]/60 backdrop-blur-md border border-white/5 p-6 rounded-xl shadow-xl flex flex-col md:flex-row items-center md:items-end justify-between gap-6 relative z-20 mb-2 md:mb-0 text-center md:text-left">
               <div>
                   <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
                       <Swords className="w-4 h-4 text-red-500" />
@@ -231,15 +211,14 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                   </h1>
                   <p className="text-gray-500 font-bold text-xs mt-1 drop-shadow-sm">{user.email}</p>
                   
-                  {/* EMBLEMA EQUIPADO EM DESTAQUE */}
                   <div className="mt-4 flex flex-wrap items-center justify-center md:justify-start gap-3">
-                      <div className="bg-[#030305] border border-red-600/40 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+                      <div className="bg-[#030305] border border-red-600/40 inline-flex items-center gap-2 px-4 py-2 rounded-lg shadow-[0_0_15px_rgba(220,38,38,0.2)]">
                           <Trophy className="w-4 h-4 text-amber-500" />
                           <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Nível {level} • {getLevelTitle(level)}</span>
                       </div>
                       
                       {equippedBadgeData && (
-                          <div className={`bg-gradient-to-r from-black to-[#0a0a0c] border border-white/10 inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg ${equippedBadgeData.colorClass}`}>
+                          <div className={`bg-gradient-to-r from-black to-[#0a0a0c] border border-white/10 inline-flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg ${equippedBadgeData.colorClass}`}>
                               <equippedBadgeData.icon className="w-4 h-4 drop-shadow-md" />
                               <span className="text-[10px] font-black uppercase tracking-[0.2em]">{equippedBadgeData.title}</span>
                           </div>
@@ -248,39 +227,37 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
               </div>
 
               <div className="flex gap-3 w-full md:w-auto">
-                  <button onClick={() => setIsEditing(!isEditing)} className="flex-1 md:flex-none bg-[#050505] border border-red-600/50 text-red-500 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(220,38,38,0.1)]">
+                  <button onClick={() => setIsEditing(!isEditing)} className="flex-1 md:flex-none bg-[#050505] border border-red-600/50 text-red-500 px-6 py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(220,38,38,0.1)]">
                       <Edit3 className="w-4 h-4" /> {isEditing ? 'Selar' : 'Forjar Perfil'}
                   </button>
-                  <button onClick={onLogout} className="bg-red-500/10 text-red-400 p-3.5 rounded-xl hover:bg-red-600 hover:text-white transition-all border border-red-500/20 shadow-md">
+                  <button onClick={onLogout} className="bg-red-500/10 text-red-400 p-3.5 rounded-lg hover:bg-red-600 hover:text-white transition-all border border-red-500/20 shadow-md">
                       <LogOut className="w-4 h-4" />
                   </button>
               </div>
           </div>
         </div>
         
-        {bio && !isEditing && <p className="text-gray-400 text-sm mb-10 font-bold bg-gradient-to-r from-[#0a0a0c] to-transparent p-6 rounded-2xl border-l-4 border-red-600 whitespace-pre-wrap italic shadow-lg text-center md:text-left max-w-4xl mx-auto md:mx-0">"{bio}"</p>}
+        {bio && !isEditing && <p className="text-gray-400 text-sm mb-10 font-bold bg-gradient-to-r from-[#0a0a0c] to-transparent p-6 rounded-xl border-l-4 border-red-600 whitespace-pre-wrap italic shadow-lg text-center md:text-left max-w-4xl mx-auto md:mx-0">"{bio}"</p>}
 
-        {/* MODO DE EDIÇÃO */}
         {isEditing && (
           <ShadowCard className="mb-10 animate-in fade-in duration-300">
             <div className="space-y-6">
               <div>
                  <label className="block text-[10px] font-black text-red-500 mb-2 uppercase tracking-widest">Nome nas Sombras</label>
-                 <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-[#050505] border border-white/10 rounded-xl px-5 py-4 text-white text-sm font-medium outline-none focus:border-red-600 transition-colors shadow-inner"/>
+                 <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-[#050505] border border-white/10 rounded-lg px-5 py-4 text-white text-sm font-medium outline-none focus:border-red-600 transition-colors shadow-inner"/>
               </div>
               <div>
                  <label className="block text-[10px] font-black text-red-500 mb-2 uppercase tracking-widest">Aura Pessoal (Bio)</label>
-                 <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="w-full bg-[#050505] border border-white/10 rounded-xl px-5 py-4 text-white text-sm font-medium resize-none outline-none focus:border-red-600 transition-colors shadow-inner"></textarea>
+                 <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className="w-full bg-[#050505] border border-white/10 rounded-lg px-5 py-4 text-white text-sm font-medium resize-none outline-none focus:border-red-600 transition-colors shadow-inner"></textarea>
               </div>
             </div>
-            <button onClick={handleSave} disabled={loading} className="mt-8 bg-gradient-to-r from-red-700 to-red-500 text-white text-xs font-black px-8 py-4.5 rounded-xl w-full flex justify-center hover:opacity-90 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(220,38,38,0.4)]">
+            <button onClick={handleSave} disabled={loading} className="mt-8 bg-gradient-to-r from-red-700 to-red-500 text-white text-xs font-black px-8 py-4.5 rounded-lg w-full flex justify-center hover:opacity-90 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(220,38,38,0.4)]">
                 {loading ? <Loader2 className="w-5 h-5 animate-spin"/> : 'Selar Identidade'}
             </button>
           </ShadowCard>
         )}
 
-        {/* LÂMINA DE XP */}
-        <div className="mb-12 bg-[#0a0a0c]/80 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-xl">
+        <div className="mb-12 bg-[#0a0a0c]/80 border border-white/5 rounded-xl p-6 md:p-8 backdrop-blur-md shadow-xl">
             <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Progresso Sombrio: {currentXp} XP</span>
                 <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">{xpNeeded} XP para Nível {level + 1}</span>
@@ -292,7 +269,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
             </div>
         </div>
 
-        {/* SELETOR DE ABAS PREMIUM */}
         <div className="mb-8 border-b border-red-900/30">
           <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar snap-x px-2">
             {['Estatísticas', 'Emblemas', 'Histórico', 'Configurações'].map((tab) => (
@@ -307,26 +283,25 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
           </div>
         </div>
         
-        {/* CONTEÚDO DAS ABAS */}
         {activeTab === "Estatísticas" && (
           <div className="animate-in fade-in slide-in-from-left-4 duration-300">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
+                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
                     <Library className="w-8 h-8 text-amber-500/50 mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:text-amber-500"/>
                     <span className="text-4xl font-black text-white mb-1">{!dataLoaded ? <Loader2 className="w-6 h-6 animate-spin"/> : Object.keys(libraryData).length}</span>
                     <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Obras Salvas</span>
                 </div>
-                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
+                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
                     <BookOpen className="w-8 h-8 text-red-500/50 mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:text-red-500"/>
                     <span className="text-4xl font-black text-white mb-1">{!dataLoaded ? <Loader2 className="w-6 h-6 animate-spin"/> : historyData.length}</span>
                     <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Caps Lidos</span>
                 </div>
-                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
+                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
                     <Compass className="w-8 h-8 text-blue-500/50 mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:text-blue-500"/>
                     <span className="text-4xl font-black text-white mb-1">{!dataLoaded ? <Loader2 className="w-6 h-6 animate-spin"/> : obrasLidasIds.length}</span>
                     <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Iniciadas</span>
                 </div>
-                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-3xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
+                <div className="bg-[#0a0a0c]/80 backdrop-blur-md border border-white/5 p-6 md:p-8 rounded-xl flex flex-col items-center justify-center shadow-lg hover:border-red-600/50 transition-colors group">
                     <Zap className="w-8 h-8 text-rose-500/50 mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:text-rose-500"/>
                     <span className="text-4xl font-black text-white mb-1">{currentXp}</span>
                     <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Poder Vital</span>
@@ -335,7 +310,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
           </div>
         )}
 
-        {/* NOVA ABA: EMBLEMAS (Marcas de Sangue) */}
         {activeTab === "Emblemas" && (
             <div className="animate-in fade-in slide-in-from-left-4 duration-300">
                 <ShadowCard>
@@ -346,7 +320,8 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                         <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Conquistas gravadas na sua alma. Equipe para exibir no perfil.</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+                  {/* Grid mais denso para caber os emblemas reduzidos */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {badgesList.map(badge => (
                         <AchievementBadge 
                             key={badge.id} 
@@ -369,15 +344,15 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                       {historyData.slice(0, 15).map(hist => {
                           const mg = mangas.find(m => m.id === hist.mangaId);
                           return (
-                              <div key={hist.id} onClick={() => { if(mg) onNavigate('details', mg); }} className="bg-[#050505] border border-white/5 p-4 rounded-2xl flex items-center gap-5 cursor-pointer hover:border-red-600/50 transition-all duration-300 group shadow-sm">
-                                  <div className="w-14 h-20 rounded-xl overflow-hidden bg-black flex-shrink-0 border border-red-900/30 group-hover:shadow-[0_0_15px_rgba(220,38,38,0.3)]">{mg ? <img src={mg.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" /> : <BookOpen className="w-5 h-5 m-auto mt-7 text-red-900/50"/>}</div>
+                              <div key={hist.id} onClick={() => { if(mg) onNavigate('details', mg); }} className="bg-[#050505] border border-white/5 p-4 rounded-xl flex items-center gap-5 cursor-pointer hover:border-red-600/50 transition-all duration-300 group shadow-sm">
+                                  <div className="w-14 h-20 rounded-lg overflow-hidden bg-black flex-shrink-0 border border-red-900/30 group-hover:shadow-[0_0_15px_rgba(220,38,38,0.3)]">{mg ? <img src={mg.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" /> : <BookOpen className="w-5 h-5 m-auto mt-7 text-red-900/50"/>}</div>
                                   <div className="flex-1"><h4 className="font-bold text-sm text-white line-clamp-1 group-hover:text-red-500 transition-colors duration-300">{hist.mangaTitle}</h4><p className="text-red-600 font-black text-[10px] uppercase tracking-widest mt-1.5 bg-red-950/30 inline-block px-2 py-1 rounded-md border border-red-900/50">Capítulo {hist.chapterNumber}</p></div>
                                   <p className="text-[9px] text-gray-500 font-bold uppercase hidden sm:block">{timeAgo(hist.timestamp)}</p>
                                   <ChevronRight className="w-5 h-5 text-gray-700 group-hover:text-red-500 transition-colors duration-300" />
                               </div>
                           )
                       })}
-                      <button onClick={() => setConfirmAction('history')} className="mt-8 w-full py-4 bg-[#050505] border border-red-900/50 text-red-500 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-red-950/40 hover:border-red-500 transition-colors duration-300 flex justify-center items-center gap-2"><Trash2 className="w-4 h-4"/> Limpar Registros Sombrios</button>
+                      <button onClick={() => setConfirmAction('history')} className="mt-8 w-full py-4 bg-[#050505] border border-red-900/50 text-red-500 font-black text-[10px] uppercase tracking-widest rounded-lg hover:bg-red-950/40 hover:border-red-500 transition-colors duration-300 flex justify-center items-center gap-2"><Trash2 className="w-4 h-4"/> Limpar Registros Sombrios</button>
                    </div>
                 )}
             </ShadowCard>
@@ -393,7 +368,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                       <p className="text-sm font-black text-white uppercase tracking-widest">Modo de Leitura</p>
                       <p className="text-xs text-gray-500 mt-1 font-bold">Como você consome as memórias.</p>
                     </div>
-                    <select value={userSettings?.readMode || 'Cascata'} onChange={(e) => { updateSettings({ readMode: e.target.value }); showToast("Preferência atualizada.", "success"); }} className="bg-[#050505] border border-red-600/30 text-white text-xs font-bold rounded-xl px-5 py-3.5 outline-none focus:border-red-600 shadow-sm cursor-pointer transition-colors duration-300">
+                    <select value={userSettings?.readMode || 'Cascata'} onChange={(e) => { updateSettings({ readMode: e.target.value }); showToast("Preferência atualizada.", "success"); }} className="bg-[#050505] border border-red-600/30 text-white text-xs font-bold rounded-lg px-5 py-3.5 outline-none focus:border-red-600 shadow-sm cursor-pointer transition-colors duration-300">
                       <option value="Cascata">Cascata</option>
                       <option value="Paginação">Páginas</option>
                     </select>
@@ -415,7 +390,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                       <p className="text-sm font-black text-white uppercase tracking-widest">Aura do Sistema (Tema)</p>
                       <p className="text-xs text-gray-500 mt-1 font-bold">Padrão de cores da interface.</p>
                     </div>
-                    <select value={userSettings?.theme || 'Escuro'} onChange={(e) => { updateSettings({ theme: e.target.value }); showToast("Aura aplicada.", "success"); }} className="bg-[#050505] border border-red-600/30 text-white text-xs font-bold rounded-xl px-5 py-3.5 outline-none focus:border-red-600 shadow-sm cursor-pointer transition-colors duration-300">
+                    <select value={userSettings?.theme || 'Escuro'} onChange={(e) => { updateSettings({ theme: e.target.value }); showToast("Aura aplicada.", "success"); }} className="bg-[#050505] border border-red-600/30 text-white text-xs font-bold rounded-lg px-5 py-3.5 outline-none focus:border-red-600 shadow-sm cursor-pointer transition-colors duration-300">
                       <option value="Escuro">Escuro</option>
                       <option value="Amoled">Vazio Absoluto</option>
                     </select>
@@ -428,7 +403,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                             <p className="text-sm font-black text-white uppercase tracking-widest group-hover:text-red-500 transition-colors duration-300">Limpar Fluxo (Cache)</p>
                             <p className="text-xs text-gray-500 mt-1 font-bold">Resolve distorções na interface.</p>
                         </div>
-                        <div className="bg-white/5 p-3 rounded-xl border border-white/10 group-hover:border-red-500/50 group-hover:bg-red-950/20 transition-all duration-300">
+                        <div className="bg-white/5 p-3 rounded-lg border border-white/10 group-hover:border-red-500/50 group-hover:bg-red-950/20 transition-all duration-300">
                             <RefreshCw className="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:rotate-180 transition-all duration-300" />
                         </div>
                     </button>
