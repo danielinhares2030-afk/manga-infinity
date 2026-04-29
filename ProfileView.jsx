@@ -14,7 +14,6 @@ const ShadowCard = ({ children, className = "" }) => (
   </div>
 );
 
-// NOVO COMPONENTE DE EMBLEMA EQUIPÁVEL (MODERNO E COMPACTO)
 const AchievementBadge = ({ badge, isEquipped, onEquip }) => (
   <div className={`flex items-center p-3 sm:p-4 border transition-all duration-300 relative group rounded-xl overflow-hidden ${
     badge.condition 
@@ -99,7 +98,17 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   };
 
   const executeConfirmAction = async () => {
-      if (confirmAction === 'history') { try { historyData.forEach(async (h) => { await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'history', h.id)); }); showToast("Memórias apagadas.", "success"); } catch(e) { showToast("Erro ao limpar.", "error"); } } 
+      if (confirmAction === 'history') { 
+          try { 
+              // Agora apenas marca o registro como 'cleared: true' em vez de deletar
+              historyData.forEach(async (h) => { 
+                  await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'history', h.id), { cleared: true }); 
+              }); 
+              showToast("Memórias apagadas.", "success"); 
+          } catch(e) { 
+              showToast("Erro ao limpar.", "error"); 
+          } 
+      } 
       else if (confirmAction === 'cache') { localStorage.clear(); sessionStorage.clear(); window.location.reload(true); }
       setConfirmAction(null);
   };
@@ -115,7 +124,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const crystalsCount = userProfileData.crystals || 0;
   const coinsCount = userProfileData.coins || 0;
 
-  // IMAGENS APLICADAS CORRETAMENTE NA PROGRESSÃO E DIAGRAMAÇÃO ATUALIZADA
   const badgesList = [
     { id: 'iniciado', level: 1, image: 'https://i.ibb.co/VcF093w9/file-000000000a60720ea0dc89a96aeb27e0-removebg-preview.png', title: "Olho do Corvo", description: "Desvenda 10 capítulos no sistema.", condition: readCount >= 10, colorClass: "text-red-500" },
     { id: 'guardiao', level: 2, image: 'https://i.ibb.co/7NZVyW5f/file-00000000f4e871f580ac8750e4721f56-removebg-preview.png', title: "Pacto Sombrio", description: "Sela 5 obras em sua guarda.", condition: favCount >= 5, colorClass: "text-purple-500" },
@@ -148,6 +156,9 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
       if (inventoryCategory === 'capa_fundo') return cat === 'capa_fundo' || cat === 'capa';
       return cat === inventoryCategory;
   });
+
+  // Filtra apenas o histórico que NÃO foi limpo visualmente
+  const visibleHistory = historyData.filter(h => !h.cleared);
 
   return (
     <div className={`animate-in fade-in duration-300 w-full pb-24 font-sans min-h-screen text-gray-200 bg-[#030305] overflow-x-hidden`}>
@@ -412,11 +423,11 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
         {/* ABA: HISTÓRICO */}
         {activeTab === "Histórico" && (
             <ShadowCard className="animate-in fade-in slide-in-from-left-4 duration-300">
-                {historyData.length === 0 ? (
+                {visibleHistory.length === 0 ? (
                     <div className="text-center py-16"><History className="w-12 h-12 mx-auto text-red-900/30 mb-4"/><p className="text-gray-500 text-xs font-black uppercase tracking-widest">As sombras não possuem registros.</p></div>
                 ) : (
                    <div className="flex flex-col gap-4">
-                      {historyData.slice(0, 15).map(hist => {
+                      {visibleHistory.slice(0, 15).map(hist => {
                           const mg = mangas.find(m => m.id === hist.mangaId);
                           return (
                               <div key={hist.id} onClick={() => { if(mg) onNavigate('details', mg); }} className="bg-[#050505] border border-white/5 p-4 rounded-xl flex items-center gap-5 cursor-pointer hover:border-red-600/50 transition-all duration-300 group shadow-sm">
