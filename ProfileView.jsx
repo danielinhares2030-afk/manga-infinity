@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Compass, History, Library, Camera, Edit3, LogOut, Loader2, BookOpen, AlertTriangle, Trophy, Zap, Trash2, RefreshCw, Settings, Flame, Eye, Bookmark, Hexagon, Crown, Ghost, Lock, Sparkles, Box, ChevronRight, Swords } from 'lucide-react';
+import { Compass, History, Library, Camera, Edit3, LogOut, Loader2, BookOpen, AlertTriangle, Trophy, Zap, Trash2, RefreshCw, Settings, Flame, Eye, Bookmark, Hexagon, Crown, Ghost, Lock, Sparkles, Box, ChevronRight, Swords, Monitor, Bell, EyeOff } from 'lucide-react';
 import { updateProfile } from "firebase/auth";
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from './firebase';
@@ -100,7 +100,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const executeConfirmAction = async () => {
       if (confirmAction === 'history') { 
           try { 
-              // Agora apenas marca o registro como 'cleared: true' em vez de deletar
               historyData.forEach(async (h) => { 
                   await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'history', h.id), { cleared: true }); 
               }); 
@@ -157,8 +156,31 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
       return cat === inventoryCategory;
   });
 
-  // Filtra apenas o histórico que NÃO foi limpo visualmente
   const visibleHistory = historyData.filter(h => !h.cleared);
+
+  // NOVA INTERFACE DE CONFIGURAÇÕES (CARDS INTERATIVOS)
+  const renderSettingCard = (icon, title, desc, options, currentValue, onChange) => (
+      <div className="bg-[#050505] border border-white/5 rounded-2xl p-5 hover:border-red-600/30 transition-all flex flex-col justify-between h-full shadow-lg">
+          <div className="flex items-start gap-4 mb-6">
+              <div className="p-3 bg-[#0a0a0c] rounded-xl border border-white/5 text-gray-400">{icon}</div>
+              <div>
+                  <h4 className="text-white font-black text-xs uppercase tracking-widest">{title}</h4>
+                  <p className="text-[10px] text-gray-500 font-bold mt-1 leading-snug">{desc}</p>
+              </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-auto">
+              {options.map(opt => (
+                  <button 
+                      key={opt.value} 
+                      onClick={() => onChange(opt.value)} 
+                      className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${currentValue === opt.value ? 'bg-red-600/10 border-red-600 text-red-500 shadow-[inset_0_0_15px_rgba(220,38,38,0.2)]' : 'bg-[#0a0a0c] border-white/5 text-gray-500 hover:text-white'}`}
+                  >
+                      {opt.label}
+                  </button>
+              ))}
+          </div>
+      </div>
+  );
 
   return (
     <div className={`animate-in fade-in duration-300 w-full pb-24 font-sans min-h-screen text-gray-200 bg-[#030305] overflow-x-hidden`}>
@@ -444,36 +466,60 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
             </ShadowCard>
         )}
 
-        {/* ABA: CONFIGURAÇÕES */}
+        {/* ABA: CONFIGURAÇÕES (REFEITO COM CARDS INTERATIVOS E NOVAS OPÇÕES) */}
         {activeTab === "Configurações" && (
             <div className="animate-in fade-in slide-in-from-left-4 duration-300 space-y-6">
-                <ShadowCard>
-                  <h3 className="text-xl font-black text-white mb-8 uppercase tracking-tight flex items-center gap-3"><Settings className="w-5 h-5 text-red-500"/> Preferências Kage</h3>
-                  <div className="flex items-center justify-between mb-8 pb-8 border-b border-white/5">
-                    <div><p className="text-sm font-black text-white uppercase tracking-widest">Modo de Leitura</p><p className="text-xs text-gray-500 mt-1 font-bold">Como você consome as memórias.</p></div>
-                    <select value={userSettings?.readMode || 'Cascata'} onChange={(e) => { updateSettings({ readMode: e.target.value }); showToast("Preferência atualizada.", "success"); }} className="bg-[#050505] border border-red-600/30 text-white text-xs font-bold rounded-lg px-5 py-3.5 outline-none focus:border-red-600 shadow-sm cursor-pointer transition-colors duration-300">
-                      <option value="Cascata">Cascata</option><option value="Paginação">Páginas</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center justify-between mb-8 pb-8 border-b border-white/5">
-                    <div><p className="text-sm font-black text-white uppercase tracking-widest">Magia de Economia (Dados)</p><p className="text-xs text-gray-500 mt-1 font-bold">Reduz o peso visual nas sombras.</p></div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" checked={userSettings?.dataSaver || false} onChange={(e) => { updateSettings({ dataSaver: e.target.checked }); showToast("Preferência atualizada.", "success"); }} />
-                      <div className="w-14 h-7 bg-[#050505] border border-white/20 rounded-full peer peer-checked:after:translate-x-full after:absolute after:top-[2px] after:left-[4px] after:bg-gray-400 peer-checked:after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all duration-300 peer-checked:bg-gradient-to-r peer-checked:from-red-700 peer-checked:to-red-500 shadow-inner"></div>
-                    </label>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div><p className="text-sm font-black text-white uppercase tracking-widest">Aura do Sistema (Tema)</p><p className="text-xs text-gray-500 mt-1 font-bold">Padrão de cores da interface.</p></div>
-                    <select value={userSettings?.theme || 'Escuro'} onChange={(e) => { updateSettings({ theme: e.target.value }); showToast("Aura aplicada.", "success"); }} className="bg-[#050505] border border-red-600/30 text-white text-xs font-bold rounded-lg px-5 py-3.5 outline-none focus:border-red-600 shadow-sm cursor-pointer transition-colors duration-300">
-                      <option value="Escuro">Escuro</option><option value="Amoled">Vazio Absoluto</option>
-                    </select>
-                  </div>
-                </ShadowCard>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {renderSettingCard(
+                        <BookOpen className="w-5 h-5" />,
+                        "Modo de Leitura",
+                        "Escolha como as páginas se comportam.",
+                        [ { label: 'Cascata Vertical', value: 'Cascata' }, { label: 'Uma Página', value: 'Paginação' } ],
+                        userSettings?.readMode || 'Cascata',
+                        (v) => { updateSettings({ readMode: v }); showToast("Modo de leitura atualizado.", "success"); }
+                    )}
+
+                    {renderSettingCard(
+                        <Zap className="w-5 h-5" />,
+                        "Economia de Dados",
+                        "Reduz o peso das imagens em conexões lentas.",
+                        [ { label: 'Desativado', value: false }, { label: 'Ativado', value: true } ],
+                        userSettings?.dataSaver || false,
+                        (v) => { updateSettings({ dataSaver: v }); showToast(v ? "Economia ativada." : "Qualidade máxima ativada.", "success"); }
+                    )}
+
+                    {renderSettingCard(
+                        <Monitor className="w-5 h-5" />,
+                        "Aura do Sistema (Tema)",
+                        "Paleta de cores e fundos da interface.",
+                        [ { label: 'Cinza Escuro', value: 'Escuro' }, { label: 'Vazio Absoluto (OLED)', value: 'Amoled' } ],
+                        userSettings?.theme || 'Escuro',
+                        (v) => { updateSettings({ theme: v }); showToast("Aura da interface aplicada.", "success"); }
+                    )}
+
+                    {renderSettingCard(
+                        <Bell className="w-5 h-5" />,
+                        "Notificações do Vazio",
+                        "Receba alertas de novos capítulos e missões.",
+                        [ { label: 'Silenciar', value: false }, { label: 'Permitir', value: true } ],
+                        userSettings?.notifications !== undefined ? userSettings.notifications : true,
+                        (v) => { updateSettings({ notifications: v }); showToast(v ? "Você ouvirá as sombras." : "O silêncio reinará.", "success"); }
+                    )}
+                    
+                    {renderSettingCard(
+                        userSettings?.visibility === 'Privado' ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />,
+                        "Visibilidade do Perfil",
+                        "Quem pode ver suas conquistas no Ranking.",
+                        [ { label: 'Público', value: 'Público' }, { label: 'Oculto (Privado)', value: 'Privado' } ],
+                        userSettings?.visibility || 'Público',
+                        (v) => { updateSettings({ visibility: v }); showToast(`Seu perfil agora é ${v}.`, "success"); }
+                    )}
+                </div>
 
                 <ShadowCard>
                     <button onClick={() => setConfirmAction('cache')} className="flex items-center justify-between w-full text-left group">
-                        <div><p className="text-sm font-black text-white uppercase tracking-widest group-hover:text-red-500 transition-colors duration-300">Limpar Fluxo (Cache)</p><p className="text-xs text-gray-500 mt-1 font-bold">Resolve distorções na interface.</p></div>
-                        <div className="bg-white/5 p-3 rounded-lg border border-white/10 group-hover:border-red-500/50 group-hover:bg-red-950/20 transition-all duration-300"><RefreshCw className="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:rotate-180 transition-all duration-300" /></div>
+                        <div><p className="text-sm font-black text-white uppercase tracking-widest group-hover:text-red-500 transition-colors duration-300">Limpar Matriz (Cache)</p><p className="text-xs text-gray-500 mt-1 font-bold">Reinicia a interface caso haja distorções visuais.</p></div>
+                        <div className="bg-white/5 p-3 rounded-xl border border-white/10 group-hover:border-red-500/50 group-hover:bg-red-950/20 transition-all duration-300"><RefreshCw className="w-5 h-5 text-gray-400 group-hover:text-red-500 group-hover:rotate-180 transition-all duration-300" /></div>
                     </button>
                 </ShadowCard>
             </div>
