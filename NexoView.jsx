@@ -6,7 +6,8 @@ import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmetic
 import { APP_ID } from './constants';
 
 export function NexoView({ user, userProfileData, showToast, mangas, onNavigate, onLevelUp, synthesizeCrystal, shopItems, buyItem }) {
-    const [activeTab, setActiveTab] = useState("Missões");
+    // ABA RENOMEADA PARA "Pactos" PARA NÃO VAZAR NA TELA
+    const [activeTab, setActiveTab] = useState("Pactos");
     const [enigmaAnswer, setEnigmaAnswer] = useState("");
     const [timeLeft, setTimeLeft] = useState("");
     const [confirmModal, setConfirmModal] = useState(null); 
@@ -15,17 +16,15 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     const [rankingList, setRankingList] = useState([]);
     const [loadingRank, setLoadingRank] = useState(false);
 
-    // Categoria selecionada no Mercado Negro (Loja)
     const [shopCategory, setShopCategory] = useState('avatar');
 
-    // Cores mais agressivas e radioativas/alquímicas
     const rankConfigs = {
-        'Rank E': { rxp: 20, rcoin: 10, pxp: 10, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500', shadow: 'shadow-gray-500/20' },
-        'Rank C': { rxp: 60, rcoin: 30, pxp: 30, pcoin: 25, time: 10, charLimit: 200, enigmaTries: 3, color: 'text-lime-400', border: 'border-lime-500', shadow: 'shadow-lime-500/20' },
-        'Rank B': { rxp: 90, rcoin: 60, pxp: 60, pcoin: 40, time: 8, charLimit: 120, enigmaTries: 2, color: 'text-cyan-400', border: 'border-cyan-500', shadow: 'shadow-cyan-500/20' },
-        'Rank A': { rxp: 100, rcoin: 100, pxp: 100, pcoin: 80, time: 5, charLimit: 80, enigmaTries: 2, color: 'text-amber-500', border: 'border-amber-500', shadow: 'shadow-amber-500/20' },
-        'Rank S': { rxp: 200, rcoin: 150, pxp: 150, pcoin: 200, time: 3, charLimit: 60, enigmaTries: 1, color: 'text-orange-500', border: 'border-orange-500', shadow: 'shadow-orange-500/20' },
-        'Rank SSS':{ rxp: 300, rcoin: 450, pxp: 450, pcoin: 500, time: 1, charLimit: 40, enigmaTries: 1, color: 'text-red-600', border: 'border-red-600', shadow: 'shadow-red-600/30' }
+        'Rank E': { rxp: 30, rcoin: 15, pxp: 15, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500', shadow: 'shadow-gray-500/20' },
+        'Rank C': { rxp: 100, rcoin: 50, pxp: 50, pcoin: 25, time: 10, charLimit: 200, enigmaTries: 3, color: 'text-lime-400', border: 'border-lime-500', shadow: 'shadow-lime-500/20' },
+        'Rank B': { rxp: 150, rcoin: 80, pxp: 80, pcoin: 40, time: 8, charLimit: 120, enigmaTries: 2, color: 'text-cyan-400', border: 'border-cyan-500', shadow: 'shadow-cyan-500/20' },
+        'Rank A': { rxp: 300, rcoin: 150, pxp: 150, pcoin: 80, time: 5, charLimit: 80, enigmaTries: 2, color: 'text-amber-500', border: 'border-amber-500', shadow: 'shadow-amber-500/20' },
+        'Rank S': { rxp: 800, rcoin: 400, pxp: 400, pcoin: 200, time: 3, charLimit: 60, enigmaTries: 1, color: 'text-orange-500', border: 'border-orange-500', shadow: 'shadow-orange-500/20' },
+        'Rank SSS':{ rxp: 2000, rcoin: 1000, pxp: 1000, pcoin: 500, time: 1, charLimit: 40, enigmaTries: 1, color: 'text-red-600', border: 'border-red-600', shadow: 'shadow-red-600/30' }
     };
 
     const RANK_CARDS = Object.keys(rankConfigs);
@@ -93,7 +92,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     let q = `[ TRANSCRIÇÃO ALQUÍMICA ]\n\nFragmento Instável:\n"${cleanDesc.substring(0, conf.charLimit)}..."\n\nLocalize a obra original e neutralize a anomalia.`;
                     newMission = { id: Date.now().toString(), type: 'search_local', difficulty, title: "Anomalia Abissal", question: q, targetManga: randomManga.id, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000) };
                 } else if (chosenType === 'enigma') {
-                    let q = `[ ENIGMA DO VAZIO ]\nAutoria Gravada: ${randomManga.author || 'Desconhecida'} \nDetermine a nomenclatura exata do tomo.`;
+                    let q = `[ ENIGMA DO VAZIO ]\nAutoria Gravada: ${randomManga.author || 'Desconhecida'} \nDetermine a nomenclatura exata.`;
                     newMission = { id: Date.now().toString(), type: 'enigma', difficulty, title: "Decodificação Kage", question: q, answer: [randomManga.title.toLowerCase().trim()], attemptsLeft: conf.enigmaTries, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000) };
                 } else {
                     let readTarget = difficulty === 'Rank E' ? 1 : 3;
@@ -140,7 +139,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     return (
         <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#030305]'}`}>
             
-            {/* Fundo Alquímico / Grid Neon */}
             {!equipped.tema_perfil && (
                 <div className="absolute inset-0 z-0">
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#80000010_1px,transparent_1px),linear-gradient(to_bottom,#80000010_1px,transparent_1px)] bg-[size:40px_40px]"></div>
@@ -148,7 +146,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* MODAL DE MISSÃO RADICAL */}
             {confirmModal && (
                 <div className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in zoom-in-95 duration-200" onClick={() => setConfirmModal(null)}>
                     <div className={`bg-[#050505] border-l-[4px] border-r-[4px] border-t border-b ${rankConfigs[confirmModal].border} border-t-white/10 border-b-white/10 p-8 shadow-[0_0_40px_rgba(0,0,0,1)] max-w-sm w-full text-center relative overflow-hidden`} onClick={e => e.stopPropagation()}>
@@ -166,13 +163,13 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
             <div className="max-w-6xl mx-auto px-4 py-8 relative z-10">
                 
-                {/* MENU ABAS PRINCIPAIS - ESTILO CORTADO */}
                 <div className="flex justify-center gap-4 mb-12 overflow-x-auto no-scrollbar snap-x">
-                    {['Missões', 'Forja', 'Loja', 'Ranking'].map((tab) => (
+                    {/* TROCADO DE "MISSÕES" PARA "PACTOS" */}
+                    {['Pactos', 'Forja', 'Loja', 'Ranking'].map((tab) => (
                         <button key={tab} onClick={() => setActiveTab(tab)} className={`relative px-8 py-3 font-black text-[10px] uppercase tracking-[0.3em] transition-all transform skew-x-[-15deg] group border-b-2
                             ${activeTab === tab ? 'bg-red-600/10 border-red-600 text-white' : 'bg-transparent border-transparent text-gray-500 hover:text-red-400'}`}>
                             <div className="skew-x-[15deg] flex items-center gap-2">
-                                {tab === "Missões" && <Target className="w-3.5 h-3.5"/>}
+                                {tab === "Pactos" && <Target className="w-3.5 h-3.5"/>}
                                 {tab === "Forja" && <Hexagon className="w-3.5 h-3.5"/>}
                                 {tab === "Loja" && <ShoppingCart className="w-3.5 h-3.5"/>}
                                 {tab === "Ranking" && <Trophy className="w-3.5 h-3.5"/>}
@@ -182,12 +179,10 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     ))}
                 </div>
 
-                {/* MISSÕES ALQUÍMICAS */}
-                {activeTab === "Missões" && (
+                {activeTab === "Pactos" && (
                     <div className="animate-in fade-in duration-300">
                         {userProfileData.activeMission ? (
                             <div className={`bg-[#050505] border-t border-b border-l-[4px] ${rankConfigs[userProfileData.activeMission.difficulty].border} border-t-white/5 border-b-white/5 p-8 md:p-12 max-w-3xl mx-auto shadow-2xl relative overflow-hidden`}>
-                                {/* Decoração de fundo alquímica */}
                                 <div className={`absolute -right-20 -bottom-20 opacity-5 ${rankConfigs[userProfileData.activeMission.difficulty].color} animate-[spin_40s_linear_infinite]`}>
                                     <Hexagon className="w-96 h-96" strokeWidth={0.5} />
                                 </div>
@@ -279,12 +274,10 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     </div>
                 )}
 
-                {/* FORJA ALQUÍMICA */}
+                {/* FORJA */}
                 {activeTab === "Forja" && (
                     <div className="animate-in fade-in duration-300 max-w-2xl mx-auto mt-4 relative z-10">
                         <div className="bg-[#050505] border border-red-600/30 p-10 md:p-14 text-center relative overflow-hidden shadow-[0_0_50px_rgba(220,38,38,0.15)] rounded-tl-3xl rounded-br-3xl">
-                            
-                            {/* Círculo de Transmutação no fundo */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
                                 <div className="w-80 h-80 border border-red-500 rounded-full animate-[spin_20s_linear_infinite]"></div>
                                 <div className="absolute w-80 h-80 border border-red-500 rounded-full animate-[spin_20s_linear_infinite_reverse] rotate-45 border-dashed"></div>
@@ -311,10 +304,9 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     </div>
                 )}
 
-                {/* MERCADO NEGRO (LOJA) */}
+                {/* LOJA */}
                 {activeTab === "Loja" && (
                     <div className="animate-in fade-in duration-300 max-w-6xl mx-auto">
-                        
                         <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8 bg-[#050505] p-6 border-l-[4px] border-red-600 border-t border-b border-r border-white/5 shadow-lg">
                             <div className="text-center sm:text-left">
                                 <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Mercado <span className="text-red-600">Sombrio</span></h3>
@@ -325,7 +317,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                             </div>
                         </div>
 
-                        {/* SUB-ABAS DA LOJA - CORTADAS */}
                         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 pb-2 snap-x">
                             {[ {id:'avatar', label:'Avatares'}, {id:'capa_fundo', label:'Paredes de Fundo'}, {id:'moldura', label:'Auras (Molduras)'}, {id:'nickname', label:'Selos de Nome'} ].map(cat => (
                                 <button key={cat.id} onClick={() => setShopCategory(cat.id)} className={`flex-shrink-0 px-6 py-2.5 font-black text-[9px] uppercase tracking-widest transition-all border transform skew-x-[-15deg] ${ shopCategory === cat.id ? 'bg-red-600 border-transparent text-white' : 'bg-[#050505] border-white/5 text-gray-500 hover:text-white' }`}>
@@ -347,7 +338,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                 <div key={item.id} className="bg-[#050505] border border-white/5 p-4 flex flex-col items-center text-center hover:border-red-600/40 transition-all relative group rounded-tl-xl rounded-br-xl shadow-lg">
                                   {(item.css || item.animacao) && ( <style dangerouslySetInnerHTML={{__html: `.${item.cssClass} { ${item.css} } ${item.animacao || ''}`}} /> )}
                                   
-                                  {/* Rarity Tag */}
                                   <div className={`absolute top-0 left-0 text-[6px] font-black px-2 py-1 uppercase tracking-widest border-b border-r bg-[#0a0a0c] ${getRarityColor(item.raridade).replace('text-', 'border-').replace('text-', 'text-')}`}>
                                       {item.raridade || 'COMUM'}
                                   </div>
