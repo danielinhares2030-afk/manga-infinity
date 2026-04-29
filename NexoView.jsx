@@ -1,359 +1,430 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Dices, Hexagon, Home as HomeIcon, LayoutGrid, Library, UserCircle, User, X, Trophy, BookOpen, Eye, Swords } from 'lucide-react';
-import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs, updateDoc, increment, where } from "firebase/firestore";
-import { app, auth, db } from './firebase'; 
-import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
-import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo, cleanCosmeticUrl } from './helpers';
-import { ErrorBoundary, GlobalToast, Footer, SplashScreen, KageLogo } from './UIComponents';
-import { LoginView } from './LoginView';
-import { HomeView } from './HomeView';
-import { SearchView } from './SearchView';
-import { CatalogView } from './CatalogView';
-import { LibraryView } from './LibraryView';
-import { NexoView } from './NexoView';
-import { ProfileView } from './ProfileView';
-import { PopularView } from './PopularView';
-import DetailsView from './DetailsView';
-import ReaderView from './ReaderView';
+import { Target, Hexagon, ShoppingCart, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, Flame, AlertTriangle } from 'lucide-react';
+import { doc, updateDoc, collectionGroup, getDocs, query } from "firebase/firestore";
+import { db } from './firebase';
+import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmeticUrl } from './helpers';
+import { APP_ID } from './constants';
 
-function MangakageApp() {
-  const [splashTimerDone, setSplashTimerDone] = useState(false);
-  const [authReady, setAuthReady] = useState(false);
-  const [isGuest, setIsGuest] = useState(false); 
-  const [currentView, setCurrentView] = useState('login'); 
-  const [globalToast, setGlobalToast] = useState(null); 
-  const [levelUpAlert, setLevelUpAlert] = useState(null); 
-  const [dropAlert, setDropAlert] = useState(false);
-  const [isRandomizing, setIsRandomizing] = useState(false); 
-  const [showMobileSearch, setShowMobileSearch] = useState(false); 
-  const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [selectedManga, setSelectedManga] = useState(null);
-  const [selectedChapter, setSelectedChapter] = useState(null);
-  const [globalSearch, setGlobalSearch] = useState(''); 
-  const [mangas, setMangas] = useState([]);
-  const [loadingMangas, setLoadingMangas] = useState(true);
-  const [shopItems, setShopItems] = useState(FALLBACK_SHOP_ITEMS);
-  const [catalogState, setCatalogState] = useState({ filterType: "Todos", selectedGenres: [], visibleCount: 24, scrollPos: 0 });
-  const [user, setUser] = useState(null);
-  const [userProfileData, setUserProfileData] = useState({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [] });
-  const [userSettings, setUserSettings] = useState({ readMode: 'Cascata', dataSaver: false, theme: 'Escuro' });
-  const [libraryData, setLibraryData] = useState({});
-  const [historyData, setHistoryData] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [dataLoaded, setDataLoaded] = useState(false); 
+export function NexoView({ user, userProfileData, showToast, mangas, onNavigate, onLevelUp, synthesizeCrystal, shopItems, buyItem }) {
+    const [activeTab, setActiveTab] = useState("Pactos");
+    const [enigmaAnswer, setEnigmaAnswer] = useState("");
+    const [timeLeft, setTimeLeft] = useState("");
+    const [confirmModal, setConfirmModal] = useState(null); 
+    const [isForgingMission, setIsForgingMission] = useState(false); 
+    const [synthesizing, setSynthesizing] = useState(false);
+    const [rankingList, setRankingList] = useState([]);
+    const [loadingRank, setLoadingRank] = useState(false);
 
-  useEffect(() => { const timer = setTimeout(() => setSplashTimerDone(true), 1500); return () => clearTimeout(timer); }, []);
+    const [shopCategory, setShopCategory] = useState('avatar');
 
-  useEffect(() => {
-    const handlePopState = (e) => {
-        if (e.state && e.state.view) {
-            setCurrentView(e.state.view);
-            if (e.state.mangaId) { const m = mangas.find(mg => mg.id === e.state.mangaId); if (m) setSelectedManga(m); }
-            if (e.state.chapterId && e.state.mangaId) { const m = mangas.find(mg => mg.id === e.state.mangaId); if (m && m.chapters) { const c = m.chapters.find(ch => ch.id === e.state.chapterId); if (c) setSelectedChapter(c); } }
-        } else { setCurrentView('home'); }
+    const rankConfigs = {
+        'Rank E': { rxp: 30, rcoin: 15, pxp: 15, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500', shadow: 'shadow-gray-500/20' },
+        'Rank C': { rxp: 100, rcoin: 50, pxp: 50, pcoin: 25, time: 10, charLimit: 200, enigmaTries: 3, color: 'text-lime-400', border: 'border-lime-500', shadow: 'shadow-lime-500/20' },
+        'Rank B': { rxp: 150, rcoin: 80, pxp: 80, pcoin: 40, time: 8, charLimit: 120, enigmaTries: 2, color: 'text-cyan-400', border: 'border-cyan-500', shadow: 'shadow-cyan-500/20' },
+        'Rank A': { rxp: 300, rcoin: 150, pxp: 150, pcoin: 80, time: 5, charLimit: 80, enigmaTries: 2, color: 'text-amber-500', border: 'border-amber-500', shadow: 'shadow-amber-500/20' },
+        'Rank S': { rxp: 800, rcoin: 400, pxp: 400, pcoin: 200, time: 3, charLimit: 60, enigmaTries: 1, color: 'text-orange-500', border: 'border-orange-500', shadow: 'shadow-orange-500/20' },
+        'Rank SSS':{ rxp: 2000, rcoin: 1000, pxp: 1000, pcoin: 500, time: 1, charLimit: 40, enigmaTries: 1, color: 'text-red-600', border: 'border-red-600', shadow: 'shadow-red-600/30' }
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [mangas]);
 
-  useEffect(() => {
-    const fetchMangas = async () => {
-      try {
-        const obrasRef = collection(db, "obras"); const snap = await getDocs(obrasRef); const list = [];
-        for (const docSnap of snap.docs) {
-          const data = docSnap.data(); const capSnap = await getDocs(collection(db, `obras/${docSnap.id}/capitulos`)); const chapters = [];
-          capSnap.forEach(c => { const cData = c.data(); chapters.push({ id: c.id, ...cData, rawTime: cData.createdAt || cData.timestamp || Date.now() }); });
-          chapters.sort((a,b) => b.number - a.number); list.push({ id: docSnap.id, ...data, chapters });
-        }
-        list.sort((a, b) => b.createdAt - a.createdAt); setMangas(list);
-      } catch (error) { console.error(error); } finally { setLoadingMangas(false); }
-    };
-    fetchMangas();
-  }, []);
+    const RANK_CARDS = Object.keys(rankConfigs);
 
-  useEffect(() => {
-    const q = query(collection(db, "loja_itens"));
-    const unsub = onSnapshot(q, (snap) => { 
-        if (!snap.empty) { 
-            const items = []; 
-            snap.forEach(d => items.push({ id: d.id, ...d.data() })); 
-            setShopItems(items); 
-        } else { 
-            setShopItems(FALLBACK_SHOP_ITEMS); 
-        } 
-    });
-    return () => unsub();
-  }, []);
+    useEffect(() => {
+        if(activeTab === 'Ranking') fetchRanking();
+    }, [activeTab]);
 
-  useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser); setAuthReady(true);
-      if (currentUser) {
-        if (currentView === 'login') { window.history.pushState({ view: 'home' }, '', ''); setCurrentView('home'); }
+    const fetchRanking = async () => {
+        setLoadingRank(true);
         try {
-          const profileRef = doc(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'profile', 'main');
-          const unsubProfile = onSnapshot(profileRef, (docSnap) => {
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              setUserProfileData({ bio: data.bio, avatarUrl: data.avatarUrl, coverUrl: data.coverUrl, xp: data.xp || 0, level: data.level || 1, coins: data.coins || 0, crystals: data.crystals || 0, inventory: data.inventory || [], equipped_items: data.equipped_items || {}, activeMission: data.activeMission || null, completedMissions: data.completedMissions || [] });
-              if(data.settings) setUserSettings({ ...userSettings, ...data.settings }); 
-            } else { setDoc(profileRef, { bio: "Leitor Nível 1.", settings: userSettings, xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [] }, { merge: true }); }
-          });
-          const libraryRef = collection(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'library');
-          const unsubLib = onSnapshot(query(libraryRef), (snapshot) => { const libs = {}; snapshot.docs.forEach(d => libs[d.id] = d.data().status); setLibraryData(libs); });
-          const historyRef = collection(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'history');
-          const unsubHist = onSnapshot(query(historyRef), (snapshot) => { const hist = []; snapshot.docs.forEach(d => hist.push({ id: d.id, ...d.data() })); setHistoryData(hist.sort((a,b) => b.timestamp - a.timestamp)); });
-          const notifRef = collection(db, 'artifacts', APP_ID, 'users', currentUser.uid, 'notifications');
-          const unsubNotif = onSnapshot(query(notifRef), (snapshot) => { const notifs = []; snapshot.docs.forEach(d => notifs.push({ id: d.id, ...d.data() })); setNotifications(notifs.sort((a,b) => b.createdAt - a.createdAt)); setDataLoaded(true); });
-          return () => { unsubProfile(); unsubLib(); unsubHist(); unsubNotif(); };
-        } catch (error) { console.error(error); }
-      } else { setUserProfileData({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [] }); setLibraryData({}); setHistoryData([]); setNotifications([]); setDataLoaded(true); }
-    });
-    return () => unsubscribeAuth();
-  }, [currentView]);
+            const snap = await getDocs(query(collectionGroup(db, 'profile')));
+            let rankData = [];
+            snap.forEach(doc => {
+                if(doc.ref.path.includes('main') && (doc.data().level || doc.data().name)) { 
+                   rankData.push({ id: doc.ref.parent.parent.id, ...doc.data() });
+                }
+            });
+            rankData.sort((a, b) => {
+                if (b.level !== a.level) return (b.level || 1) - (a.level || 1);
+                return (b.xp || 0) - (a.xp || 0);
+            });
+            setRankingList(rankData.slice(0, 50));
+        } catch (e) {
+            showToast("Falha na Matriz Sombria.", "error");
+        } finally {
+            setLoadingRank(false);
+        }
+    };
 
-  useEffect(() => {
-    if (!user || !userProfileData.activeMission) return;
-    const interval = setInterval(async () => {
-      const mission = userProfileData.activeMission;
-      if (mission && Date.now() > mission.deadline) {
-         setGlobalToast({ text: `Missão Falhou pelo Tempo! Penalidade: -${mission.penaltyXp}XP`, type: "error" });
-         const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-         let newCoins = Math.max(0, (userProfileData.coins || 0) - mission.penaltyCoins); let { newXp, newLvl } = removeXpLogic(userProfileData.xp || 0, userProfileData.level || 1, mission.penaltyXp);
-         await updateDoc(profileRef, { coins: newCoins, xp: newXp, level: newLvl, activeMission: null });
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [user, userProfileData.activeMission]);
+    useEffect(() => {
+        if (!userProfileData.activeMission) return;
+        const updateTimer = () => {
+            const diff = userProfileData.activeMission.deadline - Date.now();
+            if (diff <= 0) { setTimeLeft("00:00:00 (FALHA)"); } else {
+                const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const m = Math.floor((diff / 1000 / 60) % 60);
+                const s = Math.floor((diff / 1000) % 60);
+                setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+            }
+        };
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [userProfileData.activeMission]);
 
-  useEffect(() => {
-      const completeSearchLocalMission = async () => {
-          if (!user || !userProfileData?.activeMission || currentView !== 'details' || !selectedManga) return;
-          const m = userProfileData.activeMission; 
-          if (m.type !== 'search_local') return;
+    const triggerForgeMission = async (difficulty) => {
+        setConfirmModal(null); setIsForgingMission(true);
+        setTimeout(() => { generateMission(difficulty); }, 1500); 
+    };
 
-          const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-          
-          if (m.targetManga === selectedManga.id) {
-              let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.rewardXp); 
-              let newCoins = (userProfileData.coins || 0) + m.rewardCoins;
-              let currentCompleted = userProfileData.completedMissions || []; 
-              if (!currentCompleted.includes("search_local_" + m.targetManga)) currentCompleted = [...currentCompleted, "search_local_" + m.targetManga];
-              await updateDoc(profileRef, { coins: newCoins, xp: newXp, level: newLvl, activeMission: null, completedMissions: currentCompleted });
-              showToast(`Alvo Encontrado! Missão Concluída: +${m.rewardXp} XP | +${m.rewardCoins} M`, "success"); 
-              if(didLevelUp) handleLevelUpAnim(newLvl);
-          } else {
-              showToast(`Alvo Incorreto! A Missão Falhou. Penalidade: -${m.penaltyXp}XP`, "error");
-              let newCoins = Math.max(0, (userProfileData.coins || 0) - m.penaltyCoins); 
-              let { newXp, newLvl } = removeXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.penaltyXp);
-              await updateDoc(profileRef, { coins: newCoins, xp: newXp, level: newLvl, activeMission: null });
-          }
-      };
-      completeSearchLocalMission();
-  }, [currentView, selectedManga?.id]);
+    const generateMission = async (difficulty) => {
+        try {
+            const now = Date.now();
+            const conf = rankConfigs[difficulty];
+            const missionPool = ['read', 'search_visual', 'enigma'];
+            const chosenType = missionPool[Math.floor(Math.random() * missionPool.length)];
 
-  const showSplash = !splashTimerDone || !authReady || loadingMangas;
-  useEffect(() => { if (!showSplash && !user && !isGuest && currentView !== 'login') { setCurrentView('login'); } }, [showSplash, user, isGuest, currentView]);
+            if (mangas && mangas.length > 0) {
+                // Filtra para NUNCA repetir missões concluídas
+                const availableMangas = mangas.filter(m => {
+                    const c = userProfileData.completedMissions || [];
+                    return !c.includes("search_local_" + m.id) && !c.includes("enigma_" + m.id) && !c.includes(m.id);
+                });
+                
+                const randomManga = availableMangas.length > 0 ? availableMangas[Math.floor(Math.random() * availableMangas.length)] : mangas[Math.floor(Math.random() * mangas.length)];
+                let newMission = null;
 
-  const showToast = (text, type = 'info') => { setGlobalToast({ text, type }); setTimeout(() => setGlobalToast(null), 4000); };
-  const handleLevelUpAnim = (lvl) => { setLevelUpAlert(lvl); setTimeout(() => setLevelUpAlert(null), 5000); }
+                if (chosenType === 'search_visual' && randomManga.synopsis) {
+                    let cleanDesc = randomManga.synopsis.replace(/<[^>]*>?/gm, '').replace(new RegExp(randomManga.title, 'gi'), '█████');
+                    let q = `[ ALVO MARCADO ]\n\nFragmento:\n"${cleanDesc.substring(0, conf.charLimit)}..."\n\nATENÇÃO: Você só tem UMA chance. Se clicar na obra errada no catálogo, a missão falha instantaneamente.`;
+                    newMission = { id: Date.now().toString(), type: 'search_local', difficulty, title: "Caçada Implacável", question: q, targetManga: randomManga.id, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000) };
+                } else if (chosenType === 'enigma') {
+                    let q = "";
+                    if (randomManga.author && randomManga.author.trim() !== "" && randomManga.author.toLowerCase() !== "desconhecido") {
+                        q = `[ ENIGMA DO VAZIO ]\n\nA mente por trás desta criação é: ${randomManga.author}.\nQual é a obra?`;
+                    } else if (randomManga.genres && randomManga.genres.length > 0 && randomManga.synopsis) {
+                        let cleanDesc = randomManga.synopsis.replace(/<[^>]*>?/gm, '').replace(new RegExp(randomManga.title, 'gi'), '█████');
+                        q = `[ ENIGMA DO VAZIO ]\n\nGêneros: ${randomManga.genres.join(', ')}\nRelato: "${cleanDesc.substring(0, conf.charLimit)}..."\nQual é a obra?`;
+                    } else {
+                        q = `[ ENIGMA DO VAZIO ]\n\nDecifre o selo oculto pelas sombras.`;
+                    }
+                    newMission = { id: Date.now().toString(), type: 'enigma', difficulty, title: "Decodificação Kage", question: q, answer: [randomManga.title.toLowerCase().trim()], attemptsLeft: conf.enigmaTries, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000), targetManga: randomManga.id };
+                } else {
+                    let readTarget = difficulty === 'Rank E' ? 1 : 3;
+                    newMission = { id: Date.now().toString(), type: 'read', difficulty, title: `Extração de Essência`, desc: `Transmute a energia de ${readTarget} capítulo(s) da obra "${randomManga.title}".`, targetManga: randomManga.id, targetCount: readTarget, currentCount: 0, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (readTarget * 45 * 60 * 1000) };
+                }
 
-  const navigateTo = (view, manga = null, chapter = null) => {
-    if (currentView === 'catalog') { setCatalogState(prev => ({ ...prev, scrollPos: window.scrollY })); }
-    if (manga) setSelectedManga(manga); if (chapter) setSelectedChapter(chapter);
-    window.history.pushState({ view, mangaId: manga?.id, chapterId: chapter?.id }, '', ''); setCurrentView(view);
-    if (view !== 'catalog') { window.scrollTo(0, 0); }
-  };
+                if (newMission) {
+                    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { activeMission: newMission });
+                    showToast(`Pacto Formado. A contagem regressiva começou.`, "success");
+                }
+            }
+        } catch(e) { showToast("Colapso ao forjar contrato.", "error"); } finally { setIsForgingMission(false); }
+    };
 
-  const handleBack = () => { if (window.history.state !== null) { window.history.back(); } else { navigateTo('home'); } };
-  const handleSearchSubmit = (e) => { if (e.key === 'Enter' && globalSearch.trim() !== '') navigateTo('search'); };
-  const handleLogout = async () => { await signOut(auth); setIsGuest(false); setCurrentView('login'); };
+    const handleEnigmaSubmit = async (e) => {
+        e.preventDefault(); const m = userProfileData.activeMission;
+        if (enigmaAnswer.toLowerCase().trim() === m.answer[0]) {
+           let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.rewardXp);
+           let currentCompleted = userProfileData.completedMissions || []; 
+           if (m.targetManga) currentCompleted.push("enigma_" + m.targetManga);
+           await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { coins: (userProfileData.coins || 0) + m.rewardCoins, xp: newXp, level: newLvl, activeMission: null, completedMissions: currentCompleted });
+           showToast("Código quebrado. Recompensa extraída!", "success"); if(didLevelUp) onLevelUp(newLvl); 
+        } else { showToast("Análise incorreta. Cuidado.", "error"); }
+    };
 
-  const handleRandomManga = () => {
-    if (mangas.length === 0) { showToast("Catálogo vazio.", "error"); return; } setIsRandomizing(true);
-    setTimeout(() => { const random = mangas[Math.floor(Math.random() * mangas.length)]; navigateTo('details', random); setIsRandomizing(false); }, 600); 
-  };
+    const cancelMission = async () => {
+        const m = userProfileData.activeMission;
+        const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+        let { newXp, newLvl } = removeXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.penaltyXp);
+        await updateDoc(profileRef, { coins: Math.max(0, (userProfileData.coins || 0) - m.penaltyCoins), xp: newXp, level: newLvl, activeMission: null });
+        showToast("Você recuou. O Sistema cobrou seu preço.", "error");
+    };
 
-  const triggerRandomDrop = async () => { if (!user) return; const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'); try { await updateDoc(profileRef, { crystals: increment(1) }); setDropAlert(true); setTimeout(() => setDropAlert(false), 2000); } catch(e) {} };
+    const runSynthesis = async () => {
+        if ((userProfileData.crystals || 0) < 5) return showToast("Massa insuficiente. Colete 5 Cristais.", "error");
+        setSynthesizing(true);
+        setTimeout(async () => {
+          const res = await synthesizeCrystal(); setSynthesizing(false);
+          if (res?.success) showToast(`Transmutação Bem-Sucedida!`, 'success');
+          else showToast(`Colapso! Matéria desintegrada.`, 'error');
+        }, 1500);
+    };
 
-  const markAsRead = async (manga, chapter, isValidReading) => {
-    if (!user) return;
-    try {
-      const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'history', `${manga.id}_${chapter.id}`); const docSnap = await getDoc(ref); let isNewRead = false;
-      if (!docSnap.exists()) { isNewRead = true; await setDoc(ref, { mangaId: manga.id, mangaTitle: manga.title, chapterNumber: chapter.number, timestamp: Date.now(), id: `${manga.id}_${chapter.id}` }); } else { await updateDoc(ref, { timestamp: Date.now() }); }
-      if (isNewRead && userProfileData.activeMission?.type === 'read' && userProfileData.activeMission.targetManga === manga.id) {
-         if (!isValidReading) { showToast("⚠️ Tempo insuficiente (Mín. 45s).", "warning"); return; }
-         const m = userProfileData.activeMission; const newCount = m.currentCount + 1; const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-         if (newCount >= m.targetCount) {
-             let newCoins = (userProfileData.coins || 0) + m.rewardCoins; let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.rewardXp);
-             let currentCompleted = userProfileData.completedMissions || []; if (!currentCompleted.includes(m.targetManga)) currentCompleted = [...currentCompleted, m.targetManga];
-             await updateDoc(profileRef, { coins: newCoins, xp: newXp, level: newLvl, activeMission: null, completedMissions: currentCompleted }); showToast(`Missão Concluída! +${m.rewardXp} XP | +${m.rewardCoins} Moedas`, "success"); if(didLevelUp) handleLevelUpAnim(newLvl);
-         } else { await updateDoc(profileRef, { 'activeMission.currentCount': newCount }); showToast(`Progresso: ${newCount}/${m.targetCount}`, "info"); }
-      }
-    } catch(e) { console.error(e) }
-  };
+    const equipped = userProfileData.equipped_items || {};
 
-  const updateSettings = async (newSettings) => { const updated = { ...userSettings, ...newSettings }; setUserSettings(updated); if(user) { try { await setDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { settings: updated }, { merge: true }); } catch(e) {} } };
+    return (
+        <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#030305]'}`}>
+            
+            {!equipped.tema_perfil && (
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80000010_1px,transparent_1px),linear-gradient(to_bottom,#80000010_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_50%_-30%,#dc262615,transparent)]"></div>
+                </div>
+            )}
 
-  const buyItem = async (item) => {
-    const price = item.preco || item.price; if ((userProfileData.coins || 0) < price) { showToast("Moedas Insuficientes!", "error"); return; }
-    const newCoins = userProfileData.coins - price; const newInv = [...(userProfileData.inventory || []), item.id];
-    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { coins: newCoins, inventory: newInv }); showToast(`Adquirido com sucesso!`, "success");
-  };
+            {confirmModal && (
+                <div className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in zoom-in-95 duration-200" onClick={() => setConfirmModal(null)}>
+                    <div className={`bg-[#050505] border-l-[4px] border-r-[4px] border-t border-b ${rankConfigs[confirmModal].border} border-t-white/10 border-b-white/10 p-8 shadow-[0_0_40px_rgba(0,0,0,1)] max-w-sm w-full text-center relative overflow-hidden`} onClick={e => e.stopPropagation()}>
+                        <Hexagon className={`absolute -right-8 -top-8 w-32 h-32 ${rankConfigs[confirmModal].color} opacity-10 rotate-12`} />
+                        <Target className={`w-14 h-14 ${rankConfigs[confirmModal].color} mx-auto mb-4 animate-pulse relative z-10`} />
+                        <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-widest relative z-10">Aceitar Pacto?</h3>
+                        <p className="text-[10px] text-gray-400 font-bold mb-8 uppercase tracking-[0.2em] relative z-10">O sangue assinado não pode ser apagado.</p>
+                        <div className="flex gap-4 relative z-10">
+                            <button onClick={() => setConfirmModal(null)} className="flex-1 bg-[#0a0a0c] border border-white/10 hover:border-white/30 text-gray-300 font-black py-3 text-[10px] uppercase tracking-widest transition-all skew-x-[-10deg]"><div className="skew-x-[10deg]">Recuar</div></button>
+                            <button onClick={() => triggerForgeMission(confirmModal)} className={`flex-1 bg-[#0a0a0c] border border-${rankConfigs[confirmModal].border.split('-')[1]}-500/50 hover:bg-${rankConfigs[confirmModal].border.split('-')[1]}-600/20 text-${rankConfigs[confirmModal].color.split('-')[1]}-400 font-black py-3 text-[10px] uppercase tracking-widest transition-all skew-x-[-10deg]`}><div className="skew-x-[10deg]">Selar Alma</div></button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-  const toggleEquipItem = async (item) => {
-    const cat = item.categoria || item.type; const currentEquipped = userProfileData.equipped_items || {};
-    const isEquipped = currentEquipped[cat]?.id === item.id; const newEquipped = { ...currentEquipped };
-    if (isEquipped) { delete newEquipped[cat]; } else { newEquipped[cat] = item; }
-    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { equipped_items: newEquipped });
-  };
+            <div className="max-w-6xl mx-auto px-4 py-8 relative z-10">
+                
+                <div className="flex md:justify-center gap-4 mb-12 overflow-x-auto no-scrollbar snap-x w-full px-2">
+                    {['Pactos', 'Forja', 'Loja', 'Ranking'].map((tab) => (
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={`relative px-8 py-3 font-black text-[10px] uppercase tracking-[0.3em] transition-all transform skew-x-[-15deg] group border-b-2
+                            ${activeTab === tab ? 'bg-red-600/10 border-red-600 text-white' : 'bg-transparent border-transparent text-gray-500 hover:text-red-400'}`}>
+                            <div className="skew-x-[15deg] flex items-center gap-2">
+                                {tab === "Pactos" && <Target className="w-3.5 h-3.5"/>}
+                                {tab === "Forja" && <Hexagon className="w-3.5 h-3.5"/>}
+                                {tab === "Loja" && <ShoppingCart className="w-3.5 h-3.5"/>}
+                                {tab === "Ranking" && <Trophy className="w-3.5 h-3.5"/>}
+                                {tab}
+                            </div>
+                        </button>
+                    ))}
+                </div>
 
-  const synthesizeCrystal = async () => {
-    if (userProfileData.crystals < 5) return null; const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-    if (Math.random() < 0.40) { await updateDoc(profileRef, { crystals: increment(-5) }); return { success: false }; }
-    const wonCoins = Math.floor(Math.random() * 10) + 5; const wonXp = Math.floor(Math.random() * 5) + 5;   
-    let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, wonXp);
-    await updateDoc(profileRef, { crystals: increment(-5), coins: increment(wonCoins), xp: newXp, level: newLvl }); if(didLevelUp) handleLevelUpAnim(newLvl);
-    return { success: true, wonCoins, wonXp, leveledUp: didLevelUp, newLvl };
-  };
+                {activeTab === "Pactos" && (
+                    <div className="animate-in fade-in duration-300">
+                        {userProfileData.activeMission ? (
+                            <div className={`bg-[#050505] border-t border-b border-l-[4px] ${rankConfigs[userProfileData.activeMission.difficulty].border} border-t-white/5 border-b-white/5 p-8 md:p-12 max-w-3xl mx-auto shadow-2xl relative overflow-hidden`}>
+                                <div className={`absolute -right-20 -bottom-20 opacity-5 ${rankConfigs[userProfileData.activeMission.difficulty].color} animate-[spin_40s_linear_infinite]`}>
+                                    <Hexagon className="w-96 h-96" strokeWidth={0.5} />
+                                </div>
 
-  const handleLibraryToggle = async (mangaId, status) => {
-      if (!user) { showToast("Faça login para favoritar obras.", "warning"); return; }
-      try {
-          const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'library', mangaId.toString());
-          if (status === "Remover") await deleteDoc(ref); else await setDoc(ref, { mangaId: mangaId, status: status, updatedAt: Date.now() });
-          if(status === 'Favoritos') showToast("Adicionado aos Favoritos!", "success"); else if(status === 'Remover') showToast("Removido da Biblioteca.", "info");
-      } catch(error) { showToast('Erro ao atualizar biblioteca.', 'error'); }
-  };
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10 gap-6">
+                                    <div>
+                                        <div className={`inline-block px-3 py-1 text-[8px] font-black uppercase tracking-[0.4em] border ${rankConfigs[userProfileData.activeMission.difficulty].border} ${rankConfigs[userProfileData.activeMission.difficulty].color} bg-[#0a0a0c]`}>
+                                            Anomalia: {userProfileData.activeMission.difficulty}
+                                        </div>
+                                        <h3 className="text-3xl md:text-4xl font-black text-white mt-4 uppercase tracking-tighter drop-shadow-md">{userProfileData.activeMission.title}</h3>
+                                    </div>
+                                    <div className="bg-[#0a0a0c] border border-red-500/50 px-5 py-3 rounded-none flex items-center gap-3 text-red-500 font-black text-sm shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+                                        <Timer className="w-4 h-4 animate-pulse" /> <span className="tracking-[0.3em]">{timeLeft}</span>
+                                    </div>
+                                </div>
 
-  if (showSplash) return <SplashScreen />;
-  if (currentView === 'login' || (!user && !isGuest)) { return <LoginView onLoginSuccess={() => { window.history.pushState({ view: 'home' }, '', ''); setCurrentView('home'); setIsGuest(false); }} onGuestAccess={() => { window.history.pushState({ view: 'home' }, '', ''); setIsGuest(true); setCurrentView('home'); }} showToast={showToast} />; }
+                                <div className="bg-[#0a0a0c] border border-white/5 p-6 md:p-8 mb-8 relative z-10 shadow-inner">
+                                    <p className={`text-xs md:text-sm font-bold leading-relaxed uppercase tracking-widest border-l-2 border-red-600 pl-4 ${userProfileData.activeMission.type === 'search_local' ? 'text-red-400' : 'text-gray-300'}`}>
+                                        {userProfileData.activeMission.desc || userProfileData.activeMission.question}
+                                    </p>
+                                    
+                                    {userProfileData.activeMission.type === 'read' && (
+                                        <div className="mt-8">
+                                            <div className="w-full bg-black h-2 mb-3 border border-white/5 overflow-hidden">
+                                                <div className={`h-full transition-all duration-1000 ease-out bg-gradient-to-r from-red-900 to-red-500 shadow-[0_0_10px_rgba(220,38,38,0.8)]`} style={{width: `${(userProfileData.activeMission.currentCount / userProfileData.activeMission.targetCount) * 100}%`}}></div>
+                                            </div>
+                                            <div className="flex justify-between text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
+                                                <span>Progresso</span>
+                                                <span className="text-red-500">{userProfileData.activeMission.currentCount} / {userProfileData.activeMission.targetCount} Caps</span>
+                                            </div>
+                                        </div>
+                                    )}
 
-  const unreadNotifCount = notifications.filter(n => !n.read).length;
-  const eq = userProfileData.equipped_items || {};
+                                    {userProfileData.activeMission.type === 'enigma' && (
+                                        <form onSubmit={handleEnigmaSubmit} className="mt-8 flex gap-3">
+                                            <input type="text" value={enigmaAnswer} onChange={e=>setEnigmaAnswer(e.target.value)} placeholder="Código da Decodificação..." className="flex-1 bg-black border border-white/10 px-5 py-3 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-red-600 transition-colors" />
+                                            <button type="submit" className="bg-red-600 px-6 text-white hover:bg-red-500 transition-colors flex items-center justify-center"><Key className="w-5 h-5"/></button>
+                                        </form>
+                                    )}
+                                </div>
 
-  const getAvatarSrc = () => {
-    if (!eq.avatar) return null;
-    const itemImg = eq.avatar.preview || eq.avatar.url || eq.avatar.img || eq.avatar.imagem || eq.avatar.image || eq.avatar.src || eq.avatar.foto || eq.avatar.link;
-    return itemImg ? cleanCosmeticUrl(itemImg) : null;
-  };
-  const activeAvatarSrc = getAvatarSrc() || cleanCosmeticUrl(userProfileData.avatarUrl) || user?.photoURL || `https://placehold.co/100x100/030305/dc2626?text=K`;
+                                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5 relative z-10">
+                                    <div className="flex gap-6 text-[10px] font-black uppercase tracking-widest bg-[#0a0a0c] px-4 py-2 border border-white/5">
+                                        <span className="text-white flex items-center gap-2"><Sparkles className="w-3 h-3 text-white"/> +{userProfileData.activeMission.rewardXp} XP</span>
+                                        <span className="text-amber-500 flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full"></div> +{userProfileData.activeMission.rewardCoins} M</span>
+                                    </div>
+                                    
+                                    <div className="flex gap-4 w-full sm:w-auto">
+                                        {userProfileData.activeMission.type === 'read' && (
+                                            <button onClick={() => { const m = mangas.find(mg => mg.id === userProfileData.activeMission.targetManga); if(m) onNavigate('details', m); }} className="flex-1 bg-white border border-white text-black font-black text-[9px] uppercase tracking-widest py-3 px-6 hover:bg-transparent hover:text-white transition-colors flex items-center justify-center gap-2">
+                                                Rastrear Alvo <ArrowRight className="w-3 h-3" />
+                                            </button>
+                                        )}
+                                        <button onClick={cancelMission} className="flex-1 sm:flex-none text-red-500 hover:text-white hover:bg-red-600 border border-red-500/30 px-6 py-3 font-black text-[9px] uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
+                                            <Skull className="w-3 h-3" /> Quebrar Pacto
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+                                {RANK_CARDS.map(rId => (
+                                    <div key={rId} className={`bg-[#050505] border-t border-b border-l-[4px] border-r border-t-white/5 border-b-white/5 border-r-white/5 ${rankConfigs[rId].border} p-6 flex flex-col justify-between hover:scale-[1.02] hover:${rankConfigs[rId].shadow} transition-all duration-300 group relative overflow-hidden`}>
+                                        <Hexagon className={`absolute -right-10 -top-10 w-40 h-40 ${rankConfigs[rId].color} opacity-5 group-hover:opacity-10 transition-opacity rotate-45`} />
+                                        
+                                        <div className="relative z-10 mb-6">
+                                            <h3 className={`text-2xl font-black uppercase tracking-tighter ${rankConfigs[rId].color}`}>{rId}</h3>
+                                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Classificação de Anomalia</p>
+                                        </div>
 
-  return (
-    <div className={`min-h-screen font-sans selection:bg-red-600 selection:text-white flex flex-col transition-colors duration-300 ${getThemeClasses(userSettings.theme)} bg-[#030305] text-gray-200`}>
-      <style dangerouslySetInnerHTML={{__html: [ ...shopItems.map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`), ...Object.values(eq).filter(Boolean).map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`) ].join('\n')}} />
-      <style>{`
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #dc2626; cursor: pointer; border: 2px solid white; box-shadow: 0 0 10px rgba(220,38,38,0.5); } 
-        .no-scrollbar::-webkit-scrollbar { display: none; } 
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+                                        <div className="space-y-2 mb-8 relative z-10 bg-[#0a0a0c] p-4 border border-white/5">
+                                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em]">
+                                                <span className="text-gray-500">Recompensa:</span>
+                                                <span className="text-white">{rankConfigs[rId].rxp}XP | {rankConfigs[rId].rcoin}M</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em]">
+                                                <span className="text-gray-500">Penalidade:</span>
+                                                <span className="text-red-500">-{rankConfigs[rId].pxp}XP | -{rankConfigs[rId].pcoin}M</span>
+                                            </div>
+                                        </div>
 
-      {levelUpAlert && ( <div className="fixed top-20 right-4 z-[99999] bg-[#0a0a0c]/95 backdrop-blur-md border border-red-600/30 text-white px-4 py-3 rounded-2xl flex items-center gap-3 animate-in slide-in-from-right fade-out duration-300 pointer-events-none shadow-[0_0_20px_rgba(220,38,38,0.3)]"><div className="bg-gradient-to-br from-red-600 to-rose-500 p-2 rounded-xl"><Trophy className="w-5 h-5 text-white" /></div><div className="flex flex-col"><span className="text-[10px] text-red-400 uppercase tracking-widest font-black">Poder Expandido!</span><span className="text-sm font-bold">Arcânia {levelUpAlert} Alcançada</span></div></div> )}
-      {dropAlert && ( <div className="fixed bottom-24 right-4 z-[99999] bg-[#0a0a0c]/90 backdrop-blur-md border border-blue-500/50 rounded-2xl px-3 py-2 flex items-center gap-2 animate-in slide-in-from-bottom-5 fade-out duration-300 pointer-events-none shadow-lg"><Hexagon className="w-4 h-4 text-blue-400 animate-pulse" /><span className="text-blue-100 text-xs font-bold">+1 Cristal Nexo</span></div> )}
-      {isRandomizing && ( <div className="fixed inset-0 z-[2000] bg-[#030305]/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-100 pointer-events-none"><Dices className="w-24 h-24 text-red-600 animate-[spin_0.2s_linear_infinite]" /></div> )}
+                                        <button onClick={() => setConfirmModal(rId)} className="w-full py-3 bg-transparent border border-white/10 text-white font-black text-[9px] uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all relative z-10 flex items-center justify-center gap-2">
+                                            Sintetizar Desafio <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
-      <GlobalToast toast={globalToast} />
+                {/* FORJA */}
+                {activeTab === "Forja" && (
+                    <div className="animate-in fade-in duration-300 max-w-2xl mx-auto mt-4 relative z-10">
+                        <div className="bg-[#050505] border border-red-600/30 p-10 md:p-14 text-center relative overflow-hidden shadow-[0_0_50px_rgba(220,38,38,0.15)] rounded-tl-3xl rounded-br-3xl">
+                            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                                <div className="w-80 h-80 border border-red-500 rounded-full animate-[spin_20s_linear_infinite]"></div>
+                                <div className="absolute w-80 h-80 border border-red-500 rounded-full animate-[spin_20s_linear_infinite_reverse] rotate-45 border-dashed"></div>
+                                <Hexagon className="absolute w-64 h-64 text-red-500 animate-pulse" strokeWidth={0.5} />
+                            </div>
 
-      {currentView !== 'reader' && (
-        <nav className="sticky top-0 z-40 bg-[#0a0a0c]/80 backdrop-blur-xl border-b border-red-600/10 shadow-md relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
-                <KageLogo className="w-10 h-10 md:w-12 md:h-12 group-hover:scale-110 transition-transform duration-300" showContour={false} />
-                <span className="text-xl font-black text-white tracking-[0.2em] uppercase hidden sm:block">MANGA<span className="text-red-600">KAGE</span></span>
-              </div>
-              
-              <div className="hidden md:block flex-1 max-w-lg mx-8 relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Search className="h-4 w-4 text-gray-500 group-focus-within:text-red-500 transition-colors" /></div>
-                <input type="text" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} onKeyDown={handleSearchSubmit} className="w-full pl-10 pr-4 py-2 rounded-xl border border-white/5 bg-[#111113]/80 text-gray-100 outline-none focus:border-red-600/50 transition-all text-sm shadow-inner" placeholder="Buscar nas sombras..." />
-              </div>
+                            <Flame className="w-16 h-16 mx-auto mb-6 text-red-600 animate-pulse relative z-10 drop-shadow-[0_0_20px_rgba(220,38,38,1)]" />
+                            <h2 className="text-4xl md:text-5xl font-black text-white mb-2 relative z-10 uppercase tracking-tighter">Reator <span className="text-red-600">Nexo</span></h2>
+                            <p className="text-gray-400 text-[10px] md:text-xs mb-10 uppercase tracking-[0.2em] font-bold relative z-10">Transmute <b className="text-blue-400">5 Cristais</b> em poder bruto. <span className="text-red-500">40% de chance de colapso material.</span></p>
+                            
+                            <div className="bg-[#0a0a0c] border border-blue-500/20 p-6 mb-10 relative z-10 max-w-xs mx-auto flex flex-col items-center justify-center gap-2 shadow-[inset_0_0_20px_rgba(59,130,246,0.1)]">
+                                <span className="text-[9px] uppercase font-black text-blue-500/70 tracking-[0.3em]">Carga Atual</span>
+                                <div className="text-5xl font-black text-white flex items-center gap-4">
+                                    {userProfileData.crystals || 0} <Hexagon className="w-10 h-10 text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
+                                </div>
+                            </div>
 
-              <div className="flex items-center gap-4 md:gap-6">
-                <div className="flex items-center gap-1 md:gap-3 border-r border-white/10 pr-4 md:pr-6">
-                  <button onClick={() => setShowMobileSearch(!showMobileSearch)} className="md:hidden p-2 rounded-full text-gray-400 hover:text-red-500 transition-colors duration-300" title="Pesquisar">{showMobileSearch ? <X className="w-5 h-5"/> : <Search className="w-5 h-5" />}</button>
-                  <button onClick={handleRandomManga} className="p-2 rounded-full text-gray-400 hover:text-red-500 transition-colors duration-300 group relative" title="Obra Aleatória"><Dices className="w-5 h-5 md:w-5 md:h-5 group-hover:text-red-500 transition-colors duration-300" /></button>
-                  <div className="relative">
-                    <button onClick={() => {if(!user) return showToast("Faça login para ver mensagens", "info"); setShowNotifMenu(!showNotifMenu)}} className="relative rounded-full p-2 text-gray-400 hover:text-red-500 transition-colors duration-300"><Bell className="w-5 h-5 md:w-5 md:h-5"/>{unreadNotifCount > 0 && <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-red-600 animate-pulse border border-[#0a0a0c]"></span>}</button>
-                    {showNotifMenu && user && (
-                        <div className="absolute top-full right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-72 bg-[#111113] border border-red-600/20 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in slide-in-from-top-2">
-                            <div className="p-3 border-b border-white/5 bg-[#0a0a0c] flex items-center justify-between"><h3 className="font-black text-sm text-white flex items-center gap-2"><Bell className="w-4 h-4 text-red-500"/> Avisos Sombrios</h3>{unreadNotifCount > 0 && <span className="text-[10px] rounded-lg bg-red-600 text-white px-1.5 py-0.5 font-black">{unreadNotifCount}</span>}</div>
-                            <div className="max-h-64 overflow-y-auto no-scrollbar">
-                                {notifications.length === 0 ? <p className="text-center text-xs text-gray-500 py-6">Nenhum aviso no momento.</p> : notifications.map(n => <div key={n.id} onClick={async () => { await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'notifications', n.id), {read: true}); if(n.mangaId) { const m = mangas.find(mg=>mg.id===n.mangaId); if(m) navigateTo('details', m); setShowNotifMenu(false); } }} className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${!n.read ? 'bg-red-900/10' : ''}`}><p className="text-xs text-gray-300 font-medium leading-relaxed">{n.text}</p><p className="text-[9px] text-red-500 mt-1.5 font-bold uppercase">{timeAgo(n.createdAt)}</p></div>)}
+                            <button onClick={runSynthesis} disabled={synthesizing || (userProfileData.crystals || 0) < 5} className="w-full bg-red-600 text-white hover:bg-red-500 disabled:bg-[#0a0a0c] disabled:border border-white/5 disabled:text-gray-600 font-black py-5 transition-all duration-300 relative z-10 text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(220,38,38,0.4)] disabled:shadow-none transform skew-x-[-10deg]">
+                                <div className="skew-x-[10deg] flex items-center gap-2">
+                                    {synthesizing ? <><Loader2 className="w-5 h-5 animate-spin" /> Transmutando Matéria...</> : 'Iniciar Transmutação'}
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* LOJA */}
+                {activeTab === "Loja" && (
+                    <div className="animate-in fade-in duration-300 max-w-6xl mx-auto">
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8 bg-[#050505] p-6 border-l-[4px] border-red-600 border-t border-b border-r border-white/5 shadow-lg">
+                            <div className="text-center sm:text-left">
+                                <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Mercado <span className="text-red-600">Sombrio</span></h3>
+                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-1">Adquira anomalias visuais para o seu Perfil.</p>
+                            </div>
+                            <div className="bg-[#0a0a0c] px-6 py-3 border border-amber-500/30 text-amber-500 font-black text-lg flex items-center gap-3 shadow-[inset_0_0_10px_rgba(245,158,11,0.1)]">
+                                <div className="w-3 h-3 bg-amber-500 rotate-45"></div> {userProfileData.coins || 0}
                             </div>
                         </div>
-                    )}
-                  </div>
-                </div>
 
-                <div className="hidden md:flex items-center gap-6 text-sm font-bold text-gray-400">
-                  <button onClick={() => navigateTo('home')} className={`hover:text-red-500 transition-colors duration-300 ${currentView === 'home' ? 'text-red-500' : ''}`}>Início</button>
-                  <button onClick={() => navigateTo('catalog')} className={`hover:text-red-500 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : ''}`}>Catálogo</button>
-                  <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`hover:text-red-500 transition-colors duration-300 flex items-center gap-1 ${currentView === 'nexo' ? 'text-red-500' : ''}`}><Swords className="w-4 h-4"/> Nexo</button>
-                  <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`hover:text-red-500 transition-colors duration-300 flex items-center gap-1 ${currentView === 'profile' ? 'text-red-500' : ''}`}><UserCircle className="w-4 h-4"/> Perfil</button>
-                </div>
-                {user ? (
-                  <div className="cursor-pointer flex items-center gap-3 group" onClick={() => navigateTo('profile')}>
-                    <div className="hidden sm:flex flex-col text-right">
-                      <span className="text-sm font-bold text-gray-200 group-hover:text-red-400 transition-colors duration-300">{user.displayName || "Kage"}</span>
-                      <span className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Nível {userProfileData.level || 1}</span>
-                    </div>
-                    
-                    <div className="relative w-10 h-10 flex items-center justify-center flex-shrink-0 group">
-                        <div className="w-9 h-9 rounded-full overflow-hidden bg-[#161a25] flex items-center justify-center relative z-10 border-[2px] border-[#0a0a0c] group-hover:border-red-500 transition-colors">
-                            <img src={activeAvatarSrc} className="w-full h-full object-cover" alt="Avatar" onError={(e) => e.target.src = `https://placehold.co/100x100/030305/dc2626?text=K`} />
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 pb-2 snap-x">
+                            {[ {id:'avatar', label:'Avatares'}, {id:'capa_fundo', label:'Paredes de Fundo'}, {id:'moldura', label:'Auras (Molduras)'}, {id:'nickname', label:'Selos de Nome'} ].map(cat => (
+                                <button key={cat.id} onClick={() => setShopCategory(cat.id)} className={`flex-shrink-0 px-6 py-2.5 font-black text-[9px] uppercase tracking-widest transition-all border transform skew-x-[-15deg] ${ shopCategory === cat.id ? 'bg-red-600 border-transparent text-white' : 'bg-[#050505] border-white/5 text-gray-500 hover:text-white' }`}>
+                                    <div className="skew-x-[15deg]">{cat.label}</div>
+                                </button>
+                            ))}
                         </div>
-                        
-                        {cleanCosmeticUrl(eq.moldura?.preview) && ( <img src={cleanCosmeticUrl(eq.moldura.preview)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] max-w-none object-contain object-center z-30 pointer-events-none" /> )}
+                          
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {shopItems.filter(item => {
+                                const cat = (item.categoria || item.type || '').toLowerCase();
+                                if (shopCategory === 'capa_fundo') return cat === 'capa_fundo' || cat === 'capa';
+                                return cat === shopCategory;
+                            }).map(item => {
+                              const hasItem = userProfileData.inventory?.includes(item.id);
+                              const cat = (item.categoria || item.type || '').toLowerCase();
+
+                              return (
+                                <div key={item.id} className="bg-[#050505] border border-white/5 p-4 flex flex-col items-center text-center hover:border-red-600/40 transition-all relative group rounded-tl-xl rounded-br-xl shadow-lg">
+                                  {(item.css || item.animacao) && ( <style dangerouslySetInnerHTML={{__html: `.${item.cssClass} { ${item.css} } ${item.animacao || ''}`}} /> )}
+                                  
+                                  <div className={`absolute top-0 left-0 text-[6px] font-black px-2 py-1 uppercase tracking-widest border-b border-r bg-[#0a0a0c] ${getRarityColor(item.raridade).replace('text-', 'border-').replace('text-', 'text-')}`}>
+                                      {item.raridade || 'COMUM'}
+                                  </div>
+
+                                  <div className={`w-24 h-24 mt-4 mb-4 bg-[#0a0a0c] flex items-center justify-center overflow-hidden border border-white/5 relative flex-shrink-0 ${cat === 'avatar' ? item.cssClass : ''}`}>
+                                    {['capa_fundo', 'capa'].includes(cat) && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="w-full h-full object-cover opacity-70 group-hover:scale-110 transition-transform duration-700" /> )}
+                                    {cat === 'moldura' && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none scale-[1.15]" style={{ mixBlendMode: 'screen' }} /> )}
+                                    {cat === 'avatar' && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="w-full h-full object-cover relative z-10 group-hover:scale-110 transition-transform duration-500" /> )}
+                                    {cat === 'nickname' && ( <div className={`font-black text-base z-20 ${item.cssClass}`}>Kage</div> )}
+                                  </div>
+                                  
+                                  <h4 className="text-gray-300 font-black mb-4 text-[10px] uppercase tracking-widest line-clamp-1 w-full">{item.nome || item.name}</h4>
+                                  
+                                  {hasItem ? (
+                                    <button disabled className="w-full bg-[#0a0a0c] border border-white/5 text-gray-700 font-black py-2.5 text-[8px] uppercase tracking-widest cursor-not-allowed">No Inventário</button>
+                                  ) : (
+                                    <button onClick={() => buyItem(item)} className="w-full bg-transparent border border-amber-600/50 text-amber-500 hover:bg-amber-600 hover:text-black font-black py-2.5 text-[9px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                                        Adquirir <div className="w-1.5 h-1.5 bg-current rotate-45"></div> {item.preco}
+                                    </button>
+                                  )}
+                                </div>
+                              )
+                            })}
+                        </div>
                     </div>
-                  </div>
-                ) : ( <button onClick={() => navigateTo('login')} className="bg-red-600 text-white hover:bg-red-700 rounded-xl font-black px-5 py-2 transition-colors duration-300 text-sm shadow-[0_0_10px_rgba(220,38,38,0.4)]">Entrar</button> )}
-              </div>
-            </div>
-          </div>
-          
-          {showMobileSearch && (
-            <div className="absolute top-full left-0 w-full bg-[#0a0a0c]/95 backdrop-blur-xl border-b border-white/10 p-3 shadow-xl md:hidden animate-in slide-in-from-top-2 z-50">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input type="text" value={globalSearch} onChange={e => setGlobalSearch(e.target.value)} onKeyDown={(e) => { handleSearchSubmit(e); if(e.key === 'Enter') setShowMobileSearch(false); }} className="w-full pl-9 pr-4 py-2 border border-white/10 rounded-xl bg-[#111113] text-gray-100 outline-none focus:border-red-600 text-sm transition-colors duration-300" placeholder="Buscar nas sombras..." autoFocus />
-              </div>
-            </div>
-          )}
-        </nav>
-      )}
+                )}
 
-      <main className="flex-1">
-        {currentView === 'home' && <HomeView mangas={mangas} onNavigate={navigateTo} dataSaver={userSettings.dataSaver} />}
-        {currentView === 'search' && <SearchView mangas={mangas} query={globalSearch} onNavigate={navigateTo} dataSaver={userSettings.dataSaver} />}
-        {currentView === 'catalog' && <CatalogView mangas={mangas} onNavigate={navigateTo} dataSaver={userSettings.dataSaver} catalogState={catalogState} setCatalogState={setCatalogState} />}
-        {currentView === 'nexo' && user && <NexoView user={user} userProfileData={userProfileData} showToast={showToast} mangas={mangas} db={db} appId={APP_ID} onNavigate={navigateTo} onLevelUp={handleLevelUpAnim} synthesizeCrystal={synthesizeCrystal} shopItems={shopItems} buyItem={buyItem} equipItem={toggleEquipItem} />}
-        {currentView === 'library' && <LibraryView mangas={mangas} user={user} libraryData={libraryData} onNavigate={navigateTo} onRequireLogin={() => navigateTo('login')} dataSaver={userSettings.dataSaver} />}
-        {currentView === 'profile' && user && <ProfileView user={user} userProfileData={userProfileData} historyData={historyData} libraryData={libraryData} dataLoaded={dataLoaded} userSettings={userSettings} updateSettings={updateSettings} onLogout={handleLogout} onUpdateData={(n) => setUserProfileData({...userProfileData, ...n})} showToast={showToast} mangas={mangas} onNavigate={navigateTo} shopItems={shopItems} />}
-        {currentView === 'popular' && <PopularView mangas={mangas} onNavigate={navigateTo} dataSaver={userSettings.dataSaver} />}
-        {currentView === 'details' && selectedManga && <DetailsView manga={selectedManga} libraryData={libraryData} historyData={historyData} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} onRequireLogin={() => navigateTo('login')} showToast={showToast} db={db} />}
-        {currentView === 'reader' && selectedManga && selectedChapter && <ReaderView manga={selectedManga} chapter={selectedChapter} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} triggerRandomDrop={triggerRandomDrop} onMarkAsRead={markAsRead} readMode={userSettings.readMode} onRequireLogin={() => navigateTo('login')} showToast={showToast} libraryData={libraryData} onToggleLibrary={handleLibraryToggle} />}
-      </main>
+                {/* RANKING */}
+                {activeTab === "Ranking" && (
+                    <div className="animate-in fade-in duration-300 max-w-4xl mx-auto">
+                        <div className="text-center mb-12">
+                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">Hierarquia <span className="text-red-600">Sombria</span></h2>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-2">Classificação de Poder Global.</p>
+                        </div>
+                        {loadingRank ? (
+                            <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 text-red-600 animate-spin"/></div>
+                        ) : (
+                            <div className="space-y-3">
+                                {rankingList.map((player, index) => (
+                                    <div key={player.id} className={`bg-[#050505] p-4 flex items-center gap-4 transition-all border-l-[4px] border-r border-t border-b ${index < 3 ? 'border-red-600 border-r-white/5 border-t-white/5 border-b-white/5 bg-red-950/10' : 'border-white/5 hover:border-l-gray-500'}`}>
+                                        <div className={`w-10 font-black text-center text-lg ${index === 0 ? 'text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-700' : 'text-gray-600'}`}>
+                                            {index + 1}
+                                        </div>
+                                        
+                                        <div className="relative w-12 h-12 flex-shrink-0">
+                                            {player.equipped_items?.avatar?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.avatar.cssClass} { ${player.equipped_items.avatar.css} } ${player.equipped_items.avatar.animacao || ''}`}} /> )}
+                                            {player.equipped_items?.moldura?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.moldura.cssClass} { ${player.equipped_items.moldura.css} } ${player.equipped_items.moldura.animacao || ''}`}} /> )}
 
-      {currentView !== 'reader' && currentView !== 'login' && <Footer />}
+                                            <div className={`w-full h-full rounded-full overflow-hidden bg-[#0a0a0c] relative z-10 ${player.equipped_items?.avatar ? player.equipped_items.avatar.cssClass : ''}`}>
+                                                <img src={cleanCosmeticUrl(player.avatarUrl) || 'https://placehold.co/100x100/030305/dc2626?text=K'} className="w-full h-full object-cover" />
+                                            </div>
+                                            {player.equipped_items?.moldura?.preview && ( <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-10%] w-[120%] h-[120%] object-cover z-20 pointer-events-none scale-[1.15] ${player.equipped_items.moldura.cssClass}`} style={{ mixBlendMode: 'screen' }} /> )}
+                                        </div>
 
-      {currentView !== 'reader' && (
-        <div className="md:hidden fixed bottom-0 w-full bg-[#0a0a0c]/95 backdrop-blur-2xl border-t border-red-600/10 z-40 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
-          <div className="flex justify-around items-center h-[60px] px-2 relative">
-            <button onClick={() => navigateTo('home')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'home' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><HomeIcon className="w-5 h-5" /><span className="text-[9px] font-bold">Início</span></button>
-            <button onClick={() => navigateTo('catalog')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><LayoutGrid className="w-5 h-5" /><span className="text-[9px] font-bold">Catálogo</span></button>
-            <div className="relative -top-5 flex justify-center w-16">
-                <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`flex flex-col items-center justify-center w-14 h-14 rounded-full border-[3px] border-[#030305] transition-transform hover:scale-105 duration-300 ${currentView === 'nexo' ? 'bg-gradient-to-tr from-red-600 to-rose-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'bg-[#111113] text-red-500'}`}>
-                    <Swords className="w-6 h-6 relative z-10" fill={currentView === 'nexo' ? "currentColor" : "none"}/><span className="text-[8px] font-black relative z-10 mt-0.5">NEXO</span>
-                </button>
+                                        <div className="flex-1 min-w-0">
+                                            {player.equipped_items?.nickname?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.nickname.cssClass} { ${player.equipped_items.nickname.css} } ${player.equipped_items.nickname.animacao || ''}`}} /> )}
+                                            <h4 className={`font-black text-sm uppercase truncate ${index < 3 ? 'text-white' : 'text-gray-400'} ${player.equipped_items?.nickname ? player.equipped_items.nickname.cssClass : ''}`}>
+                                                {player.displayName || "Oculto"}
+                                            </h4>
+                                            <p className="text-[9px] text-red-500 font-bold uppercase tracking-[0.2em] mt-1">{getLevelTitle(player.level)}</p>
+                                        </div>
+                                        
+                                        <div className="text-right flex-shrink-0 flex flex-col items-end gap-1.5">
+                                            <div className="bg-[#0a0a0c] border border-white/5 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1.5">Nv. {player.level}</div>
+                                            <div className="text-gray-500 font-black text-[9px] uppercase tracking-widest">{player.xp} XP</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
-            <button onClick={() => user ? navigateTo('library') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'library' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><Library className="w-5 h-5" /><span className="text-[9px] font-bold">Guarda</span></button>
-            <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'profile' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><UserCircle className="w-5 h-5" /><span className="text-[9px] font-bold">Perfil</span></button>
-          </div>
         </div>
-      )}
-    </div>
-  );
+    );
 }
-
-export default function App() { return <ErrorBoundary><MangakageApp /></ErrorBoundary>; }
