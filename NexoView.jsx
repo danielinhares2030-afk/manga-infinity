@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Hexagon, ShoppingCart, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, Moon, Flame, AlertTriangle } from 'lucide-react';
+import { Target, Hexagon, ShoppingCart, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, Flame, AlertTriangle } from 'lucide-react';
 import { doc, updateDoc, collectionGroup, getDocs, query } from "firebase/firestore";
 import { db } from './firebase';
 import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmeticUrl } from './helpers';
@@ -18,13 +18,14 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     // Categoria selecionada no Mercado Negro (Loja)
     const [shopCategory, setShopCategory] = useState('avatar');
 
+    // Cores mais agressivas e radioativas/alquímicas
     const rankConfigs = {
-        'Rank E': { rxp: 30, rcoin: 15, pxp: 15, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500/30' },
-        'Rank C': { rxp: 100, rcoin: 50, pxp: 50, pcoin: 25, time: 10, charLimit: 200, enigmaTries: 3, color: 'text-emerald-400', border: 'border-emerald-500/30' },
-        'Rank B': { rxp: 150, rcoin: 80, pxp: 80, pcoin: 40, time: 8, charLimit: 120, enigmaTries: 2, color: 'text-blue-400', border: 'border-blue-500/30' },
-        'Rank A': { rxp: 300, rcoin: 150, pxp: 150, pcoin: 80, time: 5, charLimit: 80, enigmaTries: 2, color: 'text-amber-500', border: 'border-amber-500/40' },
-        'Rank S': { rxp: 800, rcoin: 400, pxp: 400, pcoin: 200, time: 3, charLimit: 60, enigmaTries: 1, color: 'text-orange-500', border: 'border-orange-500/50' },
-        'Rank SSS':{ rxp: 2000, rcoin: 1000, pxp: 1000, pcoin: 500, time: 1, charLimit: 40, enigmaTries: 1, color: 'text-red-600', border: 'border-red-600/60' }
+        'Rank E': { rxp: 20, rcoin: 10, pxp: 10, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500', shadow: 'shadow-gray-500/20' },
+        'Rank C': { rxp: 60, rcoin: 30, pxp: 30, pcoin: 25, time: 10, charLimit: 200, enigmaTries: 3, color: 'text-lime-400', border: 'border-lime-500', shadow: 'shadow-lime-500/20' },
+        'Rank B': { rxp: 90, rcoin: 60, pxp: 60, pcoin: 40, time: 8, charLimit: 120, enigmaTries: 2, color: 'text-cyan-400', border: 'border-cyan-500', shadow: 'shadow-cyan-500/20' },
+        'Rank A': { rxp: 100, rcoin: 100, pxp: 100, pcoin: 80, time: 5, charLimit: 80, enigmaTries: 2, color: 'text-amber-500', border: 'border-amber-500', shadow: 'shadow-amber-500/20' },
+        'Rank S': { rxp: 200, rcoin: 150, pxp: 150, pcoin: 200, time: 3, charLimit: 60, enigmaTries: 1, color: 'text-orange-500', border: 'border-orange-500', shadow: 'shadow-orange-500/20' },
+        'Rank SSS':{ rxp: 300, rcoin: 450, pxp: 450, pcoin: 500, time: 1, charLimit: 40, enigmaTries: 1, color: 'text-red-600', border: 'border-red-600', shadow: 'shadow-red-600/30' }
     };
 
     const RANK_CARDS = Object.keys(rankConfigs);
@@ -89,22 +90,22 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
                 if (chosenType === 'search_visual' && randomManga.synopsis) {
                     let cleanDesc = randomManga.synopsis.replace(/<[^>]*>?/gm, '').replace(new RegExp(randomManga.title, 'gi'), '█████');
-                    let q = `[ ECO DAS SOMBRAS ]\n\nFragmento:\n"${cleanDesc.substring(0, conf.charLimit)}..."\n\nLocalize a obra no catálogo.`;
-                    newMission = { id: Date.now().toString(), type: 'search_local', difficulty, title: "Caçada Abissal", question: q, targetManga: randomManga.id, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000) };
+                    let q = `[ TRANSCRIÇÃO ALQUÍMICA ]\n\nFragmento Instável:\n"${cleanDesc.substring(0, conf.charLimit)}..."\n\nLocalize a obra original e neutralize a anomalia.`;
+                    newMission = { id: Date.now().toString(), type: 'search_local', difficulty, title: "Anomalia Abissal", question: q, targetManga: randomManga.id, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000) };
                 } else if (chosenType === 'enigma') {
-                    let q = `[ MISTÉRIO ]\nAutoria: ${randomManga.author || '???'} \nQual é o nome da obra?`;
-                    newMission = { id: Date.now().toString(), type: 'enigma', difficulty, title: "Enigma do Vazio", question: q, answer: [randomManga.title.toLowerCase().trim()], attemptsLeft: conf.enigmaTries, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000) };
+                    let q = `[ ENIGMA DO VAZIO ]\nAutoria Gravada: ${randomManga.author || 'Desconhecida'} \nDetermine a nomenclatura exata do tomo.`;
+                    newMission = { id: Date.now().toString(), type: 'enigma', difficulty, title: "Decodificação Kage", question: q, answer: [randomManga.title.toLowerCase().trim()], attemptsLeft: conf.enigmaTries, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (conf.time * 60 * 1000) };
                 } else {
                     let readTarget = difficulty === 'Rank E' ? 1 : 3;
-                    newMission = { id: Date.now().toString(), type: 'read', difficulty, title: `Extração de Sangue`, desc: `Lê ${readTarget} capítulo(s) de "${randomManga.title}".`, targetManga: randomManga.id, targetCount: readTarget, currentCount: 0, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (readTarget * 45 * 60 * 1000) };
+                    newMission = { id: Date.now().toString(), type: 'read', difficulty, title: `Extração de Essência`, desc: `Transmute a energia de ${readTarget} capítulo(s) da obra "${randomManga.title}".`, targetManga: randomManga.id, targetCount: readTarget, currentCount: 0, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (readTarget * 45 * 60 * 1000) };
                 }
 
                 if (newMission) {
                     await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { activeMission: newMission });
-                    showToast(`Pacto Selado.`, "success");
+                    showToast(`Pacto Formado. A contagem regressiva começou.`, "success");
                 }
             }
-        } catch(e) { showToast("Falha ao gerar contrato.", "error"); } finally { setIsForgingMission(false); }
+        } catch(e) { showToast("Colapso ao forjar contrato.", "error"); } finally { setIsForgingMission(false); }
     };
 
     const handleEnigmaSubmit = async (e) => {
@@ -112,8 +113,8 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         if (enigmaAnswer.toLowerCase().trim() === m.answer[0]) {
            let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.rewardXp);
            await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { coins: (userProfileData.coins || 0) + m.rewardCoins, xp: newXp, level: newLvl, activeMission: null });
-           showToast("Sucesso!", "success"); if(didLevelUp) onLevelUp(newLvl); 
-        } else { showToast("Incorreto.", "error"); }
+           showToast("Código quebrado. Recompensa extraída!", "success"); if(didLevelUp) onLevelUp(newLvl); 
+        } else { showToast("Análise incorreta. Cuidado.", "error"); }
     };
 
     const cancelMission = async () => {
@@ -121,16 +122,16 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
         let { newXp, newLvl } = removeXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.penaltyXp);
         await updateDoc(profileRef, { coins: Math.max(0, (userProfileData.coins || 0) - m.penaltyCoins), xp: newXp, level: newLvl, activeMission: null });
-        showToast("Pacto quebrado.", "error");
+        showToast("Você recuou. O Sistema cobrou seu preço.", "error");
     };
 
     const runSynthesis = async () => {
-        if ((userProfileData.crystals || 0) < 5) return showToast("Faltam cristais.", "error");
+        if ((userProfileData.crystals || 0) < 5) return showToast("Massa insuficiente. Colete 5 Cristais.", "error");
         setSynthesizing(true);
         setTimeout(async () => {
           const res = await synthesizeCrystal(); setSynthesizing(false);
-          if (res?.success) showToast(`Sucesso!`, 'success');
-          else showToast(`Falha no Ritual.`, 'error');
+          if (res?.success) showToast(`Transmutação Bem-Sucedida!`, 'success');
+          else showToast(`Colapso! Matéria desintegrada.`, 'error');
         }, 1500);
     };
 
@@ -139,18 +140,25 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     return (
         <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#030305]'}`}>
             
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/10 via-[#030305] to-[#000000] pointer-events-none z-0"></div>
+            {/* Fundo Alquímico / Grid Neon */}
+            {!equipped.tema_perfil && (
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80000010_1px,transparent_1px),linear-gradient(to_bottom,#80000010_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_800px_at_50%_-30%,#dc262615,transparent)]"></div>
+                </div>
+            )}
 
-            {/* MODAL DE MISSÃO */}
+            {/* MODAL DE MISSÃO RADICAL */}
             {confirmModal && (
-                <div className="fixed inset-0 z-[3000] bg-[#030305]/95 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setConfirmModal(null)}>
-                    <div className="bg-[#0a0a0c] border border-red-600/50 p-8 rounded-xl shadow-2xl max-w-sm w-full text-center" onClick={e => e.stopPropagation()}>
-                        <Target className="w-12 h-12 text-red-500 mx-auto mb-4 animate-pulse" />
-                        <h3 className="text-xl font-black text-white mb-2 uppercase">Firmar Pacto?</h3>
-                        <p className="text-[10px] text-gray-500 font-bold mb-6 uppercase">A falha resultará em perda de XP e Moedas.</p>
-                        <div className="flex gap-4">
-                            <button onClick={() => setConfirmModal(null)} className="flex-1 bg-transparent border border-white/10 text-gray-400 font-black py-3 rounded-lg text-[10px] uppercase">Recuar</button>
-                            <button onClick={() => triggerForgeMission(confirmModal)} className="flex-1 bg-red-600 text-white font-black py-3 rounded-lg text-[10px] uppercase shadow-lg">Aceitar</button>
+                <div className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in zoom-in-95 duration-200" onClick={() => setConfirmModal(null)}>
+                    <div className={`bg-[#050505] border-l-[4px] border-r-[4px] border-t border-b ${rankConfigs[confirmModal].border} border-t-white/10 border-b-white/10 p-8 shadow-[0_0_40px_rgba(0,0,0,1)] max-w-sm w-full text-center relative overflow-hidden`} onClick={e => e.stopPropagation()}>
+                        <Hexagon className={`absolute -right-8 -top-8 w-32 h-32 ${rankConfigs[confirmModal].color} opacity-10 rotate-12`} />
+                        <Target className={`w-14 h-14 ${rankConfigs[confirmModal].color} mx-auto mb-4 animate-pulse relative z-10`} />
+                        <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-widest relative z-10">Aceitar Pacto?</h3>
+                        <p className="text-[10px] text-gray-400 font-bold mb-8 uppercase tracking-[0.2em] relative z-10">O sangue assinado não pode ser apagado.</p>
+                        <div className="flex gap-4 relative z-10">
+                            <button onClick={() => setConfirmModal(null)} className="flex-1 bg-[#0a0a0c] border border-white/10 hover:border-white/30 text-gray-300 font-black py-3 text-[10px] uppercase tracking-widest transition-all skew-x-[-10deg]"><div className="skew-x-[10deg]">Recuar</div></button>
+                            <button onClick={() => triggerForgeMission(confirmModal)} className={`flex-1 bg-[#0a0a0c] border border-${rankConfigs[confirmModal].border.split('-')[1]}-500/50 hover:bg-${rankConfigs[confirmModal].border.split('-')[1]}-600/20 text-${rankConfigs[confirmModal].color.split('-')[1]}-400 font-black py-3 text-[10px] uppercase tracking-widest transition-all skew-x-[-10deg]`}><div className="skew-x-[10deg]">Selar Alma</div></button>
                         </div>
                     </div>
                 </div>
@@ -158,60 +166,112 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
             <div className="max-w-6xl mx-auto px-4 py-8 relative z-10">
                 
-                {/* MENU ABAS PRINCIPAIS */}
-                <div className="flex justify-center gap-2 mb-10 overflow-x-auto no-scrollbar snap-x">
+                {/* MENU ABAS PRINCIPAIS - ESTILO CORTADO */}
+                <div className="flex justify-center gap-4 mb-12 overflow-x-auto no-scrollbar snap-x">
                     {['Missões', 'Forja', 'Loja', 'Ranking'].map((tab) => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2.5 rounded-lg font-black text-[10px] uppercase tracking-widest border transition-all ${activeTab === tab ? 'bg-red-600 border-transparent text-white shadow-lg' : 'bg-[#0a0a0c] border-white/5 text-gray-500 hover:text-white'}`}>
-                            {tab}
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={`relative px-8 py-3 font-black text-[10px] uppercase tracking-[0.3em] transition-all transform skew-x-[-15deg] group border-b-2
+                            ${activeTab === tab ? 'bg-red-600/10 border-red-600 text-white' : 'bg-transparent border-transparent text-gray-500 hover:text-red-400'}`}>
+                            <div className="skew-x-[15deg] flex items-center gap-2">
+                                {tab === "Missões" && <Target className="w-3.5 h-3.5"/>}
+                                {tab === "Forja" && <Hexagon className="w-3.5 h-3.5"/>}
+                                {tab === "Loja" && <ShoppingCart className="w-3.5 h-3.5"/>}
+                                {tab === "Ranking" && <Trophy className="w-3.5 h-3.5"/>}
+                                {tab}
+                            </div>
                         </button>
                     ))}
                 </div>
 
-                {/* MISSÕES */}
+                {/* MISSÕES ALQUÍMICAS */}
                 {activeTab === "Missões" && (
                     <div className="animate-in fade-in duration-300">
                         {userProfileData.activeMission ? (
-                            <div className="bg-[#0a0a0c]/90 border border-red-600/20 p-6 md:p-10 rounded-xl max-w-2xl mx-auto shadow-2xl">
-                                <div className="flex justify-between items-start mb-6">
+                            <div className={`bg-[#050505] border-t border-b border-l-[4px] ${rankConfigs[userProfileData.activeMission.difficulty].border} border-t-white/5 border-b-white/5 p-8 md:p-12 max-w-3xl mx-auto shadow-2xl relative overflow-hidden`}>
+                                {/* Decoração de fundo alquímica */}
+                                <div className={`absolute -right-20 -bottom-20 opacity-5 ${rankConfigs[userProfileData.activeMission.difficulty].color} animate-[spin_40s_linear_infinite]`}>
+                                    <Hexagon className="w-96 h-96" strokeWidth={0.5} />
+                                </div>
+
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 relative z-10 gap-6">
                                     <div>
-                                        <span className={`text-[8px] font-black uppercase px-3 py-1 rounded border ${rankConfigs[userProfileData.activeMission.difficulty].border} ${rankConfigs[userProfileData.activeMission.difficulty].color}`}>
-                                            {userProfileData.activeMission.difficulty}
-                                        </span>
-                                        <h3 className="text-2xl font-black text-white mt-3 uppercase">{userProfileData.activeMission.title}</h3>
+                                        <div className={`inline-block px-3 py-1 text-[8px] font-black uppercase tracking-[0.4em] border ${rankConfigs[userProfileData.activeMission.difficulty].border} ${rankConfigs[userProfileData.activeMission.difficulty].color} bg-[#0a0a0c]`}>
+                                            Anomalia: {userProfileData.activeMission.difficulty}
+                                        </div>
+                                        <h3 className="text-3xl md:text-4xl font-black text-white mt-4 uppercase tracking-tighter drop-shadow-md">{userProfileData.activeMission.title}</h3>
                                     </div>
-                                    <div className="bg-red-950/30 border border-red-600/30 px-3 py-1.5 rounded-lg text-red-500 font-black text-xs">
-                                        <Timer className="w-3 h-3 inline mr-2 mb-0.5" /> {timeLeft}
+                                    <div className="bg-[#0a0a0c] border border-red-500/50 px-5 py-3 rounded-none flex items-center gap-3 text-red-500 font-black text-sm shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+                                        <Timer className="w-4 h-4 animate-pulse" /> <span className="tracking-[0.3em]">{timeLeft}</span>
                                     </div>
                                 </div>
-                                <div className="bg-black/40 border border-white/5 p-5 rounded-lg mb-6">
-                                    <p className="text-gray-300 text-xs font-bold leading-relaxed uppercase tracking-wider">
+
+                                <div className="bg-[#0a0a0c] border border-white/5 p-6 md:p-8 mb-8 relative z-10 shadow-inner">
+                                    <p className="text-gray-300 text-xs md:text-sm font-bold leading-relaxed uppercase tracking-widest border-l-2 border-red-600 pl-4">
                                         {userProfileData.activeMission.desc || userProfileData.activeMission.question}
                                     </p>
+                                    
+                                    {userProfileData.activeMission.type === 'read' && (
+                                        <div className="mt-8">
+                                            <div className="w-full bg-black h-2 mb-3 border border-white/5 overflow-hidden">
+                                                <div className={`h-full transition-all duration-1000 ease-out bg-gradient-to-r from-red-900 to-red-500 shadow-[0_0_10px_rgba(220,38,38,0.8)]`} style={{width: `${(userProfileData.activeMission.currentCount / userProfileData.activeMission.targetCount) * 100}%`}}></div>
+                                            </div>
+                                            <div className="flex justify-between text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
+                                                <span>Progresso</span>
+                                                <span className="text-red-500">{userProfileData.activeMission.currentCount} / {userProfileData.activeMission.targetCount} Caps</span>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {userProfileData.activeMission.type === 'enigma' && (
-                                        <form onSubmit={handleEnigmaSubmit} className="mt-4 flex gap-2">
-                                            <input type="text" value={enigmaAnswer} onChange={e=>setEnigmaAnswer(e.target.value)} placeholder="Resposta..." className="flex-1 bg-black border border-white/10 rounded-lg px-4 py-2.5 text-white text-xs outline-none focus:border-red-600" />
-                                            <button type="submit" className="bg-red-600 p-2.5 rounded-lg text-white"><Key className="w-4 h-4"/></button>
+                                        <form onSubmit={handleEnigmaSubmit} className="mt-8 flex gap-3">
+                                            <input type="text" value={enigmaAnswer} onChange={e=>setEnigmaAnswer(e.target.value)} placeholder="Código da Decodificação..." className="flex-1 bg-black border border-white/10 px-5 py-3 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-red-600 transition-colors" />
+                                            <button type="submit" className="bg-red-600 px-6 text-white hover:bg-red-500 transition-colors flex items-center justify-center"><Key className="w-5 h-5"/></button>
                                         </form>
                                     )}
                                 </div>
-                                <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                                    <div className="flex gap-4 text-[9px] font-black uppercase text-gray-400">
-                                        <span className="text-white">+ {userProfileData.activeMission.rewardXp} XP</span>
-                                        <span className="text-amber-500">+ {userProfileData.activeMission.rewardCoins} M</span>
+
+                                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5 relative z-10">
+                                    <div className="flex gap-6 text-[10px] font-black uppercase tracking-widest bg-[#0a0a0c] px-4 py-2 border border-white/5">
+                                        <span className="text-white flex items-center gap-2"><Sparkles className="w-3 h-3 text-white"/> +{userProfileData.activeMission.rewardXp} XP</span>
+                                        <span className="text-amber-500 flex items-center gap-2"><div className="w-2 h-2 bg-amber-500 rounded-full"></div> +{userProfileData.activeMission.rewardCoins} M</span>
                                     </div>
-                                    <button onClick={cancelMission} className="text-red-600 text-[9px] font-black uppercase hover:underline">Abortar</button>
+                                    
+                                    <div className="flex gap-4 w-full sm:w-auto">
+                                        {userProfileData.activeMission.type === 'read' && (
+                                            <button onClick={() => { const m = mangas.find(mg => mg.id === userProfileData.activeMission.targetManga); if(m) onNavigate('details', m); }} className="flex-1 bg-white border border-white text-black font-black text-[9px] uppercase tracking-widest py-3 px-6 hover:bg-transparent hover:text-white transition-colors flex items-center justify-center gap-2">
+                                                Rastrear Alvo <ArrowRight className="w-3 h-3" />
+                                            </button>
+                                        )}
+                                        <button onClick={cancelMission} className="flex-1 sm:flex-none text-red-500 hover:text-white hover:bg-red-600 border border-red-500/30 px-6 py-3 font-black text-[9px] uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
+                                            <Skull className="w-3 h-3" /> Quebrar Pacto
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
                                 {RANK_CARDS.map(rId => (
-                                    <div key={rId} className={`bg-[#0a0a0c] border ${rankConfigs[rId].border} p-5 rounded-xl flex flex-col justify-between hover:-translate-y-1 transition-all group`}>
-                                        <h3 className={`text-lg font-black uppercase ${rankConfigs[rId].color}`}>{rId}</h3>
-                                        <div className="my-4 text-[8px] font-black uppercase text-gray-500 space-y-1">
-                                            <p>Ganhos: <span className="text-white">{rankConfigs[rId].rxp}XP | {rankConfigs[rId].rcoin}M</span></p>
-                                            <p>Risco: <span className="text-red-800">{rankConfigs[rId].pxp}XP | {rankConfigs[rId].pcoin}M</span></p>
+                                    <div key={rId} className={`bg-[#050505] border-t border-b border-l-[4px] border-r border-t-white/5 border-b-white/5 border-r-white/5 ${rankConfigs[rId].border} p-6 flex flex-col justify-between hover:scale-[1.02] hover:${rankConfigs[rId].shadow} transition-all duration-300 group relative overflow-hidden`}>
+                                        <Hexagon className={`absolute -right-10 -top-10 w-40 h-40 ${rankConfigs[rId].color} opacity-5 group-hover:opacity-10 transition-opacity rotate-45`} />
+                                        
+                                        <div className="relative z-10 mb-6">
+                                            <h3 className={`text-2xl font-black uppercase tracking-tighter ${rankConfigs[rId].color}`}>{rId}</h3>
+                                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1">Classificação de Anomalia</p>
                                         </div>
-                                        <button onClick={() => setConfirmModal(rId)} className="w-full py-2 rounded-lg bg-white/5 border border-white/10 text-white font-black text-[9px] uppercase group-hover:bg-red-600 group-hover:border-transparent transition-all">Firmar</button>
+
+                                        <div className="space-y-2 mb-8 relative z-10 bg-[#0a0a0c] p-4 border border-white/5">
+                                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em]">
+                                                <span className="text-gray-500">Recompensa:</span>
+                                                <span className="text-white">{rankConfigs[rId].rxp}XP | {rankConfigs[rId].rcoin}M</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-[0.2em]">
+                                                <span className="text-gray-500">Penalidade:</span>
+                                                <span className="text-red-500">-{rankConfigs[rId].pxp}XP | -{rankConfigs[rId].pcoin}M</span>
+                                            </div>
+                                        </div>
+
+                                        <button onClick={() => setConfirmModal(rId)} className="w-full py-3 bg-transparent border border-white/10 text-white font-black text-[9px] uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all relative z-10 flex items-center justify-center gap-2">
+                                            Sintetizar Desafio <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -219,46 +279,62 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     </div>
                 )}
 
-                {/* FORJA */}
+                {/* FORJA ALQUÍMICA */}
                 {activeTab === "Forja" && (
-                    <div className="animate-in fade-in duration-300 max-w-sm mx-auto text-center bg-[#0a0a0c] border border-red-600/20 p-8 rounded-xl">
-                        <Flame className="w-12 h-12 text-red-600 mx-auto mb-4 animate-pulse" />
-                        <h2 className="text-2xl font-black text-white mb-2 uppercase">Fornalha</h2>
-                        <p className="text-[10px] text-gray-500 font-bold mb-8 uppercase">Sintetize 5 Cristais. 40% de chance de falha.</p>
-                        <div className="bg-black border border-white/10 p-5 rounded-lg mb-8">
-                            <div className="text-3xl font-black text-white flex items-center justify-center gap-3">
-                                {userProfileData.crystals || 0} <Hexagon className="w-6 h-6 text-blue-500" />
+                    <div className="animate-in fade-in duration-300 max-w-2xl mx-auto mt-4 relative z-10">
+                        <div className="bg-[#050505] border border-red-600/30 p-10 md:p-14 text-center relative overflow-hidden shadow-[0_0_50px_rgba(220,38,38,0.15)] rounded-tl-3xl rounded-br-3xl">
+                            
+                            {/* Círculo de Transmutação no fundo */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+                                <div className="w-80 h-80 border border-red-500 rounded-full animate-[spin_20s_linear_infinite]"></div>
+                                <div className="absolute w-80 h-80 border border-red-500 rounded-full animate-[spin_20s_linear_infinite_reverse] rotate-45 border-dashed"></div>
+                                <Hexagon className="absolute w-64 h-64 text-red-500 animate-pulse" strokeWidth={0.5} />
                             </div>
+
+                            <Flame className="w-16 h-16 mx-auto mb-6 text-red-600 animate-pulse relative z-10 drop-shadow-[0_0_20px_rgba(220,38,38,1)]" />
+                            <h2 className="text-4xl md:text-5xl font-black text-white mb-2 relative z-10 uppercase tracking-tighter">Reator <span className="text-red-600">Nexo</span></h2>
+                            <p className="text-gray-400 text-[10px] md:text-xs mb-10 uppercase tracking-[0.2em] font-bold relative z-10">Transmute <b className="text-blue-400">5 Cristais</b> em poder bruto. <span className="text-red-500">40% de chance de colapso material.</span></p>
+                            
+                            <div className="bg-[#0a0a0c] border border-blue-500/20 p-6 mb-10 relative z-10 max-w-xs mx-auto flex flex-col items-center justify-center gap-2 shadow-[inset_0_0_20px_rgba(59,130,246,0.1)]">
+                                <span className="text-[9px] uppercase font-black text-blue-500/70 tracking-[0.3em]">Carga Atual</span>
+                                <div className="text-5xl font-black text-white flex items-center gap-4">
+                                    {userProfileData.crystals || 0} <Hexagon className="w-10 h-10 text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
+                                </div>
+                            </div>
+
+                            <button onClick={runSynthesis} disabled={synthesizing || (userProfileData.crystals || 0) < 5} className="w-full bg-red-600 text-white hover:bg-red-500 disabled:bg-[#0a0a0c] disabled:border border-white/5 disabled:text-gray-600 font-black py-5 transition-all duration-300 relative z-10 text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(220,38,38,0.4)] disabled:shadow-none transform skew-x-[-10deg]">
+                                <div className="skew-x-[10deg] flex items-center gap-2">
+                                    {synthesizing ? <><Loader2 className="w-5 h-5 animate-spin" /> Transmutando Matéria...</> : 'Iniciar Transmutação'}
+                                </div>
+                            </button>
                         </div>
-                        <button onClick={runSynthesis} disabled={synthesizing || (userProfileData.crystals || 0) < 5} className="w-full bg-red-600 text-white font-black py-3 rounded-lg text-[10px] uppercase shadow-lg disabled:opacity-30">
-                            {synthesizing ? "Fundindo..." : "Iniciar Ritual"}
-                        </button>
                     </div>
                 )}
 
                 {/* MERCADO NEGRO (LOJA) */}
                 {activeTab === "Loja" && (
-                    <div className="animate-in fade-in duration-300 max-w-5xl mx-auto">
-                        <div className="flex justify-between items-center mb-6 bg-[#0a0a0c] p-5 rounded-xl border border-white/5">
-                            <div>
-                                <h3 className="text-xl font-black text-white uppercase">Mercado Negro</h3>
-                                <p className="text-[9px] text-gray-500 font-bold uppercase">Cosméticos Proibidos.</p>
+                    <div className="animate-in fade-in duration-300 max-w-6xl mx-auto">
+                        
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-8 bg-[#050505] p-6 border-l-[4px] border-red-600 border-t border-b border-r border-white/5 shadow-lg">
+                            <div className="text-center sm:text-left">
+                                <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Mercado <span className="text-red-600">Sombrio</span></h3>
+                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-1">Adquira anomalias visuais para o seu Perfil.</p>
                             </div>
-                            <div className="bg-black px-4 py-2 rounded-lg border border-amber-500/30 text-amber-500 font-black text-sm flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-amber-500"></div> {userProfileData.coins || 0}
+                            <div className="bg-[#0a0a0c] px-6 py-3 border border-amber-500/30 text-amber-500 font-black text-lg flex items-center gap-3 shadow-[inset_0_0_10px_rgba(245,158,11,0.1)]">
+                                <div className="w-3 h-3 bg-amber-500 rotate-45"></div> {userProfileData.coins || 0}
                             </div>
                         </div>
 
-                        {/* SUB-ABAS DA LOJA */}
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-2 snap-x">
-                            {[ {id:'avatar', label:'Avatar'}, {id:'capa_fundo', label:'Capa'}, {id:'moldura', label:'Moldura'}, {id:'nickname', label:'Nick'} ].map(cat => (
-                                <button key={cat.id} onClick={() => setShopCategory(cat.id)} className={`px-4 py-2 rounded-lg font-black text-[9px] uppercase transition-all border ${ shopCategory === cat.id ? 'bg-red-600 border-transparent text-white shadow-lg' : 'bg-black border-white/5 text-gray-500 hover:text-white' }`}>
-                                    {cat.label}
+                        {/* SUB-ABAS DA LOJA - CORTADAS */}
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 pb-2 snap-x">
+                            {[ {id:'avatar', label:'Avatares'}, {id:'capa_fundo', label:'Paredes de Fundo'}, {id:'moldura', label:'Auras (Molduras)'}, {id:'nickname', label:'Selos de Nome'} ].map(cat => (
+                                <button key={cat.id} onClick={() => setShopCategory(cat.id)} className={`flex-shrink-0 px-6 py-2.5 font-black text-[9px] uppercase tracking-widest transition-all border transform skew-x-[-15deg] ${ shopCategory === cat.id ? 'bg-red-600 border-transparent text-white' : 'bg-[#050505] border-white/5 text-gray-500 hover:text-white' }`}>
+                                    <div className="skew-x-[15deg]">{cat.label}</div>
                                 </button>
                             ))}
                         </div>
                           
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {shopItems.filter(item => {
                                 const cat = (item.categoria || item.type || '').toLowerCase();
                                 if (shopCategory === 'capa_fundo') return cat === 'capa_fundo' || cat === 'capa';
@@ -268,27 +344,29 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                               const cat = (item.categoria || item.type || '').toLowerCase();
 
                               return (
-                                <div key={item.id} className="bg-[#0a0a0c] border border-white/5 rounded-xl p-3 flex flex-col items-center text-center hover:border-red-600/40 transition-all relative">
+                                <div key={item.id} className="bg-[#050505] border border-white/5 p-4 flex flex-col items-center text-center hover:border-red-600/40 transition-all relative group rounded-tl-xl rounded-br-xl shadow-lg">
                                   {(item.css || item.animacao) && ( <style dangerouslySetInnerHTML={{__html: `.${item.cssClass} { ${item.css} } ${item.animacao || ''}`}} /> )}
                                   
                                   {/* Rarity Tag */}
-                                  <div className={`absolute top-2 right-2 text-[6px] font-black px-1.5 py-0.5 rounded border bg-black/80 ${getRarityColor(item.raridade)}`}>
+                                  <div className={`absolute top-0 left-0 text-[6px] font-black px-2 py-1 uppercase tracking-widest border-b border-r bg-[#0a0a0c] ${getRarityColor(item.raridade).replace('text-', 'border-').replace('text-', 'text-')}`}>
                                       {item.raridade || 'COMUM'}
                                   </div>
 
-                                  <div className={`w-20 h-20 rounded-lg mt-2 mb-3 bg-black flex items-center justify-center overflow-hidden border border-white/5 relative flex-shrink-0 ${cat === 'avatar' ? item.cssClass : ''}`}>
-                                    {['capa_fundo', 'capa'].includes(cat) && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="w-full h-full object-cover opacity-70" /> )}
+                                  <div className={`w-24 h-24 mt-4 mb-4 bg-[#0a0a0c] flex items-center justify-center overflow-hidden border border-white/5 relative flex-shrink-0 ${cat === 'avatar' ? item.cssClass : ''}`}>
+                                    {['capa_fundo', 'capa'].includes(cat) && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="w-full h-full object-cover opacity-70 group-hover:scale-110 transition-transform duration-700" /> )}
                                     {cat === 'moldura' && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none scale-[1.15]" style={{ mixBlendMode: 'screen' }} /> )}
-                                    {cat === 'avatar' && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="w-full h-full object-cover relative z-10" /> )}
-                                    {cat === 'nickname' && ( <div className={`font-black text-sm z-20 ${item.cssClass}`}>Kage</div> )}
+                                    {cat === 'avatar' && cleanCosmeticUrl(item.preview) && ( <img src={cleanCosmeticUrl(item.preview)} className="w-full h-full object-cover relative z-10 group-hover:scale-110 transition-transform duration-500" /> )}
+                                    {cat === 'nickname' && ( <div className={`font-black text-base z-20 ${item.cssClass}`}>Kage</div> )}
                                   </div>
                                   
-                                  <h4 className="text-gray-300 font-black mb-3 text-[10px] line-clamp-1 w-full">{item.nome || item.name}</h4>
+                                  <h4 className="text-gray-300 font-black mb-4 text-[10px] uppercase tracking-widest line-clamp-1 w-full">{item.nome || item.name}</h4>
                                   
                                   {hasItem ? (
-                                    <button disabled className="w-full rounded-lg bg-black text-gray-600 font-black py-2 text-[8px] uppercase cursor-not-allowed">Já Possui</button>
+                                    <button disabled className="w-full bg-[#0a0a0c] border border-white/5 text-gray-700 font-black py-2.5 text-[8px] uppercase tracking-widest cursor-not-allowed">No Inventário</button>
                                   ) : (
-                                    <button onClick={() => buyItem(item)} className="w-full rounded-lg bg-amber-600 text-black font-black py-2 text-[8px] uppercase hover:bg-amber-500 transition-colors">Comprar • {item.preco}</button>
+                                    <button onClick={() => buyItem(item)} className="w-full bg-transparent border border-amber-600/50 text-amber-500 hover:bg-amber-600 hover:text-black font-black py-2.5 text-[9px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
+                                        Adquirir <div className="w-1.5 h-1.5 bg-current rotate-45"></div> {item.preco}
+                                    </button>
                                   )}
                                 </div>
                               )
@@ -300,25 +378,41 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 {/* RANKING */}
                 {activeTab === "Ranking" && (
                     <div className="animate-in fade-in duration-300 max-w-4xl mx-auto">
-                        <div className="text-center mb-10">
-                            <h2 className="text-3xl font-black text-white uppercase">Hierarquia</h2>
-                            <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Os Líderes das Sombras.</p>
+                        <div className="text-center mb-12">
+                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">Hierarquia <span className="text-red-600">Sombria</span></h2>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-2">Classificação de Poder Global.</p>
                         </div>
                         {loadingRank ? (
-                            <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-red-600 animate-spin"/></div>
+                            <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 text-red-600 animate-spin"/></div>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {rankingList.map((player, index) => (
-                                    <div key={player.id} className={`bg-[#0a0a0c] rounded-xl border p-3 flex items-center gap-4 transition-all ${index < 3 ? 'border-red-600/40 bg-red-950/10' : 'border-white/5'}`}>
-                                        <div className={`w-8 font-black text-center text-sm ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-300' : 'text-gray-600'}`}>#{index + 1}</div>
-                                        <img src={cleanCosmeticUrl(player.avatarUrl) || 'https://placehold.co/100x100/030305/dc2626?text=K'} className="w-10 h-10 rounded-full object-cover border border-white/10" />
-                                        <div className="flex-1">
-                                            <h4 className="font-black text-xs text-white uppercase truncate">{player.displayName || "Oculto"}</h4>
-                                            <p className="text-[8px] text-red-500 font-bold uppercase">{getLevelTitle(player.level)}</p>
+                                    <div key={player.id} className={`bg-[#050505] p-4 flex items-center gap-4 transition-all border-l-[4px] border-r border-t border-b ${index < 3 ? 'border-red-600 border-r-white/5 border-t-white/5 border-b-white/5 bg-red-950/10' : 'border-white/5 hover:border-l-gray-500'}`}>
+                                        <div className={`w-10 font-black text-center text-lg ${index === 0 ? 'text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-700' : 'text-gray-600'}`}>
+                                            {index + 1}
                                         </div>
-                                        <div className="text-right text-[8px] font-black">
-                                            <div className="text-white">Nível {player.level}</div>
-                                            <div className="text-gray-500">{player.xp} XP</div>
+                                        
+                                        <div className="relative w-12 h-12 flex-shrink-0">
+                                            {player.equipped_items?.avatar?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.avatar.cssClass} { ${player.equipped_items.avatar.css} } ${player.equipped_items.avatar.animacao || ''}`}} /> )}
+                                            {player.equipped_items?.moldura?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.moldura.cssClass} { ${player.equipped_items.moldura.css} } ${player.equipped_items.moldura.animacao || ''}`}} /> )}
+
+                                            <div className={`w-full h-full rounded-full overflow-hidden bg-[#0a0a0c] relative z-10 ${player.equipped_items?.avatar ? player.equipped_items.avatar.cssClass : ''}`}>
+                                                <img src={cleanCosmeticUrl(player.avatarUrl) || 'https://placehold.co/100x100/030305/dc2626?text=K'} className="w-full h-full object-cover" />
+                                            </div>
+                                            {player.equipped_items?.moldura?.preview && ( <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-10%] w-[120%] h-[120%] object-cover z-20 pointer-events-none scale-[1.15] ${player.equipped_items.moldura.cssClass}`} style={{ mixBlendMode: 'screen' }} /> )}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            {player.equipped_items?.nickname?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.nickname.cssClass} { ${player.equipped_items.nickname.css} } ${player.equipped_items.nickname.animacao || ''}`}} /> )}
+                                            <h4 className={`font-black text-sm uppercase truncate ${index < 3 ? 'text-white' : 'text-gray-400'} ${player.equipped_items?.nickname ? player.equipped_items.nickname.cssClass : ''}`}>
+                                                {player.displayName || "Oculto"}
+                                            </h4>
+                                            <p className="text-[9px] text-red-500 font-bold uppercase tracking-[0.2em] mt-1">{getLevelTitle(player.level)}</p>
+                                        </div>
+                                        
+                                        <div className="text-right flex-shrink-0 flex flex-col items-end gap-1.5">
+                                            <div className="bg-[#0a0a0c] border border-white/5 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1.5">Nv. {player.level}</div>
+                                            <div className="text-gray-500 font-black text-[9px] uppercase tracking-widest">{player.xp} XP</div>
                                         </div>
                                     </div>
                                 ))}
