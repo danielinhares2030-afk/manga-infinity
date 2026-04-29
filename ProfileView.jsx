@@ -14,50 +14,38 @@ const ShadowCard = ({ children, className = "" }) => (
   </div>
 );
 
-// NOVO COMPONENTE DE EMBLEMA EQUIPÁVEL (ATUALIZADO)
+// NOVO COMPONENTE DE EMBLEMA EQUIPÁVEL (MODERNO E COMPACTO)
 const AchievementBadge = ({ badge, isEquipped, onEquip }) => (
-  <div className={`flex flex-col items-center p-4 sm:p-5 border transition-all duration-500 relative group rounded-2xl overflow-hidden ${
+  <div className={`flex items-center p-3 sm:p-4 border transition-all duration-300 relative group rounded-xl overflow-hidden ${
     badge.condition 
       ? isEquipped
-        ? 'bg-gradient-to-b from-red-950/40 to-[#050505] border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.2)] scale-[1.02]'
-        : 'bg-[#0a0a0c] border-white/5 hover:border-red-600/50 hover:bg-red-950/10 shadow-lg hover:-translate-y-2'
-      : 'bg-[#030305] border-white/5 opacity-50 grayscale hover:grayscale-[50%] transition-all duration-700'
+        ? 'bg-[#0a0a0c] border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)]'
+        : 'bg-[#050505] border-white/5 hover:border-red-600/50'
+      : 'bg-[#030305] border-white/5 opacity-40 grayscale'
   }`}>
-    {isEquipped && <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_20px_rgba(220,38,38,1)]"></div>}
-    
-    <div className={`absolute top-3 right-3 px-2 py-1 rounded bg-black/80 border text-[8px] font-black tracking-[0.2em] z-20 shadow-lg ${ badge.condition ? (isEquipped ? 'border-red-500/50 text-red-400' : 'border-white/10 text-gray-400') : 'border-white/5 text-gray-600' }`}>
-        NVL {badge.level}
-    </div>
-    
-    <div className={`w-20 h-20 sm:w-24 sm:h-24 mt-4 mb-4 rounded-full flex items-center justify-center relative transition-transform duration-500 group-hover:scale-110 z-10`}>
-        {isEquipped && <div className="absolute inset-0 bg-red-600/20 blur-xl rounded-full animate-pulse"></div>}
+    <div className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-full flex items-center justify-center mr-4 transition-transform duration-500 group-hover:scale-105`}>
         {badge.image ? (
-            <img src={badge.image} alt={badge.title} className="w-full h-full object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)] relative z-10" />
+            <img src={badge.image} alt={badge.title} className="w-full h-full object-contain" />
         ) : (
-            <badge.icon className={`w-10 h-10 ${badge.condition ? badge.colorClass : 'text-gray-600'} drop-shadow-xl relative z-10`} />
+            <badge.icon className={`w-6 h-6 ${badge.condition ? badge.colorClass : 'text-gray-600'}`} />
         )}
     </div>
-    
-    <h4 className={`font-black text-[12px] uppercase tracking-widest text-center line-clamp-1 mb-2 z-10 w-full ${ badge.condition ? (isEquipped ? 'text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]' : 'text-white') : 'text-gray-500' }`}>
-        {badge.title}
-    </h4>
-    <p className="text-[9px] text-gray-400 font-bold text-center line-clamp-2 mb-5 px-2 leading-relaxed z-10 h-8 w-full">
-        {badge.description}
-    </p>
-    
-    {badge.condition ? (
-        <button onClick={() => onEquip(badge)} className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 z-10 flex items-center justify-center gap-2 ${ isEquipped ? 'bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:bg-red-500' : 'bg-[#030305] border border-red-600/30 text-red-500 hover:bg-red-600 hover:text-white hover:border-red-600' }`}>
-            {isEquipped ? 'Selo Ativo' : 'Equipar Selo'}
-        </button>
-    ) : (
-        <div className="w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-black/60 border border-white/5 text-gray-600 flex justify-center items-center gap-2 z-10">
-            <Lock className="w-3 h-3" /> Bloqueado
-        </div>
-    )}
+    <div className="flex-1 min-w-0">
+        <h4 className={`font-black text-[11px] sm:text-xs uppercase tracking-widest line-clamp-1 mb-1 ${ badge.condition ? (isEquipped ? 'text-red-400' : 'text-white') : 'text-gray-500' }`}>
+            {badge.title}
+        </h4>
+        <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold line-clamp-2 leading-snug">
+            {badge.description}
+        </p>
+        {badge.condition && (
+            <button onClick={() => onEquip(badge)} className={`mt-2 text-[9px] font-black uppercase tracking-widest transition-colors ${ isEquipped ? 'text-red-500' : 'text-gray-500 hover:text-white' }`}>
+                {isEquipped ? '✓ Equipado' : 'Equipar'}
+            </button>
+        )}
+    </div>
   </div>
 );
 
-// COMPONENTE PRINCIPAL DO PERFIL
 export function ProfileView({ user, userProfileData, historyData, libraryData, dataLoaded, userSettings, updateSettings, onLogout, onUpdateData, showToast, mangas, onNavigate, shopItems = [] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("Estatísticas"); 
@@ -127,13 +115,13 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const crystalsCount = userProfileData.crystals || 0;
   const coinsCount = userProfileData.coins || 0;
 
-  // LISTA DE EMBLEMAS ATUALIZADA COM AS NOVAS IMAGENS
+  // IMAGENS APLICADAS CORRETAMENTE NA PROGRESSÃO E DIAGRAMAÇÃO ATUALIZADA
   const badgesList = [
     { id: 'iniciado', level: 1, image: 'https://i.ibb.co/VcF093w9/file-000000000a60720ea0dc89a96aeb27e0-removebg-preview.png', title: "Olho do Corvo", description: "Desvenda 10 capítulos no sistema.", condition: readCount >= 10, colorClass: "text-red-500" },
     { id: 'guardiao', level: 2, image: 'https://i.ibb.co/7NZVyW5f/file-00000000f4e871f580ac8750e4721f56-removebg-preview.png', title: "Pacto Sombrio", description: "Sela 5 obras em sua guarda.", condition: favCount >= 5, colorClass: "text-purple-500" },
-    { id: 'coletor', level: 3, image: 'https://i.ibb.co/cK3rLmhY/file-00000000a89471f5b61f4284cf8c9779-removebg-preview.png', title: "Cristal do Abismo", description: "Consome 50 cristais nexo.", condition: crystalsCount >= 50, colorClass: "text-blue-500" },
-    { id: 'ouro', level: 4, image: 'https://i.ibb.co/B2PkBMDX/file-00000000482871f5a7d7653e8ca359e3-removebg-preview.png', title: "Avareza Escarlate", description: "Acumula 1000 moedas astrais.", condition: coinsCount >= 1000, colorClass: "text-amber-500" },
-    { id: 'mestre', level: 5, icon: Ghost, title: "Espectro Kage", description: "Transcreve a alma ao Nível 10.", condition: level >= 10, colorClass: "text-rose-500" }
+    { id: 'diamante', level: 3, image: 'https://i.ibb.co/B2PkBMDX/file-00000000482871f5a7d7653e8ca359e3-removebg-preview.png', title: "Diamante Sombrio", description: "Consome 50 cristais nexo.", condition: crystalsCount >= 50, colorClass: "text-blue-500" },
+    { id: 'espectro', level: 4, image: 'https://i.ibb.co/cK3rLmhY/file-00000000a89471f5b61f4284cf8c9779-removebg-preview.png', title: "Espectro Kage", description: "Transcreve a alma ao Nível 10.", condition: level >= 10, colorClass: "text-rose-500" },
+    { id: 'ouro', level: 5, icon: Crown, title: "Avareza Escarlate", description: "Acumula 1000 moedas astrais.", condition: coinsCount >= 1000, colorClass: "text-amber-500" }
   ];
 
   const handleEquipBadge = async (badge) => {
@@ -351,7 +339,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                         <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Conquistas gravadas na sua alma. Equipe para exibir no perfil.</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {badgesList.map(badge => (
                         <AchievementBadge key={badge.id} badge={badge} isEquipped={equippedBadgeId === badge.id} onEquip={handleEquipBadge} />
                     ))}
