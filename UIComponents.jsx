@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-// LOGO MANGAKAGE (Limpo, com contorno animado opcional)
 export const KageLogo = React.memo(({ className = "w-64 h-64", showContour = false }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
-      
-      {/* ANIMAÇÃO DE CONTORNO (Ativada via props na tela de login) */}
       {showContour && (
          <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-red-600 border-b-red-600 animate-[spin_3s_linear_infinite] shadow-[0_0_20px_rgba(220,38,38,0.5)] z-0"></div>
       )}
-
-      {/* O Seu Mascote Oficial (Sem fundos borrados) */}
       <img 
         src="https://i.ibb.co/gF4zyvkk/Gemini-Generated-Image-gj2yhugj2yhugj2y-removebg-preview.png" 
         alt="Mangakage Mascot" 
@@ -21,24 +16,14 @@ export const KageLogo = React.memo(({ className = "w-64 h-64", showContour = fal
   );
 });
 
-// SPLASH SCREEN (Sem animações de fundo, totalmente clean)
 export const SplashScreen = React.memo(() => {
   const [fade, setFade] = useState(false);
-
-  useEffect(() => {
-    const t1 = setTimeout(() => setFade(true), 50); 
-    return () => clearTimeout(t1);
-  }, []);
-
+  useEffect(() => { const t1 = setTimeout(() => setFade(true), 50); return () => clearTimeout(t1); }, []);
   return (
     <div className={`fixed inset-0 z-[9999] bg-[#030305] flex flex-col items-center justify-center font-sans transition-all duration-500`}>
       <style>{`body, html { background-color: #030305 !important; margin: 0; padding: 0; }`}</style>
-
       <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[700ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-        
-        {/* Mascote Gigante na Abertura (sem o contorno aqui) */}
         <KageLogo className="w-[300px] h-[300px] md:w-[450px] md:h-[450px]" showContour={false} />
-        
         <div className="mt-8 flex items-center gap-3 opacity-60">
             <div className="w-2.5 h-2.5 bg-red-700 rounded-full animate-ping"></div>
             <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" style={{animationDelay: '0.2s'}}></div>
@@ -49,7 +34,6 @@ export const SplashScreen = React.memo(() => {
   );
 });
 
-// TRATAMENTO DE ERROS KAGE
 export class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -68,7 +52,6 @@ export class ErrorBoundary extends React.Component {
   }
 }
 
-// SISTEMA DE TOAST (AVISOS)
 export function GlobalToast({ toast }) {
   if (!toast) return null;
   const colors = toast.type === 'error' ? 'bg-red-950/90 text-red-200 border-red-600/50 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 
@@ -81,31 +64,38 @@ export function GlobalToast({ toast }) {
   );
 }
 
-// RODAPÉ MANGAKAGE
+// FOOTER SEM A PALAVRA ACERVO
 export function Footer() {
     return (
         <footer className="w-full bg-[#030305] border-t border-red-900/20 py-12 mt-auto pb-24 md:pb-12 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[1px] bg-gradient-to-r from-transparent via-red-600/50 to-transparent"></div>
             <div className="max-w-7xl mx-auto px-4 text-center flex flex-col items-center relative z-10">
                 <KageLogo className="w-32 h-32 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500" showContour={false} />
-                <span className="font-black text-[10px] text-gray-700 tracking-[0.5em] uppercase mt-2">MANGAKAGE • ACERVO DAS SOMBRAS</span>
+                <span className="font-black text-[10px] text-gray-700 tracking-[0.5em] uppercase mt-2">MANGAKAGE • DOMÍNIO DAS SOMBRAS</span>
             </div>
         </footer>
     );
 }
 
-// TRANSIÇÃO DE CAPÍTULO (SOMBRIOS)
+// NOVA ANIMAÇÃO DE TRANSIÇÃO (Corte diagonal radical)
 export const ChapterTransitionOverlay = React.memo(({ isVisible, chapterNumber }) => {
     if (!isVisible) return null;
     return (
-        <div className="fixed inset-0 z-[99999] bg-[#030305] font-sans flex flex-col items-center justify-center animate-in fade-in duration-300">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-red-600/10 blur-[80px] rounded-full"></div>
-            <div className="text-red-500 font-black tracking-[0.5em] text-[10px] uppercase mb-2 animate-pulse relative z-10">
-                Adentrando as Sombras
+        <div className="fixed inset-0 z-[99999] bg-[#030305] font-sans flex flex-col items-center justify-center overflow-hidden animate-in fade-in duration-300">
+            {/* Animação de Corte/Slash */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-1 bg-red-600 shadow-[0_0_30px_rgba(220,38,38,1)] rotate-[-15deg] animate-in slide-in-from-right-[100%] duration-300"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-1 bg-white shadow-[0_0_20px_rgba(255,255,255,0.8)] rotate-[-15deg] animate-in slide-in-from-left-[100%] duration-300 delay-100 mix-blend-overlay"></div>
+
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/20 blur-[100px] rounded-full animate-pulse"></div>
+            
+            <div className="relative z-10 flex flex-col items-center animate-in zoom-in-75 fade-in duration-500">
+                <div className="text-red-500 font-black tracking-[0.8em] text-[10px] uppercase mb-2">
+                    Avanço de Domínio
+                </div>
+                <h2 className="text-7xl sm:text-9xl font-black text-white tracking-tighter drop-shadow-[0_0_40px_rgba(220,38,38,0.8)]">
+                  {chapterNumber}
+                </h2>
             </div>
-            <h2 className="text-6xl sm:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-red-400 to-white tracking-tighter animate-in zoom-in-50 duration-300 relative z-10 drop-shadow-[0_0_30px_rgba(220,38,38,0.5)]">
-              {chapterNumber}
-            </h2>
         </div>
     );
 });
