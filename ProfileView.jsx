@@ -14,39 +14,44 @@ const ShadowCard = ({ children, className = "" }) => (
   </div>
 );
 
-// COMPONENTE DE EMBLEMA EQUIPÁVEL
+// NOVO COMPONENTE DE EMBLEMA EQUIPÁVEL (ATUALIZADO)
 const AchievementBadge = ({ badge, isEquipped, onEquip }) => (
-  <div className={`flex flex-col items-center p-3 sm:p-4 border transition-all duration-300 relative group rounded-lg overflow-hidden ${
+  <div className={`flex flex-col items-center p-4 sm:p-5 border transition-all duration-500 relative group rounded-2xl overflow-hidden ${
     badge.condition 
       ? isEquipped
-        ? 'bg-gradient-to-br from-red-950/50 to-[#030305] border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-[1.02]'
-        : 'bg-[#0a0a0c]/80 border-white/5 hover:border-red-600/50 hover:bg-[#0f0f13] shadow-md hover:-translate-y-1'
-      : 'bg-[#030305]/50 border-white/5 opacity-50 grayscale'
+        ? 'bg-gradient-to-b from-red-950/40 to-[#050505] border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.2)] scale-[1.02]'
+        : 'bg-[#0a0a0c] border-white/5 hover:border-red-600/50 hover:bg-red-950/10 shadow-lg hover:-translate-y-2'
+      : 'bg-[#030305] border-white/5 opacity-50 grayscale hover:grayscale-[50%] transition-all duration-700'
   }`}>
-    {isEquipped && <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_15px_rgba(220,38,38,1)]"></div>}
+    {isEquipped && <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent shadow-[0_0_20px_rgba(220,38,38,1)]"></div>}
     
-    <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded text-[7px] font-black tracking-widest z-10 border shadow-sm ${ badge.condition ? (isEquipped ? 'bg-red-950/80 border-red-500/50 text-red-400' : 'bg-black/80 border-white/10 text-gray-400') : 'bg-black/40 border-white/5 text-gray-600' }`}>
-       NVL {badge.level}
+    <div className={`absolute top-3 right-3 px-2 py-1 rounded bg-black/80 border text-[8px] font-black tracking-[0.2em] z-20 shadow-lg ${ badge.condition ? (isEquipped ? 'border-red-500/50 text-red-400' : 'border-white/10 text-gray-400') : 'border-white/5 text-gray-600' }`}>
+        NVL {badge.level}
     </div>
     
-    <div className={`w-12 h-12 mt-2 mb-3 rounded-lg flex items-center justify-center relative transition-transform duration-300 group-hover:scale-110 ${ badge.condition ? (isEquipped ? 'bg-red-900/40 border border-red-500/50 shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'bg-black/50 border border-white/10') : 'bg-transparent' }`}>
-        <badge.icon className={`w-6 h-6 ${badge.condition ? badge.colorClass : 'text-gray-600'} drop-shadow-lg z-10`} />
+    <div className={`w-20 h-20 sm:w-24 sm:h-24 mt-4 mb-4 rounded-full flex items-center justify-center relative transition-transform duration-500 group-hover:scale-110 z-10`}>
+        {isEquipped && <div className="absolute inset-0 bg-red-600/20 blur-xl rounded-full animate-pulse"></div>}
+        {badge.image ? (
+            <img src={badge.image} alt={badge.title} className="w-full h-full object-contain drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)] relative z-10" />
+        ) : (
+            <badge.icon className={`w-10 h-10 ${badge.condition ? badge.colorClass : 'text-gray-600'} drop-shadow-xl relative z-10`} />
+        )}
     </div>
     
-    <span className={`font-black text-[10px] sm:text-[11px] uppercase tracking-widest text-center line-clamp-1 mb-1 z-10 ${ badge.condition ? (isEquipped ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]' : 'text-white') : 'text-gray-500' }`}>
+    <h4 className={`font-black text-[12px] uppercase tracking-widest text-center line-clamp-1 mb-2 z-10 w-full ${ badge.condition ? (isEquipped ? 'text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]' : 'text-white') : 'text-gray-500' }`}>
         {badge.title}
-    </span>
-    <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold text-center line-clamp-2 mb-4 px-1 leading-tight z-10 h-6">
+    </h4>
+    <p className="text-[9px] text-gray-400 font-bold text-center line-clamp-2 mb-5 px-2 leading-relaxed z-10 h-8 w-full">
         {badge.description}
-    </span>
+    </p>
     
     {badge.condition ? (
-        <button onClick={() => onEquip(badge)} className={`w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-300 z-10 ${ isEquipped ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:bg-red-500' : 'bg-transparent border border-red-600/30 text-red-500 hover:bg-red-900/40 hover:border-red-500' }`}>
-            {isEquipped ? 'Equipado' : 'Equipar'}
+        <button onClick={() => onEquip(badge)} className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 z-10 flex items-center justify-center gap-2 ${ isEquipped ? 'bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:bg-red-500' : 'bg-[#030305] border border-red-600/30 text-red-500 hover:bg-red-600 hover:text-white hover:border-red-600' }`}>
+            {isEquipped ? 'Selo Ativo' : 'Equipar Selo'}
         </button>
     ) : (
-        <div className="w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-black/40 border border-white/5 text-gray-600 flex justify-center items-center gap-1.5 z-10">
-            <Lock className="w-3 h-3" /> Oculto
+        <div className="w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-black/60 border border-white/5 text-gray-600 flex justify-center items-center gap-2 z-10">
+            <Lock className="w-3 h-3" /> Bloqueado
         </div>
     )}
   </div>
@@ -122,11 +127,12 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const crystalsCount = userProfileData.crystals || 0;
   const coinsCount = userProfileData.coins || 0;
 
+  // LISTA DE EMBLEMAS ATUALIZADA COM AS NOVAS IMAGENS
   const badgesList = [
-    { id: 'iniciado', level: 1, icon: Eye, title: "Olho do Corvo", description: "Desvenda 10 capítulos no sistema.", condition: readCount >= 10, colorClass: "text-red-500" },
-    { id: 'guardiao', level: 2, icon: Bookmark, title: "Pacto Sombrio", description: "Sela 5 obras em sua guarda.", condition: favCount >= 5, colorClass: "text-purple-500" },
-    { id: 'coletor', level: 3, icon: Hexagon, title: "Cristal do Abismo", description: "Consome 50 cristais nexo.", condition: crystalsCount >= 50, colorClass: "text-blue-500" },
-    { id: 'ouro', level: 4, icon: Crown, title: "Avareza Escarlate", description: "Acumula 1000 moedas astrais.", condition: coinsCount >= 1000, colorClass: "text-amber-500" },
+    { id: 'iniciado', level: 1, image: 'https://i.ibb.co/VcF093w9/file-000000000a60720ea0dc89a96aeb27e0-removebg-preview.png', title: "Olho do Corvo", description: "Desvenda 10 capítulos no sistema.", condition: readCount >= 10, colorClass: "text-red-500" },
+    { id: 'guardiao', level: 2, image: 'https://i.ibb.co/7NZVyW5f/file-00000000f4e871f580ac8750e4721f56-removebg-preview.png', title: "Pacto Sombrio", description: "Sela 5 obras em sua guarda.", condition: favCount >= 5, colorClass: "text-purple-500" },
+    { id: 'coletor', level: 3, image: 'https://i.ibb.co/cK3rLmhY/file-00000000a89471f5b61f4284cf8c9779-removebg-preview.png', title: "Cristal do Abismo", description: "Consome 50 cristais nexo.", condition: crystalsCount >= 50, colorClass: "text-blue-500" },
+    { id: 'ouro', level: 4, image: 'https://i.ibb.co/B2PkBMDX/file-00000000482871f5a7d7653e8ca359e3-removebg-preview.png', title: "Avareza Escarlate", description: "Acumula 1000 moedas astrais.", condition: coinsCount >= 1000, colorClass: "text-amber-500" },
     { id: 'mestre', level: 5, icon: Ghost, title: "Espectro Kage", description: "Transcreve a alma ao Nível 10.", condition: level >= 10, colorClass: "text-rose-500" }
   ];
 
@@ -147,7 +153,6 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
   const equippedBadgeId = eq.emblema?.id;
   const equippedBadgeData = badgesList.find(b => b.id === equippedBadgeId);
 
-  // Filtragem dos itens do Inventário
   const userInventory = userProfileData.inventory || [];
   const inventoryItems = shopItems.filter(item => {
       if (!userInventory.includes(item.id)) return false;
@@ -238,7 +243,11 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                       
                       {equippedBadgeData && (
                           <div className={`bg-gradient-to-r from-black to-[#0a0a0c] border border-white/10 inline-flex items-center gap-2 px-4 py-2 rounded-lg shadow-lg ${equippedBadgeData.colorClass}`}>
-                              <equippedBadgeData.icon className="w-4 h-4 drop-shadow-md" />
+                              {equippedBadgeData.image ? (
+                                  <img src={equippedBadgeData.image} className="w-6 h-6 object-contain drop-shadow-md" alt="Emblema" />
+                              ) : (
+                                  <equippedBadgeData.icon className="w-4 h-4 drop-shadow-md" />
+                              )}
                               <span className="text-[10px] font-black uppercase tracking-[0.2em]">{equippedBadgeData.title}</span>
                           </div>
                       )}
@@ -342,7 +351,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
                         <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Conquistas gravadas na sua alma. Equipe para exibir no perfil.</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {badgesList.map(badge => (
                         <AchievementBadge key={badge.id} badge={badge} isEquipped={equippedBadgeId === badge.id} onEquip={handleEquipBadge} />
                     ))}
@@ -351,7 +360,7 @@ export function ProfileView({ user, userProfileData, historyData, libraryData, d
             </div>
         )}
 
-        {/* NOVA ABA: INVENTÁRIO */}
+        {/* ABA: INVENTÁRIO */}
         {activeTab === "Inventário" && (
             <div className="animate-in fade-in slide-in-from-left-4 duration-300">
                 <ShadowCard>
