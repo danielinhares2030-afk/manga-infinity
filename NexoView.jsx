@@ -5,34 +5,6 @@ import { db } from './firebase';
 import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmeticUrl } from './helpers';
 import { APP_ID } from './constants';
 
-const CLOUD_NAME = "dxrppfkrq";
-const UPLOAD_PRESET = "obra_upload";
-const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-const REMOVE_BG_API_KEY = "k85TdHmAtNJQheMuUPujyV7k";
-
-async function uploadToCloudinary(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
-  const res = await fetch(UPLOAD_URL, { method: "POST", body: formData });
-  if (!res.ok) throw new Error("Erro no Cloudinary. Verifique o seu preset.");
-  const data = await res.json();
-  return data.secure_url;
-}
-
-async function removeBackgroundWithRemoveBg(imageBlob) {
-  const formData = new FormData();
-  formData.append('image_file', imageBlob);
-  formData.append('size', 'auto');
-  const response = await fetch('https://api.remove.bg/v1.0/removebg', {
-    method: 'POST',
-    headers: { 'X-Api-Key': REMOVE_BG_API_KEY },
-    body: formData
-  });
-  if (!response.ok) throw new Error("Erro na API Remove.bg");
-  return await response.blob();
-}
-
 export function NexoView({ user, userProfileData, showToast, mangas, onNavigate, onLevelUp, synthesizeCrystal, shopItems, buyItem, equipItem }) {
     const [activeTab, setActiveTab] = useState("Missões");
     const [enigmaAnswer, setEnigmaAnswer] = useState("");
@@ -44,11 +16,8 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     const [rankingList, setRankingList] = useState([]);
     const [loadingRank, setLoadingRank] = useState(false);
 
-    const [showIAModal, setShowIAModal] = useState(false);
-    const [iaPrompt, setIaPrompt] = useState("");
-    const [iaCategory, setIaCategory] = useState("avatar");
-    const [isGeneratingIA, setIsGeneratingIA] = useState(false);
-    const [iaStatus, setIaStatus] = useState("");
+    // NOVA STATE PARA AS ABAS DA LOJA
+    const [shopCategory, setShopCategory] = useState('avatar');
 
     const rankConfigs = {
         'Rank E': { rxp: 30, rcoin: 15, pxp: 15, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500/30' },
@@ -199,136 +168,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         }, 1500);
     };
 
-    const handlePlayerGenerateIA = async (e) => {
-        e.preventDefault();
-        const COST = 5000;
-        
-        if ((userProfileData.coins || 0) < COST) {
-            return showToast(`Essência insuficiente. A Forja das Sombras exige ${COST} M.`, "error");
-        }
-        
-        setIsGeneratingIA(true);
-        setIaStatus("A Inteligência Kage está arquitetando...");
-
-        try {
-            const apiKey = ""; 
-            const textModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const imageModelUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`;
-
-            const finalPrompt = iaPrompt.trim() === '' ? 'Invente um tema ninja, sombrio e incrivelmente estiloso.' : iaPrompt;
-
-            let regrasEspecificas = "";
-            if (iaCategory === 'capa_fundo') {
-                regrasEspecificas = "- CAPA_FUNDO: Apenas cenário épico. PROIBIDO desenhar personagens. ImagePrompt: 'Scenery, landscape, background only, dark aesthetic, NO CHARACTERS'.";
-            } else if (iaCategory === 'moldura') {
-                regrasEspecificas = "- MOLDURA: O objeto DEVE ser um ANEL VAZADO GIGANTE tocando as bordas da tela! ZERO MARGENS! Fundo externo e o miolo interno 100% PRETO SÓLIDO (#000000). ImagePrompt: '2D UI asset, single hollow circular ring, glowing avatar frame border, HUGE, TOUCHING THE ABSOLUTE EDGES OF THE CANVAS, ZERO MARGINS, PURE FLAT SOLID BLACK BACKGROUND #000000, pure flat black empty hole in the center #000000, NO vignettes'. REGRAS CSS: 1) PROIBIDO usar 'background' ou 'background-color'. 2) NUNCA use 'transform' ou 'scale' nos keyframes para molduras (use apenas filter, hue-rotate, opacity, drop-shadow).";
-            } else if (iaCategory === 'avatar') {
-                regrasEspecificas = "- AVATAR: Desenhe APENAS o rosto/busto do personagem. Fundo 100% BRANCO SÓLIDO E VAZIO (#FFFFFF). PROIBIDO desenhar fundos, auras ou formas ao redor. FIDELIDADE MÁXIMA: Descreva as características físicas do personagem em INGLÊS no imagePrompt. ImagePrompt OBRIGATÓRIO: 'Close-up portrait of [DESCREVA AS CARACTERÍSTICAS EM INGLÊS], perfectly centered, authentic 2D anime style, clean face, PURE SOLID WHITE BACKGROUND #FFFFFF, completely empty background'. REGRA CSS: DEVE conter um 'background' no CSS para colorir o fundo.";
-            } else if (iaCategory === 'nickname') {
-                regrasEspecificas = "- NICKNAME: Apenas efeito de texto no CSS. NÃO GERE IMAGEM! O ImagePrompt DEVE ser EXATAMENTE 'NONE'. REGRA CSS: PROIBIDO usar 'background' no CSS, use apenas color, text-shadow, etc.";
-            }
-
-            const systemInstruction = `Você é o mestre forjador de cosméticos de um App Ninja/Mangá (Mangakage). Crie um item da categoria '${iaCategory}'.
-            Pedido do usuário: '${finalPrompt}'.
-            
-            REGRAS OBRIGATÓRIAS DE IMAGEM:
-            ${regrasEspecificas}
-
-            REGRAS CRÍTICAS DE CSS E ANIMAÇÃO: 
-            1. O campo 'css' DEVE conter APENAS as propriedades CSS separadas por ponto e vírgula. NÃO use chaves {}, NÃO use seletores.
-            2. ANIMAÇÕES: Se pedir animação, adicione 'animation' no css e a regra COMPLETA no campo 'keyframes'.
-            3. Se NÃO pedir animação, deixe 'keyframes' vazio ("").
-            
-            A raridade DEVE SER EXATAMENTE: "mitico".`;
-
-            const response = await fetch(textModelUrl, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: iaPrompt }] }],
-                    systemInstruction: { parts: [{ text: systemInstruction }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                nome: { type: "STRING" },
-                                descricao: { type: "STRING" },
-                                raridade: { type: "STRING" },
-                                css: { type: "STRING" },
-                                keyframes: { type: "STRING" },
-                                imagePrompt: { type: "STRING" }
-                            },
-                            required: ["nome", "descricao", "raridade", "css", "keyframes", "imagePrompt"]
-                        }
-                    }
-                })
-            });
-
-            const textData = await response.json();
-            const aiResult = JSON.parse(textData.candidates[0].content.parts[0].text);
-
-            let finalImageUrl = "";
-            
-            if (aiResult.imagePrompt && aiResult.imagePrompt !== "NONE") {
-                setIaStatus('Materializando nas Sombras...');
-                const imgRes = await fetch(imageModelUrl, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ instances: { prompt: aiResult.imagePrompt }, parameters: { sampleCount: 1 } })
-                });
-                const imgData = await imgRes.json();
-                
-                if(imgData.predictions && imgData.predictions[0]) {
-                    const base64Image = `data:image/png;base64,${imgData.predictions[0].bytesBase64Encoded}`;
-                    const resBlob = await fetch(base64Image);
-                    let blob = await resBlob.blob();
-
-                    if (iaCategory === 'avatar') {
-                        setIaStatus('Recortando impurezas (Remove.bg)...');
-                        try { blob = await removeBackgroundWithRemoveBg(blob); } catch(removeErr) { console.warn("Remove.bg failed:", removeErr); }
-                    }
-
-                    const file = new File([blob], `forge_${Date.now()}.png`, { type: "image/png" });
-                    
-                    setIaStatus('Selando no banco de dados...');
-                    finalImageUrl = await uploadToCloudinary(file);
-                } else {
-                    throw new Error("A entidade visual foi bloqueada pelos filtros Kage.");
-                }
-            }
-
-            const uniqueId = "item_" + Date.now() + Math.floor(Math.random()*1000);
-
-            await setDoc(doc(db, "loja_itens", uniqueId), {
-                nome: aiResult.nome,
-                categoria: iaCategory,
-                descricao: aiResult.descricao,
-                raridade: "mitico",
-                preco: 99999, 
-                cssClass: uniqueId,
-                css: aiResult.css,
-                animacao: aiResult.keyframes || "",
-                preview: finalImageUrl,
-                criador: user.uid,
-                createdAt: Date.now()
-            });
-
-            const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
-            await updateDoc(profileRef, {
-                coins: (userProfileData.coins || 0) - COST,
-                inventory: arrayUnion(uniqueId)
-            });
-
-            showToast("Cosmético forjado com sangue e adicionado ao seu inventário!", "success");
-            setShowIAModal(false);
-            setIaPrompt('');
-        } catch(err) {
-            showToast("Falha na Forja Kage: " + err.message, "error");
-        } finally {
-            setIsGeneratingIA(false);
-            setIaStatus("");
-        }
-    };
-
     const equipped = userProfileData.equipped_items || {};
 
     return (
@@ -355,57 +194,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                             <button onClick={() => triggerForgeMission(confirmModal)} className="flex-1 bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)] rounded-xl font-black py-4 transition-all hover:bg-red-500 text-xs uppercase tracking-widest">
                                 Aceitar
                             </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* MODAL DA FORJA IA DO JOGADOR */}
-            {showIAModal && (
-                <div className="fixed inset-0 z-[4000] bg-[#030305]/95 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-                    <div className="bg-[#0a0a0c] border border-red-600/50 p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(220,38,38,0.2)] max-w-lg w-full relative overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-600/10 rounded-full blur-[80px] pointer-events-none"></div>
-
-                        <div className="relative z-10">
-                            <h3 className="text-3xl font-black text-white flex items-center gap-3 mb-2 uppercase tracking-tighter"><Flame className="w-8 h-8 text-red-500" /> Forja Kage (IA)</h3>
-                            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-8">Pague 5000 M e a IA criará uma relíquia mítica sombria exclusiva para você.</p>
-
-                            {isGeneratingIA ? (
-                                <div className="flex flex-col items-center text-center animate-pulse py-10">
-                                    <div className="w-20 h-20 mb-6 bg-red-900/30 rounded-full flex items-center justify-center border border-red-500/50">
-                                        <Wand2 className="w-10 h-10 text-red-500 animate-spin" style={{ animationDuration: '3s' }}/>
-                                    </div>
-                                    <h2 className="text-2xl font-black text-white bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-rose-500 uppercase tracking-tighter">Canalizando Sombras...</h2>
-                                    <p className="text-gray-500 mt-3 font-bold text-xs uppercase tracking-widest">{iaStatus}</p>
-                                </div>
-                            ) : (
-                                <form onSubmit={handlePlayerGenerateIA} className="space-y-6">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-3">Categoria da Relíquia</label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {['avatar', 'moldura', 'capa_fundo', 'nickname'].map(cat => (
-                                                <button type="button" key={cat} onClick={()=>setIaCategory(cat)} className={`py-3 text-xs font-black rounded-xl border transition-all uppercase tracking-widest ${iaCategory === cat ? 'bg-red-600 border-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)]' : 'bg-[#050505] text-gray-500 border-white/5 hover:text-white'}`}>
-                                                    {cat.replace('_', ' ')}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">Descrição (Opcional)</label>
-                                        <textarea value={iaPrompt} onChange={e=>setIaPrompt(e.target.value)} placeholder="Ex: Cabelos vermelhos e olhos de sharingan, estilo ninja sombrio..." rows="3" className="w-full bg-[#050505] p-4 rounded-2xl border border-white/10 text-white outline-none focus:border-red-500 resize-none transition-colors text-sm font-medium shadow-inner" />
-                                    </div>
-
-                                    <div className="flex gap-4 pt-4 border-t border-red-900/30">
-                                        <button type="button" onClick={() => setShowIAModal(false)} className="flex-1 bg-transparent border border-white/10 text-gray-400 font-black py-4 rounded-xl hover:bg-white/5 hover:text-white transition-colors text-xs uppercase tracking-widest">
-                                            Cancelar
-                                        </button>
-                                        <button type="submit" className="flex-[2] bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl font-black py-4 transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] text-xs uppercase tracking-widest hover:scale-[1.02]">
-                                            Sintetizar • 5000 M
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -462,7 +250,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                        </div>
 
                                        <button onClick={() => { const m = mangas.find(mg => mg.id === userProfileData.activeMission.targetManga); if(m) onNavigate('details', m); }} className="w-full mt-10 bg-transparent border border-red-600 text-red-500 hover:bg-red-600 hover:text-white rounded-2xl font-black py-4 flex items-center justify-center gap-3 transition-all text-xs uppercase tracking-widest group/btn">
-                                            Rastrear Alvo <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
+                                           Rastrear Alvo <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
                                        </button>
                                     </div>
                                 )}
@@ -561,45 +349,56 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     </div>
                 )}
 
-                {/* CONTEÚDO: LOJA */}
+                {/* CONTEÚDO: LOJA (Refatorada, limpa e com Abas) */}
                 {activeTab === "Loja" && (
                     <div className="animate-in fade-in duration-500 relative z-10 max-w-7xl mx-auto">
                         
-                        <div className="mb-10 bg-gradient-to-r from-red-900/40 to-black/80 border border-red-600/40 rounded-[2.5rem] p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group hover:border-red-500 transition-colors shadow-[0_0_30px_rgba(220,38,38,0.15)]">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-red-600/20 transition-all duration-700"></div>
-                            <div className="relative z-10 text-center md:text-left">
-                                <h4 className="text-2xl md:text-3xl font-black text-white flex items-center justify-center md:justify-start gap-3 mb-3 uppercase tracking-tighter">
-                                    <Wand2 className="w-8 h-8 text-red-500"/> Forja Kage (IA)
-                                </h4>
-                                <p className="text-gray-400 text-xs md:text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
-                                    Utilize a Inteligência Artificial para conjurar um cosmético mítico e sombrio. <br className="hidden md:block" />
-                                    O item será selado diretamente no seu inventário!
-                                </p>
-                            </div>
-                            <button onClick={() => setShowIAModal(true)} className="w-full md:w-auto px-8 py-5 bg-red-600 hover:bg-red-500 text-white font-black rounded-2xl transition-all shadow-[0_0_20px_rgba(220,38,38,0.4)] uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 flex-shrink-0 hover:scale-[1.02]">
-                                <Sparkles className="w-5 h-5"/> Forjar • 5000 M
-                            </button>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row justify-between items-center gap-8 mb-12 bg-[#0a0a0c]/80 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md shadow-lg">
+                        <div className="flex flex-col sm:flex-row justify-between items-center gap-8 mb-10 bg-[#0a0a0c]/80 rounded-[2.5rem] p-8 border border-white/5 backdrop-blur-md shadow-lg">
                             <div className="text-center sm:text-left">
                                 <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">Cosméticos <span className="text-red-600">Sombrios</span></h3>
-                                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Oculte sua identidade visual.</p>
+                                <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Equipe seu acervo de relíquias.</p>
                             </div>
                             <div className="bg-[#030305] border rounded-2xl border-amber-500/30 text-amber-500 font-black px-8 py-4 flex items-center gap-3 text-lg shadow-inner">
                                 <div className="w-4 h-4 rounded-full bg-amber-500"></div>
                                 {userProfileData.coins || 0}
                             </div>
                         </div>
+
+                        {/* SUB-ABAS DA LOJA */}
+                        <div className="flex gap-4 overflow-x-auto no-scrollbar mb-10 pb-4 snap-x border-b border-red-900/30">
+                            {[
+                                { id: 'avatar', label: 'Avatar' },
+                                { id: 'capa_fundo', label: 'Capa de Fundo' },
+                                { id: 'moldura', label: 'Moldura' },
+                                { id: 'nickname', label: 'Nickname' }
+                            ].map(cat => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setShopCategory(cat.id)}
+                                    className={`snap-start flex-shrink-0 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all border ${
+                                        shopCategory === cat.id
+                                        ? 'bg-red-600 text-white border-red-500 shadow-[0_0_15px_rgba(220,38,38,0.4)]'
+                                        : 'bg-[#050505] text-gray-500 border-white/5 hover:text-white hover:border-white/20'
+                                    }`}
+                                >
+                                    {cat.label}
+                                </button>
+                            ))}
+                        </div>
                           
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                             {shopItems.filter(item => {
                                 const cat = (item.categoria || item.type || '').toLowerCase();
-                                return ['avatar', 'nickname', 'capa_fundo', 'capa', 'moldura', 'tema_perfil'].includes(cat);
+                                // Exibe os itens classificados como 'capa' na aba de 'capa_fundo'
+                                if (shopCategory === 'capa_fundo') return cat === 'capa_fundo' || cat === 'capa';
+                                return cat === shopCategory;
                             }).map(item => {
                               const hasItem = userProfileData.inventory?.includes(item.id);
-                              const isEquipped = userProfileData.equipped_items?.[item.categoria]?.id === item.id;
-                              const cat = (item.categoria || item.type || '').toLowerCase();
+                              
+                              // Verifica se tá equipado baseado na categoria do item
+                              const itemCat = item.categoria || item.type || '';
+                              const isEquipped = userProfileData.equipped_items?.[itemCat]?.id === item.id || userProfileData.equipped_items?.['capa_fundo']?.id === item.id;
+                              const cat = itemCat.toLowerCase();
 
                               return (
                                 <div key={item.id} className={`bg-[#0a0a0c] border rounded-[2rem] p-6 flex flex-col items-center text-center transition-all duration-500 group relative overflow-hidden shadow-lg ${isEquipped ? 'border-red-600 bg-red-950/20' : 'border-white/5 hover:border-red-500/40'}`}>
@@ -634,78 +433,81 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                     )}
                                   </div>
 
-                                  <p className={`text-[8px] uppercase tracking-[0.2em] font-black mb-2 px-2 py-1 rounded bg-[#030305] border border-white/5 relative z-10 ${getRarityColor(item.raridade)}`}>{item.categoria || item.type}</p>
+                                  <p className={`text-[8px] uppercase tracking-[0.2em] font-black mb-3 px-3 py-1.5 rounded-lg bg-[#030305] border border-white/5 relative z-10 ${getRarityColor(item.raridade)}`}>
+                                      {item.raridade || 'Comum'}
+                                  </p>
+                                  
                                   <h4 className="text-white font-black mb-6 text-sm line-clamp-1 relative z-10">{item.nome || item.name}</h4>
                                   
                                   {hasItem ? (
-                                    <button onClick={() => equipItem(item)} className={`w-full rounded-xl font-black py-3 transition-all text-[10px] uppercase tracking-widest relative z-10 ${isEquipped ? 'bg-red-600 text-white' : 'bg-transparent text-gray-400 hover:text-white hover:border-white/50 border border-white/10'}`}>{isEquipped ? 'Desequipar' : 'Equipar'}</button>
+                                    <button onClick={() => equipItem(item)} className={`w-full rounded-xl font-black py-3 transition-all text-[10px] uppercase tracking-widest relative z-10 ${isEquipped ? 'bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]' : 'bg-transparent text-gray-400 hover:text-white hover:border-white/50 border border-white/10'}`}>{isEquipped ? 'Desequipar' : 'Equipar'}</button>
                                   ) : (
                                     <button onClick={() => buyItem(item)} className="w-full rounded-xl bg-amber-600 text-black hover:bg-amber-500 font-black py-3 transition-colors text-[10px] uppercase tracking-widest relative z-10">Comprar • {item.preco || item.price}</button>
                                   )}
                                 </div>
                               )
                             })}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* CONTEÚDO: RANKING */}
-            {activeTab === "Ranking" && (
-                <div className="animate-in fade-in duration-500 max-w-5xl mx-auto relative z-10">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl md:text-5xl font-black text-white mb-4 uppercase tracking-tighter">Hierarquia <span className="text-red-600">Sombria</span></h2>
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em]">Os líderes supremos da plataforma.</p>
-                    </div>
-                    
-                    {loadingRank ? (
-                        <div className="flex flex-col items-center justify-center py-24"><Loader2 className="w-12 h-12 text-red-600 animate-spin mb-6"/><p className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em]">Sincronizando Sombras...</p></div>
-                    ) : rankingList.length === 0 ? (
-                        <p className="text-center text-gray-600 py-20 font-black uppercase tracking-[0.2em] text-sm">A hierarquia aguarda os primeiros ninjas.</p>
-                    ) : (
-                        <div className="space-y-4">
-                            {rankingList.map((player, index) => (
-                                <div key={player.id} className={`bg-[#0a0a0c]/80 backdrop-blur-md rounded-3xl border p-5 sm:p-6 flex items-center gap-4 sm:gap-8 transition-all duration-500 hover:scale-[1.02] shadow-lg ${index < 3 ? 'border-red-600/40 bg-red-950/10 shadow-[0_0_20px_rgba(220,38,38,0.15)]' : 'border-white/5 hover:bg-white/[0.05] hover:border-white/10'}`}>
-                                    <div className={`w-8 sm:w-12 font-black text-center text-lg sm:text-2xl ${index === 0 ? 'text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-700' : 'text-gray-600'}`}>
-                                        #{index + 1}
-                                    </div>
-                                    
-                                    <div className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center flex-shrink-0 group`}>
-                                        
-                                        {player.equipped_items?.avatar?.css && (
-                                            <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.avatar.cssClass || 'custom-avatar'} { ${player.equipped_items.avatar.css} } \n ${player.equipped_items.avatar.animacao || player.equipped_items.avatar.keyframes || ''}`}} />
-                                        )}
-                                        {player.equipped_items?.moldura?.css && (
-                                            <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.moldura.cssClass || 'custom-moldura'} { ${player.equipped_items.moldura.css} } \n ${player.equipped_items.moldura.animacao || player.equipped_items.moldura.keyframes || ''}`}} />
-                                        )}
-
-                                        <div className={`w-full h-full rounded-full overflow-hidden border border-[#030305] relative z-10 bg-[#030305] ${player.equipped_items?.avatar ? (player.equipped_items.avatar.cssClass || 'custom-avatar') : ''}`}>
-                                            <img src={cleanCosmeticUrl(player.avatarUrl) || `https://placehold.co/100x100/030305/dc2626?text=${player.displayName?.charAt(0) || 'K'}`} className="w-full h-full object-cover z-0 relative" onError={(e)=>e.target.src=`https://placehold.co/100x100/030305/dc2626?text=${player.displayName?.charAt(0) || 'K'}`} />
+                {/* CONTEÚDO: RANKING */}
+                {activeTab === "Ranking" && (
+                    <div className="animate-in fade-in duration-500 max-w-5xl mx-auto relative z-10">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 uppercase tracking-tighter">Hierarquia <span className="text-red-600">Sombria</span></h2>
+                            <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em]">Os líderes supremos da plataforma.</p>
+                        </div>
+                        
+                        {loadingRank ? (
+                            <div className="flex flex-col items-center justify-center py-24"><Loader2 className="w-12 h-12 text-red-600 animate-spin mb-6"/><p className="text-red-600 text-[10px] font-black uppercase tracking-[0.4em]">Sincronizando Sombras...</p></div>
+                        ) : rankingList.length === 0 ? (
+                            <p className="text-center text-gray-600 py-20 font-black uppercase tracking-[0.2em] text-sm">A hierarquia aguarda os primeiros ninjas.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {rankingList.map((player, index) => (
+                                    <div key={player.id} className={`bg-[#0a0a0c]/80 backdrop-blur-md rounded-3xl border p-5 sm:p-6 flex items-center gap-4 sm:gap-8 transition-all duration-500 hover:scale-[1.02] shadow-lg ${index < 3 ? 'border-red-600/40 bg-red-950/10 shadow-[0_0_20px_rgba(220,38,38,0.15)]' : 'border-white/5 hover:bg-white/[0.05] hover:border-white/10'}`}>
+                                        <div className={`w-8 sm:w-12 font-black text-center text-lg sm:text-2xl ${index === 0 ? 'text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-700' : 'text-gray-600'}`}>
+                                            #{index + 1}
                                         </div>
                                         
-                                        {player.equipped_items?.moldura?.preview && (
-                                            <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-10%] w-[120%] h-[120%] object-cover z-20 pointer-events-none max-w-none rounded-full ${player.equipped_items.moldura.cssClass || 'custom-moldura'}`} />
-                                        )}
-                                    </div>
+                                        <div className={`relative w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center flex-shrink-0 group`}>
+                                            
+                                            {player.equipped_items?.avatar?.css && (
+                                                <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.avatar.cssClass || 'custom-avatar'} { ${player.equipped_items.avatar.css} } \n ${player.equipped_items.avatar.animacao || player.equipped_items.avatar.keyframes || ''}`}} />
+                                            )}
+                                            {player.equipped_items?.moldura?.css && (
+                                                <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.moldura.cssClass || 'custom-moldura'} { ${player.equipped_items.moldura.css} } \n ${player.equipped_items.moldura.animacao || player.equipped_items.moldura.keyframes || ''}`}} />
+                                            )}
 
-                                    <div className="flex-1 min-w-0">
-                                        {player.equipped_items?.nickname?.css && (
-                                            <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.nickname.cssClass || 'custom-nick'} { ${player.equipped_items.nickname.css} } \n ${player.equipped_items.nickname.animacao || player.equipped_items.nickname.keyframes || ''}`}} />
-                                        )}
-                                        <h4 className={`font-black text-base sm:text-lg truncate uppercase tracking-wider ${index < 3 ? 'text-white' : 'text-gray-400'} ${player.equipped_items?.nickname ? (player.equipped_items.nickname.cssClass || 'custom-nick') : ''}`}>
-                                            {player.displayName || "Entidade Oculta"}
-                                        </h4>
-                                        <p className="text-[10px] text-red-500 font-bold uppercase tracking-[0.2em] truncate mt-1">{getLevelTitle(player.level)}</p>
+                                            <div className={`w-full h-full rounded-full overflow-hidden border border-[#030305] relative z-10 bg-[#030305] ${player.equipped_items?.avatar ? (player.equipped_items.avatar.cssClass || 'custom-avatar') : ''}`}>
+                                                <img src={cleanCosmeticUrl(player.avatarUrl) || `https://placehold.co/100x100/030305/dc2626?text=${player.displayName?.charAt(0) || 'K'}`} className="w-full h-full object-cover z-0 relative" onError={(e)=>e.target.src=`https://placehold.co/100x100/030305/dc2626?text=${player.displayName?.charAt(0) || 'K'}`} />
+                                            </div>
+                                            
+                                            {player.equipped_items?.moldura?.preview && (
+                                                <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-10%] w-[120%] h-[120%] object-cover z-20 pointer-events-none max-w-none rounded-full ${player.equipped_items.moldura.cssClass || 'custom-moldura'}`} />
+                                            )}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            {player.equipped_items?.nickname?.css && (
+                                                <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.nickname.cssClass || 'custom-nick'} { ${player.equipped_items.nickname.css} } \n ${player.equipped_items.nickname.animacao || player.equipped_items.nickname.keyframes || ''}`}} />
+                                            )}
+                                            <h4 className={`font-black text-base sm:text-lg truncate uppercase tracking-wider ${index < 3 ? 'text-white' : 'text-gray-400'} ${player.equipped_items?.nickname ? (player.equipped_items.nickname.cssClass || 'custom-nick') : ''}`}>
+                                                {player.displayName || "Entidade Oculta"}
+                                            </h4>
+                                            <p className="text-[10px] text-red-500 font-bold uppercase tracking-[0.2em] truncate mt-1">{getLevelTitle(player.level)}</p>
+                                        </div>
+                                        <div className="text-right flex-shrink-0 flex flex-col items-end">
+                                            <div className="text-[10px] rounded-xl font-black text-white bg-[#030305] border border-white/5 px-4 py-2 uppercase tracking-widest">Nível {player.level}</div>
+                                            <div className="text-[10px] text-red-500 font-black mt-2 uppercase tracking-widest">{player.xp} XP</div>
+                                        </div>
                                     </div>
-                                    <div className="text-right flex-shrink-0 flex flex-col items-end">
-                                        <div className="text-[10px] rounded-xl font-black text-white bg-[#030305] border border-white/5 px-4 py-2 uppercase tracking-widest">Nível {player.level}</div>
-                                        <div className="text-[10px] text-red-500 font-black mt-2 uppercase tracking-widest">{player.xp} XP</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
