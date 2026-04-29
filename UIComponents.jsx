@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-// LOGO MANGAKAGE (Tamanho gigante, aura limpa e sem animação de flutuar)
-export const KageLogo = React.memo(({ className = "w-64 h-64" }) => {
+// LOGO MANGAKAGE (Limpo, com contorno animado opcional)
+export const KageLogo = React.memo(({ className = "w-64 h-64", showContour = false }) => {
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
       
-      {/* NOVA AURA: Energia densa e vermelha, sem raios estranhos */}
-      <div className="absolute inset-0 bg-red-600/30 blur-[60px] rounded-full animate-pulse scale-150 pointer-events-none"></div>
-      <div className="absolute inset-0 bg-red-900/40 blur-[90px] rounded-full animate-[pulse_3s_ease-in-out_infinite] scale-125 pointer-events-none"></div>
-      
-      {/* O Seu Mascote Oficial (Sem animação de subir/descer) */}
+      {/* ANIMAÇÃO DE CONTORNO (Ativada via props na tela de login) */}
+      {showContour && (
+         <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-red-600 border-b-red-600 animate-[spin_3s_linear_infinite] shadow-[0_0_20px_rgba(220,38,38,0.5)] z-0"></div>
+      )}
+
+      {/* O Seu Mascote Oficial (Sem fundos borrados) */}
       <img 
         src="https://i.ibb.co/gF4zyvkk/Gemini-Generated-Image-gj2yhugj2yhugj2y-removebg-preview.png" 
         alt="Mangakage Mascot" 
-        className="relative z-10 w-full h-full object-contain drop-shadow-[0_0_25px_rgba(220,38,38,0.6)]"
+        className="relative z-10 w-full h-full object-contain drop-shadow-[0_5px_15px_rgba(220,38,38,0.4)]"
       />
     </div>
   );
 });
 
+// SPLASH SCREEN (Sem animações de fundo, totalmente clean)
 export const SplashScreen = React.memo(() => {
   const [fade, setFade] = useState(false);
 
@@ -31,15 +33,11 @@ export const SplashScreen = React.memo(() => {
   return (
     <div className={`fixed inset-0 z-[9999] bg-[#030305] flex flex-col items-center justify-center font-sans transition-all duration-500`}>
       <style>{`body, html { background-color: #030305 !important; margin: 0; padding: 0; }`}</style>
-      
-      {/* AURAS DAS SOMBRAS DO FUNDO */}
-      <div className="absolute top-[20%] left-[10%] w-[50vw] h-[50vw] bg-red-900/20 blur-[120px] rounded-full animate-[pulse_4s_ease-in-out_infinite_alternate]"></div>
-      <div className="absolute bottom-[20%] right-[10%] w-[50vw] h-[50vw] bg-rose-900/15 blur-[120px] rounded-full animate-[pulse_5s_ease-in-out_infinite_alternate-reverse]"></div>
 
       <div className={`flex flex-col items-center justify-center relative z-10 transition-all duration-[700ms] ease-out px-4 w-full text-center ${fade ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
         
-        {/* MASCOTE NA ENTRADA (Tamanho colossal: 350px no mobile, 500px no PC) */}
-        <KageLogo className="w-[350px] h-[350px] md:w-[500px] md:h-[500px]" />
+        {/* Mascote Gigante na Abertura (sem o contorno aqui) */}
+        <KageLogo className="w-[300px] h-[300px] md:w-[450px] md:h-[450px]" showContour={false} />
         
         <div className="mt-8 flex items-center gap-3 opacity-60">
             <div className="w-2.5 h-2.5 bg-red-700 rounded-full animate-ping"></div>
@@ -51,6 +49,7 @@ export const SplashScreen = React.memo(() => {
   );
 });
 
+// TRATAMENTO DE ERROS KAGE
 export class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -69,6 +68,7 @@ export class ErrorBoundary extends React.Component {
   }
 }
 
+// SISTEMA DE TOAST (AVISOS)
 export function GlobalToast({ toast }) {
   if (!toast) return null;
   const colors = toast.type === 'error' ? 'bg-red-950/90 text-red-200 border-red-600/50 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 
@@ -81,19 +81,20 @@ export function GlobalToast({ toast }) {
   );
 }
 
+// RODAPÉ MANGAKAGE
 export function Footer() {
     return (
         <footer className="w-full bg-[#030305] border-t border-red-900/20 py-12 mt-auto pb-24 md:pb-12 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[1px] bg-gradient-to-r from-transparent via-red-600/50 to-transparent"></div>
             <div className="max-w-7xl mx-auto px-4 text-center flex flex-col items-center relative z-10">
-                {/* Tamanho considerável no rodapé também */}
-                <KageLogo className="w-40 h-40 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500" />
+                <KageLogo className="w-32 h-32 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500" showContour={false} />
                 <span className="font-black text-[10px] text-gray-700 tracking-[0.5em] uppercase mt-2">MANGAKAGE • ACERVO DAS SOMBRAS</span>
             </div>
         </footer>
     );
 }
 
+// TRANSIÇÃO DE CAPÍTULO (SOMBRIOS)
 export const ChapterTransitionOverlay = React.memo(({ isVisible, chapterNumber }) => {
     if (!isVisible) return null;
     return (
