@@ -163,7 +163,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
             <div className="max-w-6xl mx-auto px-4 py-8 relative z-10">
                 
-                <div className="flex justify-center gap-4 mb-12 overflow-x-auto no-scrollbar snap-x">
+                <div className="flex md:justify-center gap-4 mb-12 overflow-x-auto no-scrollbar snap-x w-full px-2">
                     {/* TROCADO DE "MISSÕES" PARA "PACTOS" */}
                     {['Pactos', 'Forja', 'Loja', 'Ranking'].map((tab) => (
                         <button key={tab} onClick={() => setActiveTab(tab)} className={`relative px-8 py-3 font-black text-[10px] uppercase tracking-[0.3em] transition-all transform skew-x-[-15deg] group border-b-2
