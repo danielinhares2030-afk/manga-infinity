@@ -16,8 +16,10 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     const [rankingList, setRankingList] = useState([]);
     const [loadingRank, setLoadingRank] = useState(false);
     const [shopCategory, setShopCategory] = useState('avatar');
+    
+    // NOVO ESTADO: Controla a animação de morte permanente
+    const [isErased, setIsErased] = useState(false);
 
-    // RECOMPENSAS NERFADAS PARA TORNAR A PROGRESSÃO MAIS DIFÍCIL
     const rankConfigs = {
         'Rank E': { rxp: 10, rcoin: 5, pxp: 15, pcoin: 10, time: 15, charLimit: 300, enigmaTries: 3, color: 'text-gray-400', border: 'border-gray-500', shadow: 'shadow-gray-500/20' },
         'Rank C': { rxp: 30, rcoin: 15, pxp: 50, pcoin: 25, time: 10, charLimit: 200, enigmaTries: 3, color: 'text-lime-400', border: 'border-lime-500', shadow: 'shadow-lime-500/20' },
@@ -80,11 +82,9 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         try {
             const now = Date.now();
             
-            // LÓGICA DO NOVO PACTO ABSOLUTO (PERMADEATH)
             if (difficulty === 'ABSOLUTO') {
                 if (!mangas || mangas.length < 3) return showToast("Falta conhecimento para o julgamento.", "error");
                 
-                // Pega 3 obras aleatórias
                 let shuffled = [...mangas].sort(() => 0.5 - Math.random());
                 let m1 = shuffled[0], m2 = shuffled[1], m3 = shuffled[2];
                 
@@ -92,7 +92,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 let q2 = m2.synopsis ? `"${m2.synopsis.substring(0, 60)}..."` : `Gêneros: ${m2.genres?.join(', ')}`;
                 let q3 = m3.synopsis ? `"${m3.synopsis.substring(0, 60)}..."` : `Gêneros: ${m3.genres?.join(', ')}`;
 
-                let finalQuestion = `[ JULGAMENTO KAGE ]\n\nDesvende as 3 Obras Exatas na Ordem (separadas por vírgula):\n\n1. ${q1}\n2. ${q2}\n3. ${q3}\n\nAVISO: Falhar resultará na desintegração total da sua conta e progresso.`;
+                let finalQuestion = `[ JULGAMENTO KAGE ]\n\nDesvende as 3 Obras Exatas na Ordem (separadas por vírgula):\n\n1. ${q1}\n\n2. ${q2}\n\n3. ${q3}\n\nAVISO: Falhar resultará na desintegração total da sua conta e progresso.`;
                 let finalAnswer = `${m1.title.toLowerCase().trim()}, ${m2.title.toLowerCase().trim()}, ${m3.title.toLowerCase().trim()}`;
 
                 let newMission = { id: Date.now().toString(), type: 'permadeath', difficulty: 'ABSOLUTO', title: "Julgamento Kage", question: finalQuestion, answer: [finalAnswer], rewardXp: 5000, rewardCoins: 3000, deadline: now + (10 * 60 * 1000) };
@@ -101,13 +101,11 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 return;
             }
 
-            // MISSÕES NORMAIS
             const conf = rankConfigs[difficulty];
             const missionPool = ['read', 'search_visual', 'enigma'];
             const chosenType = missionPool[Math.floor(Math.random() * missionPool.length)];
 
             if (mangas && mangas.length > 0) {
-                // NÃO REPETE MISSÃO
                 const availableMangas = mangas.filter(m => {
                     const c = userProfileData.completedMissions || [];
                     return !c.includes("search_local_" + m.id) && !c.includes("enigma_" + m.id) && !c.includes(m.id);
@@ -125,12 +123,11 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     let q = "";
                     const authorStr = (randomManga.author || "").toLowerCase();
                     
-                    // LÓGICA DO AUTOR DESCONHECIDO CORRIGIDA
                     if (authorStr && authorStr !== "" && !authorStr.includes("desconhecid")) {
-                        q = `[ ENIGMA DO VAZIO ]\n\nA mente por trás desta criação é: ${randomManga.author}.\nQual é a obra?`;
+                        q = `[ ENIGMA DO VAZIO ]\n\nA mente por trás desta criação é: ${randomManga.author}.\n\nQual é a obra?`;
                     } else if (randomManga.genres && randomManga.genres.length > 0 && randomManga.synopsis) {
                         let cleanDesc = randomManga.synopsis.replace(/<[^>]*>?/gm, '').replace(new RegExp(randomManga.title, 'gi'), '█████');
-                        q = `[ ENIGMA DO VAZIO ]\n\nGêneros: ${randomManga.genres.join(', ')}\nRelato: "${cleanDesc.substring(0, conf.charLimit)}..."\nQual é a obra?`;
+                        q = `[ ENIGMA DO VAZIO ]\n\nGêneros: ${randomManga.genres.join(', ')}\n\nRelato: "${cleanDesc.substring(0, conf.charLimit)}..."\n\nQual é a obra?`;
                     } else {
                         q = `[ ENIGMA DO VAZIO ]\n\nDecifre o selo oculto pelas sombras da obra de número ${randomManga.id.substring(0,4)}...`;
                     }
@@ -138,7 +135,8 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 
                 } else {
                     let readTarget = difficulty === 'Rank E' ? 1 : 3;
-                    newMission = { id: Date.now().toString(), type: 'read', difficulty, title: `Extração de Essência`, desc: `Transmute a energia de ${readTarget} capítulo(s) da obra "${randomManga.title}".`, targetManga: randomManga.id, targetCount: readTarget, currentCount: 0, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (readTarget * 45 * 60 * 1000) };
+                    let q = `[ EXTRAÇÃO DE ESSÊNCIA ]\n\nTransmute a energia de ${readTarget} capítulo(s) da obra:\n\n"${randomManga.title}".`;
+                    newMission = { id: Date.now().toString(), type: 'read', difficulty, title: `Extração de Essência`, desc: q, targetManga: randomManga.id, targetCount: readTarget, currentCount: 0, rewardXp: conf.rxp, rewardCoins: conf.rcoin, penaltyXp: conf.pxp, penaltyCoins: conf.pcoin, deadline: now + (readTarget * 45 * 60 * 1000) };
                 }
 
                 if (newMission) {
@@ -159,13 +157,15 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { coins: (userProfileData.coins || 0) + m.rewardCoins, xp: newXp, level: newLvl, activeMission: null });
                showToast("Julgamento Superado. Você transcendeu.", "success"); if(didLevelUp) onLevelUp(newLvl);
             } else {
-               showToast("VOCÊ FALHOU NO JULGAMENTO KAGE. SUA CONTA FOI DESINTEGRADA.", "error");
+               // DISPARA ANIMAÇÃO DE MORTE PERMANENTE E EXCLUI
+               setIsErased(true);
                setTimeout(async () => {
                    try {
                        await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'));
                        await deleteUser(auth.currentUser);
+                       window.location.reload(); // Força o refresh para voltar ao login limpo
                    } catch(err) { console.error(err); }
-               }, 3000);
+               }, 4500); // 4.5s de animação
             }
             return;
         }
@@ -199,11 +199,36 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         }, 1500);
     };
 
+    // NOVA FUNÇÃO: Renderiza o texto da missão organizando em blocos
+    const renderMissionText = (text) => {
+        if (!text) return null;
+        return text.split('\n\n').map((block, i) => (
+            <div key={i} className={`bg-black/50 border-l-[3px] border-red-600 p-4 mb-3 rounded-r-lg shadow-sm ${i === 0 ? 'bg-red-900/20 border-red-500' : ''}`}>
+                <p className="text-gray-300 text-xs md:text-sm font-bold leading-relaxed whitespace-pre-wrap">{block}</p>
+            </div>
+        ));
+    };
+
     const equipped = userProfileData.equipped_items || {};
 
     return (
         <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#030305]'}`}>
             
+            {/* TELA DE MORTE PERMANENTE (GLITCH) */}
+            {isErased && (
+                <div className="fixed inset-0 z-[99999] bg-[#000000] flex flex-col items-center justify-center overflow-hidden">
+                    <style>{`
+                        @keyframes glitch { 0% { transform: translate(0) } 20% { transform: translate(-5px, 5px) } 40% { transform: translate(-5px, -5px) } 60% { transform: translate(5px, 5px) } 80% { transform: translate(5px, -5px) } 100% { transform: translate(0) } }
+                        .animate-glitch { animation: glitch 0.2s linear infinite; }
+                    `}</style>
+                    <div className="absolute inset-0 bg-red-900/20 animate-pulse"></div>
+                    <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] pointer-events-none z-10"></div>
+                    <Skull className="w-32 h-32 md:w-48 md:h-48 text-red-600 mb-8 animate-glitch relative z-20" />
+                    <h1 className="text-4xl md:text-6xl font-black text-red-600 uppercase tracking-[0.3em] animate-glitch relative z-20 text-center px-4">Conta Desintegrada</h1>
+                    <p className="text-white tracking-[0.5em] mt-6 uppercase font-bold text-xs md:text-sm relative z-20">Você falhou no Julgamento Kage</p>
+                </div>
+            )}
+
             {!equipped.tema_perfil && (
                 <div className="absolute inset-0 z-0">
                     <div className="absolute inset-0 bg-[linear-gradient(to_right,#80000010_1px,transparent_1px),linear-gradient(to_bottom,#80000010_1px,transparent_1px)] bg-[size:40px_40px]"></div>
@@ -275,10 +300,11 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                     </div>
                                 </div>
 
+                                {/* RENDERIZAÇÃO NOVA DO TEXTO DA MISSÃO EM BLOCOS */}
                                 <div className="bg-[#0a0a0c] border border-white/5 p-6 md:p-8 mb-8 relative z-10 shadow-inner">
-                                    <p className={`text-xs md:text-sm font-bold leading-relaxed uppercase tracking-widest border-l-2 pl-4 ${userProfileData.activeMission.type === 'search_local' ? 'text-red-400 border-red-600' : userProfileData.activeMission.type === 'permadeath' ? 'text-red-500 border-red-600' : 'text-gray-300 border-red-600'}`}>
-                                        {userProfileData.activeMission.desc || userProfileData.activeMission.question}
-                                    </p>
+                                    <div className="mt-2">
+                                        {renderMissionText(userProfileData.activeMission.desc || userProfileData.activeMission.question)}
+                                    </div>
                                     
                                     {userProfileData.activeMission.type === 'read' && (
                                         <div className="mt-8">
