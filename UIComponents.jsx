@@ -21,12 +21,15 @@ export const SplashScreen = React.memo(() => {
   useEffect(() => { const t1 = setTimeout(() => setFade(true), 50); return () => clearTimeout(t1); }, []);
   
   return (
-    <div className={`fixed inset-0 z-[9999] bg-[#030305] flex items-center justify-center font-sans transition-opacity duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}>
-      <style>{`body, html { background-color: #030305 !important; margin: 0; padding: 0; }`}</style>
+    <div className={`fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center font-sans transition-opacity duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}>
+      <style>{`body, html { background-color: #050505 !important; margin: 0; padding: 0; }`}</style>
       
-      {/* Mesmo fundo do Login aplicado aqui */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1a0505] via-[#0d0202] to-[#120505] pointer-events-none z-0"></div>
-      <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] pointer-events-none mix-blend-overlay"></div>
+      {/* Mesmo fundo sutil do Login */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] bg-gradient-to-br from-red-900/20 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-[20%] -right-[10%] w-[70%] h-[70%] bg-gradient-to-tl from-red-950/40 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 mix-blend-overlay"></div>
+      </div>
 
       <div className={`transition-all duration-1000 ease-out z-10 ${fade ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
         <KageLogo className="w-64 h-64 md:w-80 md:h-80 opacity-90" showContour={false} />
