@@ -24,29 +24,25 @@ export const SplashScreen = React.memo(() => {
     <div className={`fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center font-sans transition-opacity duration-700 ${fade ? 'opacity-100' : 'opacity-0'}`}>
       <style>{`
         body, html { background-color: #050505 !important; }
-        .bg-opening {
-            background-image: url('https://images.alphacoders.com/134/1341053.png');
+        .bg-opening-custom {
+            background-image: url('https://i.ibb.co/mrYd0BzW/file-0000000007e471f5939a825f3eab6db6.png');
             background-size: cover;
             background-position: center;
         }
       `}</style>
       
-      {/* FUNDO DA ABERTURA IGUAL AO LOGIN */}
-      <div className="absolute inset-0 bg-opening">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#050505]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.15)_0%,transparent_80%)]"></div>
+      {/* FUNDO DA ABERTURA SINCRONIZADO */}
+      <div className="absolute inset-0 bg-opening-custom">
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#050505]"></div>
+          <div className="absolute inset-0 bg-black/40"></div>
       </div>
 
-      <div className={`transition-all duration-1000 ease-out z-10 flex flex-col items-center ${fade ? 'scale-100' : 'scale-90 opacity-0'}`}>
-        <div className="w-56 h-56 mb-4 drop-shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+      <div className={`transition-all duration-1000 ease-out z-10 flex flex-col items-center ${fade ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4 opacity-0'}`}>
+        <div className="w-64 h-64 md:w-80 md:h-80 mb-10 drop-shadow-[0_0_40px_rgba(220,38,38,0.4)]">
             <KageLogo className="w-full h-full" showContour={false} />
         </div>
         
-        <h1 className="text-3xl font-black text-white tracking-[0.2em] italic mb-10">
-            MANGA<span className="text-red-600">KAGE</span>
-        </h1>
-        
-        <div className="w-40 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
+        <div className="w-48 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
            <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-400 animate-[loading_2s_ease-in-out_infinite] rounded-full shadow-[0_0_10px_rgba(220,38,38,0.8)]"></div>
         </div>
         <style>{`@keyframes loading { 0% { width: 0%; left: -100%; } 50% { width: 100%; left: 0%; } 100% { width: 0%; left: 100%; } }`}</style>
