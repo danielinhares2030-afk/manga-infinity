@@ -21,27 +21,35 @@ export const SplashScreen = React.memo(() => {
   useEffect(() => { const t1 = setTimeout(() => setFade(true), 50); return () => clearTimeout(t1); }, []);
   
   return (
-    <div className={`fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center font-sans transition-opacity duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}>
-      <style>{`body, html { background-color: #050505 !important; margin: 0; padding: 0; }`}</style>
+    <div className={`fixed inset-0 z-[9999] bg-[#050505] flex items-center justify-center font-sans transition-opacity duration-700 ${fade ? 'opacity-100' : 'opacity-0'}`}>
+      <style>{`
+        body, html { background-color: #050505 !important; }
+        .bg-opening {
+            background-image: url('https://images.alphacoders.com/134/1341053.png');
+            background-size: cover;
+            background-position: center;
+        }
+      `}</style>
       
-      {/* Mesmo fundo do Login aplicado aqui */}
-      <div className="absolute inset-0 z-0 flex flex-col md:flex-row pointer-events-none">
-          <div className="w-full md:w-1/2 h-1/2 md:h-full bg-white flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.05)_0%,transparent_100%)]"></div>
-          </div>
-          <div className="w-full md:w-1/2 h-1/2 md:h-full bg-[#050505] relative overflow-hidden">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/40 to-[#050505]"></div>
+      {/* FUNDO DA ABERTURA IGUAL AO LOGIN */}
+      <div className="absolute inset-0 bg-opening">
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#050505]"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.15)_0%,transparent_80%)]"></div>
       </div>
 
-      <div className={`transition-all duration-1000 ease-out z-10 ${fade ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
-        <KageLogo className="w-64 h-64 md:w-80 md:h-80 opacity-90 drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" showContour={false} />
-        
-        <div className="w-48 h-1 bg-white/10 mx-auto mt-8 rounded-full overflow-hidden">
-           <div className="h-full bg-white animate-[loading_1.5s_ease-in-out_infinite] rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]"></div>
+      <div className={`transition-all duration-1000 ease-out z-10 flex flex-col items-center ${fade ? 'scale-100' : 'scale-90 opacity-0'}`}>
+        <div className="w-56 h-56 mb-4 drop-shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+            <KageLogo className="w-full h-full" showContour={false} />
         </div>
-        <style>{`@keyframes loading { 0% { width: 0%; transform: translateX(-100%); } 100% { width: 100%; transform: translateX(100%); } }`}</style>
+        
+        <h1 className="text-3xl font-black text-white tracking-[0.2em] italic mb-10">
+            MANGA<span className="text-red-600">KAGE</span>
+        </h1>
+        
+        <div className="w-40 h-[2px] bg-white/10 rounded-full overflow-hidden relative">
+           <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-400 animate-[loading_2s_ease-in-out_infinite] rounded-full shadow-[0_0_10px_rgba(220,38,38,0.8)]"></div>
+        </div>
+        <style>{`@keyframes loading { 0% { width: 0%; left: -100%; } 50% { width: 100%; left: 0%; } 100% { width: 0%; left: 100%; } }`}</style>
       </div>
     </div>
   );
