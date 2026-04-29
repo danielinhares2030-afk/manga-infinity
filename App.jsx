@@ -246,7 +246,6 @@ function MangakageApp() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
-                {/* NOVO LOGO NA NAVBAR */}
                 <KageLogo className="w-10 h-10 md:w-12 md:h-12 group-hover:scale-110 transition-transform duration-300" />
                 <span className="text-xl font-black text-white tracking-[0.2em] uppercase hidden sm:block">MANGA<span className="text-red-600">KAGE</span></span>
               </div>
@@ -275,7 +274,7 @@ function MangakageApp() {
 
                 <div className="hidden md:flex items-center gap-6 text-sm font-bold text-gray-400">
                   <button onClick={() => navigateTo('home')} className={`hover:text-red-500 transition-colors duration-300 ${currentView === 'home' ? 'text-red-500' : ''}`}>Início</button>
-                  <button onClick={() => navigateTo('catalog')} className={`hover:text-red-500 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : ''}`}>Acervo</button>
+                  <button onClick={() => navigateTo('catalog')} className={`hover:text-red-500 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : ''}`}>Catálogo</button>
                   <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`hover:text-red-500 transition-colors duration-300 flex items-center gap-1 ${currentView === 'nexo' ? 'text-red-500' : ''}`}><Swords className="w-4 h-4"/> Nexo</button>
                   <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`hover:text-red-500 transition-colors duration-300 flex items-center gap-1 ${currentView === 'profile' ? 'text-red-500' : ''}`}><UserCircle className="w-4 h-4"/> Perfil</button>
                 </div>
@@ -316,7 +315,7 @@ function MangakageApp() {
         {currentView === 'catalog' && <CatalogView mangas={mangas} onNavigate={navigateTo} dataSaver={userSettings.dataSaver} catalogState={catalogState} setCatalogState={setCatalogState} />}
         {currentView === 'nexo' && user && <NexoView user={user} userProfileData={userProfileData} showToast={showToast} mangas={mangas} db={db} appId={APP_ID} onNavigate={navigateTo} onLevelUp={handleLevelUpAnim} synthesizeCrystal={synthesizeCrystal} shopItems={shopItems} buyItem={buyItem} equipItem={toggleEquipItem} />}
         {currentView === 'library' && <LibraryView mangas={mangas} user={user} libraryData={libraryData} onNavigate={navigateTo} onRequireLogin={() => navigateTo('login')} dataSaver={userSettings.dataSaver} />}
-        {currentView === 'profile' && user && <ProfileView user={user} userProfileData={userProfileData} historyData={historyData} libraryData={libraryData} dataLoaded={dataLoaded} userSettings={userSettings} updateSettings={updateSettings} onLogout={handleLogout} onUpdateData={(n) => setUserProfileData({...userProfileData, ...n})} showToast={showToast} mangas={mangas} onNavigate={navigateTo} />}
+        {currentView === 'profile' && user && <ProfileView user={user} userProfileData={userProfileData} historyData={historyData} libraryData={libraryData} dataLoaded={dataLoaded} userSettings={userSettings} updateSettings={updateSettings} onLogout={handleLogout} onUpdateData={(n) => setUserProfileData({...userProfileData, ...n})} showToast={showToast} mangas={mangas} onNavigate={navigateTo} shopItems={shopItems} />}
         {currentView === 'popular' && <PopularView mangas={mangas} onNavigate={navigateTo} dataSaver={userSettings.dataSaver} />}
         {currentView === 'details' && selectedManga && <DetailsView manga={selectedManga} libraryData={libraryData} historyData={historyData} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} onRequireLogin={() => navigateTo('login')} showToast={showToast} db={db} />}
         {currentView === 'reader' && selectedManga && selectedChapter && <ReaderView manga={selectedManga} chapter={selectedChapter} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} triggerRandomDrop={triggerRandomDrop} onMarkAsRead={markAsRead} readMode={userSettings.readMode} onRequireLogin={() => navigateTo('login')} showToast={showToast} libraryData={libraryData} onToggleLibrary={handleLibraryToggle} />}
@@ -328,7 +327,7 @@ function MangakageApp() {
         <div className="md:hidden fixed bottom-0 w-full bg-[#0a0a0c]/95 backdrop-blur-2xl border-t border-red-600/10 z-40 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
           <div className="flex justify-around items-center h-[60px] px-2 relative">
             <button onClick={() => navigateTo('home')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'home' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><HomeIcon className="w-5 h-5" /><span className="text-[9px] font-bold">Início</span></button>
-            <button onClick={() => navigateTo('catalog')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><LayoutGrid className="w-5 h-5" /><span className="text-[9px] font-bold">Acervo</span></button>
+            <button onClick={() => navigateTo('catalog')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><LayoutGrid className="w-5 h-5" /><span className="text-[9px] font-bold">Catálogo</span></button>
             <div className="relative -top-5 flex justify-center w-16">
                 <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`flex flex-col items-center justify-center w-14 h-14 rounded-full border-[3px] border-[#030305] transition-transform hover:scale-105 duration-300 ${currentView === 'nexo' ? 'bg-gradient-to-tr from-red-600 to-rose-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'bg-[#111113] text-red-500'}`}>
                     <Swords className="w-6 h-6 relative z-10" fill={currentView === 'nexo' ? "currentColor" : "none"}/><span className="text-[8px] font-black relative z-10 mt-0.5">NEXO</span>
