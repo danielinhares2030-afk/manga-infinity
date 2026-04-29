@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Target, Hexagon, ShoppingCart, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, Flame, AlertTriangle } from 'lucide-react';
+import { Target, Hexagon, ShoppingCart, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, Flame, AlertTriangle, Crown, ChevronDown, Globe, ChevronRight } from 'lucide-react';
 import { doc, updateDoc, collectionGroup, getDocs, query, deleteDoc } from "firebase/firestore";
 import { deleteUser } from "firebase/auth";
 import { auth, db } from './firebase';
@@ -7,7 +7,7 @@ import { addXpLogic, removeXpLogic, getLevelTitle, getRarityColor, cleanCosmetic
 import { APP_ID } from './constants';
 
 export function NexoView({ user, userProfileData, showToast, mangas, onNavigate, onLevelUp, synthesizeCrystal, shopItems, buyItem }) {
-    const [activeTab, setActiveTab] = useState("Pactos");
+    const [activeTab, setActiveTab] = useState("Ranking");
     const [enigmaAnswer, setEnigmaAnswer] = useState("");
     const [timeLeft, setTimeLeft] = useState("");
     const [confirmModal, setConfirmModal] = useState(null); 
@@ -82,7 +82,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         try {
             const now = Date.now();
             
-            // LÓGICA DO PACTO ABSOLUTO: 5 PERGUNTAS, GÊNERO + SINOPSE OBRIGATÓRIOS E DIFÍCEIS
             if (difficulty === 'ABSOLUTO') {
                 if (!mangas || mangas.length < 5) return showToast("Falta conhecimento para o julgamento.", "error");
                 
@@ -168,7 +167,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                    try {
                        await deleteDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'));
                        await deleteUser(auth.currentUser);
-                       window.location.reload();
+                       window.location.reload(); 
                    } catch(err) { console.error(err); window.location.reload(); }
                }, 4500); 
             }
@@ -218,7 +217,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     return (
         <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#030305]'}`}>
             
-            {/* TELA DE MORTE PERMANENTE COM ANIMAÇÃO REFINADA */}
             {isErased && (
                 <div className="fixed inset-0 z-[99999] bg-[#000000] flex flex-col items-center justify-center overflow-hidden">
                     <style>{`
@@ -231,7 +229,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     
                     <Skull className="w-32 h-32 md:w-48 md:h-48 text-red-600 mb-8 animate-glitch relative z-20 drop-shadow-[0_0_50px_rgba(220,38,38,1)]" />
                     
-                    {/* Texto adaptável para não vazar */}
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-red-600 uppercase tracking-widest animate-glitch relative z-20 text-center px-4 leading-tight w-full drop-shadow-[0_0_20px_rgba(220,38,38,0.8)]">
                         Conta Desintegrada
                     </h1>
@@ -498,48 +495,111 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     </div>
                 )}
 
-                {/* RANKING */}
+                {/* RANKING (DESIGN REFORMULADO IDÊNTICO À IMAGEM) */}
                 {activeTab === "Ranking" && (
-                    <div className="animate-in fade-in duration-300 max-w-4xl mx-auto">
-                        <div className="text-center mb-12">
-                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">Hierarquia <span className="text-red-600">Sombria</span></h2>
-                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-2">Classificação de Poder Global.</p>
+                    <div className="animate-in fade-in duration-300 max-w-4xl mx-auto pb-10">
+                        {/* Header */}
+                        <div className="flex justify-between items-end mb-10 border-b border-red-900/30 pb-4">
+                            <div>
+                                <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+                                    <span className="text-red-600">
+                                        <svg className="w-8 h-8 fill-current" viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
+                                    </span>
+                                    RANKING DE LEITORES
+                                </h2>
+                                <p className="text-xs text-gray-400 mt-1 font-medium">Mostre sua dedicação. Suba no ranking.</p>
+                            </div>
+                            <button className="hidden sm:flex items-center gap-2 bg-transparent border border-white/20 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-colors">
+                                <Globe className="w-4 h-4" /> Global <ChevronDown className="w-4 h-4 ml-2" />
+                            </button>
                         </div>
+
                         {loadingRank ? (
                             <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 text-red-600 animate-spin"/></div>
                         ) : (
-                            <div className="space-y-3">
-                                {rankingList.map((player, index) => (
-                                    <div key={player.id} className={`bg-[#050505] p-4 flex items-center gap-4 transition-all border-l-[4px] border-r border-t border-b ${index < 3 ? 'border-red-600 border-r-white/5 border-t-white/5 border-b-white/5 bg-red-950/10' : 'border-white/5 hover:border-l-gray-500'}`}>
-                                        <div className={`w-10 font-black text-center text-lg ${index === 0 ? 'text-yellow-500 drop-shadow-[0_0_10px_rgba(234,179,8,0.8)]' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-700' : 'text-gray-600'}`}>
-                                            {index + 1}
+                            <>
+                                {/* PODIUM TOP 3 */}
+                                <div className="flex justify-center items-end gap-2 md:gap-4 mb-10 mt-8">
+                                    {/* 2nd Place */}
+                                    {rankingList[1] && (
+                                        <div className="w-[30%] max-w-[160px] bg-gradient-to-b from-[#1a1a1a] to-[#050505] rounded-t-2xl border-t-[3px] border-gray-400 p-4 relative flex flex-col items-center shadow-[0_-10px_30px_rgba(156,163,175,0.15)] order-1">
+                                            <Crown className="absolute -top-6 w-8 h-8 text-gray-300 drop-shadow-[0_0_10px_rgba(209,213,219,0.8)]" />
+                                            <div className="absolute top-2 left-2 text-xl font-black text-gray-300">2</div>
+                                            <div className="w-16 h-16 rounded-full border-2 border-gray-400 overflow-hidden mb-3 mt-4">
+                                                <img src={cleanCosmeticUrl(rankingList[1].avatarUrl) || 'https://placehold.co/100x100/030305/dc2626?text=K'} className="w-full h-full object-cover" />
+                                            </div>
+                                            <h4 className="font-black text-xs text-white uppercase truncate w-full text-center">{rankingList[1].displayName || "Oculto"}</h4>
+                                            <p className="text-[8px] text-red-500 font-black uppercase mt-1">{getLevelTitle(rankingList[1].level)}</p>
+                                            <div className="mt-3 bg-transparent border border-gray-500 text-gray-300 px-3 py-1 rounded-full text-[9px] font-black">NV. {rankingList[1].level}</div>
+                                            <div className="w-full h-1.5 bg-gray-800 rounded-full mt-4 overflow-hidden"><div className="h-full bg-gradient-to-r from-gray-500 to-gray-300 w-[60%]"></div></div>
+                                            <div className="text-[8px] text-gray-500 font-bold mt-1">{rankingList[1].xp} / {(rankingList[1].level || 1) * 100} XP</div>
                                         </div>
-                                        
-                                        <div className="relative w-12 h-12 flex-shrink-0">
-                                            {player.equipped_items?.avatar?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.avatar.cssClass} { ${player.equipped_items.avatar.css} } ${player.equipped_items.avatar.animacao || ''}`}} /> )}
-                                            {player.equipped_items?.moldura?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.moldura.cssClass} { ${player.equipped_items.moldura.css} } ${player.equipped_items.moldura.animacao || ''}`}} /> )}
+                                    )}
+                                    {/* 1st Place */}
+                                    {rankingList[0] && (
+                                        <div className="w-[35%] max-w-[190px] bg-gradient-to-b from-[#2a1b00] to-[#050505] rounded-t-2xl border-t-[4px] border-yellow-500 p-5 relative flex flex-col items-center shadow-[0_-15px_40px_rgba(234,179,8,0.25)] order-2 z-10 transform scale-110 mb-2">
+                                            <Crown className="absolute -top-8 w-10 h-10 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,1)]" />
+                                            <div className="absolute top-2 left-3 text-2xl font-black text-yellow-500">1</div>
+                                            <div className="w-20 h-20 rounded-full border-[3px] border-yellow-500 overflow-hidden mb-3 mt-4 shadow-[0_0_20px_rgba(234,179,8,0.4)]">
+                                                <img src={cleanCosmeticUrl(rankingList[0].avatarUrl) || 'https://placehold.co/100x100/030305/dc2626?text=K'} className="w-full h-full object-cover" />
+                                            </div>
+                                            <h4 className="font-black text-sm text-white uppercase truncate w-full text-center">{rankingList[0].displayName || "Oculto"}</h4>
+                                            <p className="text-[9px] text-red-500 font-black uppercase mt-1">{getLevelTitle(rankingList[0].level)}</p>
+                                            <div className="mt-3 bg-transparent border border-yellow-600 text-yellow-500 px-4 py-1 rounded-full text-[10px] font-black shadow-[0_0_10px_rgba(234,179,8,0.2)]">NV. {rankingList[0].level}</div>
+                                            <div className="w-full h-2 bg-gray-900 rounded-full mt-5 overflow-hidden border border-yellow-900/50"><div className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.8)] w-[80%]"></div></div>
+                                            <div className="text-[9px] text-yellow-600 font-bold mt-1.5">{rankingList[0].xp} / {(rankingList[0].level || 1) * 100} XP</div>
+                                        </div>
+                                    )}
+                                    {/* 3rd Place */}
+                                    {rankingList[2] && (
+                                        <div className="w-[30%] max-w-[160px] bg-gradient-to-b from-[#2a1305] to-[#050505] rounded-t-2xl border-t-[3px] border-amber-700 p-4 relative flex flex-col items-center shadow-[0_-10px_30px_rgba(180,83,9,0.15)] order-3">
+                                            <Crown className="absolute -top-6 w-8 h-8 text-amber-600 drop-shadow-[0_0_10px_rgba(217,119,6,0.8)]" />
+                                            <div className="absolute top-2 left-2 text-xl font-black text-amber-700">3</div>
+                                            <div className="w-16 h-16 rounded-full border-2 border-amber-700 overflow-hidden mb-3 mt-4">
+                                                <img src={cleanCosmeticUrl(rankingList[2].avatarUrl) || 'https://placehold.co/100x100/030305/dc2626?text=K'} className="w-full h-full object-cover" />
+                                            </div>
+                                            <h4 className="font-black text-xs text-white uppercase truncate w-full text-center">{rankingList[2].displayName || "Oculto"}</h4>
+                                            <p className="text-[8px] text-red-500 font-black uppercase mt-1">{getLevelTitle(rankingList[2].level)}</p>
+                                            <div className="mt-3 bg-transparent border border-amber-800 text-amber-600 px-3 py-1 rounded-full text-[9px] font-black">NV. {rankingList[2].level}</div>
+                                            <div className="w-full h-1.5 bg-gray-900 rounded-full mt-4 overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-800 to-amber-600 w-[45%]"></div></div>
+                                            <div className="text-[8px] text-amber-700/80 font-bold mt-1">{rankingList[2].xp} / {(rankingList[2].level || 1) * 100} XP</div>
+                                        </div>
+                                    )}
+                                </div>
 
-                                            <div className={`w-full h-full rounded-full overflow-hidden bg-[#0a0a0c] relative z-10 ${player.equipped_items?.avatar ? player.equipped_items.avatar.cssClass : ''}`}>
+                                {/* LISTA RESTANTE (4+) */}
+                                <div className="flex flex-col gap-3">
+                                    {rankingList.slice(3).map((player, idx) => (
+                                        <div key={player.id} className="bg-[#050505] border border-red-900/30 hover:border-red-600/50 rounded-2xl p-4 flex items-center gap-4 shadow-lg transition-colors group">
+                                            <div className="w-8 text-center text-xl font-black text-white">{idx + 4}</div>
+                                            
+                                            <div className="w-12 h-12 rounded-full border-2 border-red-900/50 group-hover:border-red-600 overflow-hidden flex-shrink-0">
                                                 <img src={cleanCosmeticUrl(player.avatarUrl) || 'https://placehold.co/100x100/030305/dc2626?text=K'} className="w-full h-full object-cover" />
                                             </div>
-                                            {player.equipped_items?.moldura?.preview && ( <img src={cleanCosmeticUrl(player.equipped_items.moldura.preview)} className={`absolute inset-[-10%] w-[120%] h-[120%] object-cover z-20 pointer-events-none scale-[1.15] ${player.equipped_items.moldura.cssClass}`} style={{ mixBlendMode: 'screen' }} /> )}
-                                        </div>
 
-                                        <div className="flex-1 min-w-0">
-                                            {player.equipped_items?.nickname?.css && ( <style dangerouslySetInnerHTML={{__html: `.${player.equipped_items.nickname.cssClass} { ${player.equipped_items.nickname.css} } ${player.equipped_items.nickname.animacao || ''}`}} /> )}
-                                            <h4 className={`font-black text-sm uppercase truncate ${index < 3 ? 'text-white' : 'text-gray-400'} ${player.equipped_items?.nickname ? player.equipped_items.nickname.cssClass : ''}`}>
-                                                {player.displayName || "Oculto"}
-                                            </h4>
-                                            <p className="text-[9px] text-red-500 font-bold uppercase tracking-[0.2em] mt-1">{getLevelTitle(player.level)}</p>
+                                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                <h4 className="text-white font-black text-sm uppercase truncate">{player.displayName || "Oculto"}</h4>
+                                                <p className="text-red-500 font-bold text-[9px] uppercase tracking-widest">{getLevelTitle(player.level)}</p>
+                                                
+                                                <div className="flex items-center gap-2 mt-1.5">
+                                                    <div className="flex-1 h-1 bg-gray-900 rounded-full overflow-hidden max-w-[150px]">
+                                                        <div className="h-full bg-red-600" style={{width: `${Math.min(100, ((player.xp || 0) / ((player.level || 1)*100)) * 100)}%`}}></div>
+                                                    </div>
+                                                    <span className="text-[8px] font-bold text-gray-500">{player.xp} / {(player.level || 1) * 100} XP</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center gap-4">
+                                                <div className="bg-transparent border border-white/10 px-3 py-1.5 rounded-lg text-white font-black text-[9px] uppercase tracking-widest hidden sm:block">
+                                                    NV. {player.level}
+                                                </div>
+                                                <svg className="w-5 h-5 text-gray-500 group-hover:text-red-500 transition-colors hidden sm:block" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
+                                                <ChevronRight className="w-5 h-5 text-red-900 group-hover:text-red-500 transition-colors" />
+                                            </div>
                                         </div>
-                                        
-                                        <div className="text-right flex-shrink-0 flex flex-col items-end gap-1.5">
-                                            <div className="bg-[#0a0a0c] border border-white/5 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1.5">Nv. {player.level}</div>
-                                            <div className="text-gray-500 font-black text-[9px] uppercase tracking-widest">{player.xp} XP</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
