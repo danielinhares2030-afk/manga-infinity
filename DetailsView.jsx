@@ -15,12 +15,10 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
 
     const libraryStatuses = ['Lendo', 'Concluído', 'Pausado', 'Dropado', 'Planejo Ler'];
 
-    // CORREÇÃO: Sistema que incrementa visualizadores reais assim que entra na obra
     useEffect(() => {
         if (!manga?.id) return;
         const addView = async () => {
             const sessionKey = `viewed_${manga.id}`;
-            // Evita contar 2 vezes se o cara só recarregar a página na mesma sessão
             if (!sessionStorage.getItem(sessionKey)) {
                 try {
                     const mangaRef = doc(db, 'obras', manga.id);
@@ -39,13 +37,13 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
     const handleRate = async (ratingValue) => {
         if (!user) return showToast("Apenas ninjas registrados podem avaliar.", "warning");
         setAnimateRating(true);
-        setTimeout(() => setAnimateRating(false), 400);
+        setTimeout(() => setAnimateRating(false), 800); // Tempo estendido para animação da chama
 
         try {
             const newRating = ((localRating + ratingValue) / 2).toFixed(1);
             const finalRating = Number(newRating);
             setLocalRating(finalRating);
-            showToast(`Avaliação de ${ratingValue} estrelas registrada.`, "success");
+            showToast(`Avaliação de ${ratingValue} chamas registrada.`, "success");
             const mangaRef = doc(db, 'obras', manga.id);
             await updateDoc(mangaRef, { rating: finalRating });
             if (manga) manga.rating = finalRating; 
@@ -130,18 +128,19 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         </h1>
                         <p className="text-gray-400 font-medium text-sm mb-6">Autor desconhecido</p>
                         
+                        {/* SISTEMA DE AVALIAÇÃO COM CHAMAS E ANIMAÇÃO */}
                         <div className="flex items-center gap-6 mb-8">
                             <div>
-                                <div className={`flex items-center gap-1.5 mb-1 transition-transform duration-300 ${animateRating ? 'scale-125' : 'scale-100'}`}>
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <button key={star} onClick={() => handleRate(star)} className="focus:outline-none hover:scale-110 transition-transform px-0.5">
-                                            <Star className={`w-6 h-6 ${star <= Math.round(localRating) ? 'text-red-600 fill-red-600 drop-shadow-[0_0_8px_rgba(220,38,38,0.6)]' : 'text-gray-700'}`} />
+                                <div className="flex items-center gap-2 mb-1">
+                                    {[1, 2, 3, 4, 5].map((flameVal) => (
+                                        <button key={flameVal} onClick={() => handleRate(flameVal)} className="focus:outline-none hover:scale-125 transition-transform px-0.5">
+                                            <Flame className={`w-7 h-7 transition-all duration-500 ${animateRating && flameVal <= Math.round(localRating) ? 'animate-bounce text-red-500 fill-red-500 scale-125' : flameVal <= Math.round(localRating) ? 'text-red-600 fill-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)]' : 'text-gray-700'}`} />
                                         </button>
                                     ))}
                                 </div>
-                                <p className="text-[10px] text-gray-500 font-medium mt-2">Avaliação da comunidade</p>
+                                <p className="text-[10px] text-gray-500 font-medium mt-2">Poder da Comunidade</p>
                             </div>
-                            <div className={`flex flex-col items-center border-l border-white/10 pl-6 transition-all duration-300 ${animateRating ? 'text-red-500 scale-110' : 'text-white scale-100'}`}>
+                            <div className={`flex flex-col items-center border-l border-white/10 pl-6 transition-all duration-500 ${animateRating ? 'text-red-500 scale-125 drop-shadow-[0_0_15px_rgba(220,38,38,1)]' : 'text-white scale-100'}`}>
                                 <span className="text-3xl font-black leading-none">{localRating.toFixed(1)}</span>
                                 <span className={`text-[9px] font-black uppercase tracking-widest mt-1 ${animateRating ? 'text-white' : 'text-red-500'}`}>{getRatingLabel(localRating)}</span>
                             </div>
