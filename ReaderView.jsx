@@ -7,14 +7,12 @@ export default function ReaderView({ manga, chapter, user, userProfileData, onBa
   const [zoom, setZoom] = useState(1); 
   const [isChapterFading, setIsChapterFading] = useState(false); 
   
-  // Estados para a animação de "Pula Capítulo"
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [nextChapNum, setNextChapNum] = useState(null);
 
   const readingTimeRef = useRef(0);
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Transição de opacidade ao carregar as páginas
   useEffect(() => {
       setIsChapterFading(true); 
       window.scrollTo(0, 0);
@@ -42,7 +40,14 @@ export default function ReaderView({ manga, chapter, user, userProfileData, onBa
   const prevChapter = currentIndex < manga.chapters.length - 1 ? manga.chapters[currentIndex + 1] : null;
 
   const mockPages = Array(15).fill('').map((_, i) => `https://placehold.co/800x1200/020202/f59e0b?text=Página+${i + 1}`);
-  const pages = chapter.pages && chapter.pages.length > 0 ? chapter.pages : mockPages;
+  
+  // CORREÇÃO DO VISUALIZADOR: Garante que ele extraia a URL caso o banco mande como objeto.
+  const pages = chapter?.pages?.length > 0 ? chapter.pages : mockPages;
+  const getPageUrl = (p) => {
+      if (!p) return mockPages[0];
+      if (typeof p === 'string') return p;
+      return p.url || p.src || mockPages[0];
+  };
 
   const handleScroll = () => {
       if (!isChapterFading && Math.random() < 0.005) triggerRandomDrop();
@@ -53,19 +58,12 @@ export default function ReaderView({ manga, chapter, user, userProfileData, onBa
       setZoom(prev => prev === 1 ? 0.5 : prev === 0.5 ? 0.75 : 1);
   };
 
-  // FUNÇÃO DE PULAR CAPÍTULO COM ANIMAÇÃO SURREAL
   const handleChapterChange = (targetChapter) => {
       if (!targetChapter) return;
-      
-      // 1. Define o número que vai aparecer na animação
       setNextChapNum(targetChapter.number);
-      // 2. Ativa o overlay do abismo
       setIsTransitioning(true);
-      
-      // 3. Espera 800ms (tempo do brilho) e troca o conteúdo
       setTimeout(() => {
           onChapterClick(manga, targetChapter);
-          // 4. Esconde a animação
           setIsTransitioning(false);
       }, 800);
   };
@@ -73,7 +71,6 @@ export default function ReaderView({ manga, chapter, user, userProfileData, onBa
   return (
       <div className="min-h-screen bg-[#020202] text-white relative flex flex-col overflow-x-hidden select-none" onScroll={handleScroll}>
           
-          {/* Componente de Animação de Transição */}
           <ChapterTransitionOverlay isVisible={isTransitioning} chapterNumber={nextChapNum} />
 
           {showUI && (
@@ -100,7 +97,7 @@ export default function ReaderView({ manga, chapter, user, userProfileData, onBa
           <div className={`flex-1 w-full mx-auto cursor-pointer overflow-x-auto origin-center transition-opacity duration-300 ease-in-out ${isChapterFading ? 'opacity-0' : 'opacity-100'}`} onClick={() => setShowUI(!showUI)}>
             {readMode === 'Páginas' ? (
                <div className="w-full h-screen flex flex-col items-center justify-center pt-16 pb-20 px-2 relative overflow-hidden">
-                  <img src={pages[currentPage]} className="max-h-full object-contain shadow-2xl transition-transform duration-300 rounded-sm" style={{ width: `${zoom * 100}%` }} />
+                  <img src={getPageUrl(pages[currentPage])} className="max-h-full object-contain shadow-2xl transition-transform duration-300 rounded-sm" style={{ width: `${zoom * 100}%` }} />
                   
                   <div className="absolute inset-y-16 left-0 w-1/3 z-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); setCurrentPage(p => Math.max(0, p - 1)); }}></div>
                   <div className="absolute inset-y-16 right-0 w-1/3 z-10 cursor-pointer" onClick={(e) => { e.stopPropagation(); setCurrentPage(p => Math.min(pages.length - 1, p + 1)); }}></div>
@@ -110,7 +107,7 @@ export default function ReaderView({ manga, chapter, user, userProfileData, onBa
             ) : (
                <div className="flex flex-col items-center pt-16 pb-20 transition-all duration-300 mx-auto" style={{ width: `${zoom * 100}%` }}>
                   {pages.map((p, i) => (
-                     <img key={i} src={p} className="w-full object-contain block" loading="lazy" />
+                     <img key={i} src={getPageUrl(p)} className="w-full object-contain block" loading="lazy" />
                   ))}
                </div>
             )}
