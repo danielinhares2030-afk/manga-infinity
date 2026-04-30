@@ -68,7 +68,13 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
         return "BOM";
     };
 
-    const mockReaders = `${((manga.id.length * 3.4) || 12.3).toFixed(1)}K`;
+    // Pegando os leitores reais do banco e formatando
+    const formatReaders = (num) => {
+        if (!num) return '0';
+        return num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
+    };
+    const realReaders = formatReaders(manga.views || manga.leitores || 0);
+
     const displayGenre = manga.genres && manga.genres.length > 0 ? manga.genres.slice(0, 2).join(', ') : 'Ação, Fantasia';
 
     return (
@@ -145,7 +151,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                             <div className="bg-[#0f0f13] border border-white/5 rounded-xl p-3 flex flex-col justify-center gap-1.5 shadow-md">
                                 <Users className="w-4 h-4 text-red-600 mb-1" />
                                 <span className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Leitores</span>
-                                <span className="text-xs font-bold text-gray-200 line-clamp-1">{mockReaders}</span>
+                                <span className="text-xs font-bold text-gray-200 line-clamp-1">{realReaders}</span>
                             </div>
                         </div>
 
