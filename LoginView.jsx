@@ -44,24 +44,16 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
 
   return (
     <div className="min-h-screen font-sans flex flex-col items-center justify-start pt-6 pb-10 relative px-6 overflow-y-auto">
-      <style>{`
-        body, html { background-color: #050505 !important; }
-        .bg-kage-custom {
-            background-image: url('https://i.ibb.co/mrYd0BzW/file-0000000007e471f5939a825f3eab6db6.png');
-            background-size: cover;
-            background-position: center;
-        }
-      `}</style>
+      <style>{`body, html { background-color: #050505 !important; }`}</style>
       
-      {/* FUNDO OFICIAL ENVIADO */}
-      <div className="fixed inset-0 z-0 bg-kage-custom">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-[#050505]"></div>
-          <div className="absolute inset-0 bg-black/20"></div>
+      {/* FUNDO CSS OTIMIZADO (CARREGA NA HORA) */}
+      <div className="fixed inset-0 z-0 bg-[#050505]">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/20 via-[#050505] to-[#050505]"></div>
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-screen"></div>
       </div>
 
       <div className="w-full max-w-[440px] relative z-10 animate-in fade-in duration-1000">
         
-        {/* LOGO AUMENTADO (Sem título em texto) */}
         <div className="flex flex-col items-center justify-center mb-6 text-center">
             <div className="w-64 h-64 md:w-80 md:h-80 drop-shadow-[0_0_35px_rgba(220,38,38,0.3)] transform hover:scale-105 transition-transform duration-700">
                 <KageLogo className="w-full h-full" showContour={false} />
@@ -71,7 +63,6 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
             </p>
         </div>
 
-        {/* CARD DO LOGIN */}
         <div className="bg-[#0f0f0f]/90 backdrop-blur-2xl border border-red-900/30 p-8 sm:p-10 rounded-[2.5rem] shadow-[0_0_60px_rgba(0,0,0,1)] mt-2">
             
             {localError && (
