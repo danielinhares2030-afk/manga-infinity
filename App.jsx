@@ -17,46 +17,6 @@ import { PopularView } from './PopularView';
 import DetailsView from './DetailsView';
 import ReaderView from './ReaderView';
 
-// SPLASH SCREEN COM ANIMAÇÃO CINEMÁTICA E TEXTO NATIVO
-function SplashScreen() {
-  return (
-    <div className="fixed inset-0 z-[9999] bg-[#030000] flex items-center justify-center transition-opacity duration-500 ease-out overflow-hidden">
-      <style>{`
-        .logo-anim {
-          opacity: 0;
-          filter: blur(10px);
-          transform: scale(0.85) translateY(15px);
-          animation: logoReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes logoReveal {
-          100% {
-            opacity: 1;
-            filter: blur(0px);
-            transform: scale(1) translateY(0);
-          }
-        }
-      `}</style>
-      
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 mix-blend-screen pointer-events-none"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-red-600/20 rounded-full blur-[60px] mix-blend-screen pointer-events-none"></div>
-      
-      <div className="relative flex items-center justify-center z-10">
-          <svg className="absolute w-64 h-64 text-red-600/40 animate-pulse pointer-events-none" style={{ mixBlendMode: 'screen' }} viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="30" fill="currentColor" filter="blur(15px)" />
-          </svg>
-          
-          <div className="logo-anim flex flex-col items-center justify-center drop-shadow-[0_0_20px_rgba(220,38,38,1)]">
-            <KageLogo className="w-20 h-20 md:w-24 md:h-24 text-red-600 mb-2" showContour={false} />
-            <h1 className="text-4xl md:text-5xl font-black italic tracking-tighter flex items-center justify-center gap-1">
-                <span className="text-white">MANGA</span>
-                <span className="text-red-600">KAGE</span>
-            </h1>
-          </div>
-      </div>
-    </div>
-  );
-}
-
 function MangakageApp() {
   const [splashTimerDone, setSplashTimerDone] = useState(false);
   const [authReady, setAuthReady] = useState(false);
