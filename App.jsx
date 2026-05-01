@@ -5,7 +5,7 @@ import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs,
 import { app, auth, db } from './firebase'; 
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
 import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo, cleanCosmeticUrl } from './helpers';
-import { ErrorBoundary, GlobalToast, Footer, KageLogo } from './UIComponents';
+import { ErrorBoundary, GlobalToast, Footer } from './UIComponents';
 import { LoginView } from './LoginView';
 import { HomeView } from './HomeView';
 import { SearchView } from './SearchView';
@@ -17,13 +17,16 @@ import { PopularView } from './PopularView';
 import DetailsView from './DetailsView';
 import ReaderView from './ReaderView';
 
-// NOVO: SPLASH SCREEN OTIMIZADA PARA CARREGAMENTO INSTANTÂNEO
+// NOVO LOGO OFICIAL
+const MAIN_LOGO = "https://i.ibb.co/gF4zyvkk/Gemini-Generated-Image-gj2yhugj2yhugj2y-removebg-preview.png";
+
+// SPLASH SCREEN COM AURA SVG E NOVO LOGO
 function SplashScreen() {
   return (
     <div className="fixed inset-0 bg-[#000] flex items-center justify-center z-[9999] transition-opacity duration-300 ease-out">
       <style>{`
         .logo-instant {
-          width: 140px;
+          width: 220px;
           opacity: 0;
           transform: scale(0.95);
           animation: logoInstantIn 0.2s ease forwards;
@@ -35,13 +38,23 @@ function SplashScreen() {
           }
         }
       `}</style>
-      <img src="/logo.png" className="logo-instant" alt="MangaKage Logo" />
+      
+      <div className="relative flex items-center justify-center">
+          {/* Aura SVG Pura */}
+          <svg className="absolute w-64 h-64 text-red-600/40 animate-pulse pointer-events-none" style={{ mixBlendMode: 'screen' }} viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="30" fill="currentColor" filter="blur(15px)" />
+          </svg>
+          <img 
+              src={MAIN_LOGO} 
+              className="logo-instant object-contain relative z-10 drop-shadow-[0_0_20px_rgba(220,38,38,1)]" 
+              alt="MangaKage Logo" 
+          />
+      </div>
     </div>
   );
 }
 
 function MangakageApp() {
-  // OTIMIZAÇÃO: Timer da splash screen reduzido drasticamente para evitar gargalos artificiais
   const [splashTimerDone, setSplashTimerDone] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [isGuest, setIsGuest] = useState(false); 
@@ -62,13 +75,13 @@ function MangakageApp() {
   const [user, setUser] = useState(null);
   
   const [userProfileData, setUserProfileData] = useState({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [], caixas: 0, lastDailyBox: 0 });
+  
   const [userSettings, setUserSettings] = useState({ readMode: 'Cascata', dataSaver: false, theme: 'Escuro' });
   const [libraryData, setLibraryData] = useState({});
   const [historyData, setHistoryData] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false); 
 
-  // OTIMIZAÇÃO: Transição mais rápida (300ms de animação + margem) em vez dos antigos 1500ms
   useEffect(() => { 
       const timer = setTimeout(() => setSplashTimerDone(true), 300); 
       return () => clearTimeout(timer); 
@@ -254,7 +267,6 @@ function MangakageApp() {
       } catch(error) { showToast('Erro ao atualizar biblioteca.', 'error'); }
   };
 
-  // Renderização condicional imediata sem bloquear outras requisições
   if (showSplash) return <SplashScreen />;
 
   if (currentView === 'login' || (!user && !isGuest)) { return <LoginView onLoginSuccess={() => { window.history.pushState({ view: 'home' }, '', ''); setCurrentView('home'); setIsGuest(false); }} onGuestAccess={() => { window.history.pushState({ view: 'home' }, '', ''); setIsGuest(true); setCurrentView('home'); }} showToast={showToast} />; }
@@ -288,9 +300,19 @@ function MangakageApp() {
         <nav className="sticky top-0 z-40 bg-[#0a0a0c]/80 backdrop-blur-xl border-b border-red-600/10 shadow-md relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
-                <KageLogo className="w-10 h-10 md:w-12 md:h-12 group-hover:scale-110 transition-transform duration-300" showContour={false} />
-                <span className="text-xl font-black text-white tracking-[0.2em] uppercase hidden sm:block">MANGA<span className="text-red-600">KAGE</span></span>
+              
+              {/* MENU DE NAVEGAÇÃO SUPERIOR COM O NOVO LOGO E SEM TEXTO DUPLICADO */}
+              <div className="flex items-center cursor-pointer group" onClick={() => navigateTo('home')}>
+                <div className="relative flex items-center justify-center">
+                  <svg className="absolute w-20 h-20 text-red-600/30 animate-pulse pointer-events-none" style={{ mixBlendMode: 'screen' }} viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="30" fill="currentColor" filter="blur(10px)" />
+                  </svg>
+                  <img 
+                      src={MAIN_LOGO} 
+                      className="h-10 md:h-12 object-contain relative z-10 group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)]" 
+                      alt="MangaKage" 
+                  />
+                </div>
               </div>
               
               <div className="hidden md:block flex-1 max-w-lg mx-8 relative group">
