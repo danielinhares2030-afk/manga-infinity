@@ -5,8 +5,7 @@ import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs,
 import { app, auth, db } from './firebase'; 
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
 import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo, cleanCosmeticUrl } from './helpers';
-// ATUALIZAÇÃO: Importando o componente SplashScreen que você disse que está aqui agora. KageLogo removido.
-import { ErrorBoundary, GlobalToast, Footer, SplashScreen } from './UIComponents';
+import { ErrorBoundary, GlobalToast, Footer, SplashScreen, KageLogo } from './UIComponents';
 import { LoginView } from './LoginView';
 import { HomeView } from './HomeView';
 import { SearchView } from './SearchView';
@@ -19,6 +18,7 @@ import DetailsView from './DetailsView';
 import ReaderView from './ReaderView';
 
 function MangakageApp() {
+  const [splashTimerDone, setSplashTimerDone] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [isGuest, setIsGuest] = useState(false); 
   const [currentView, setCurrentView] = useState('login'); 
@@ -37,6 +37,7 @@ function MangakageApp() {
   const [catalogState, setCatalogState] = useState({ filterType: "Todos", selectedGenres: [], visibleCount: 24, scrollPos: 0 });
   const [user, setUser] = useState(null);
   
+  // CORREÇÃO: O Estado inicial agora prevê caixas e resgate diário
   const [userProfileData, setUserProfileData] = useState({ xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [], caixas: 0, lastDailyBox: 0 });
   
   const [userSettings, setUserSettings] = useState({ readMode: 'Cascata', dataSaver: false, theme: 'Escuro' });
@@ -44,6 +45,8 @@ function MangakageApp() {
   const [historyData, setHistoryData] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false); 
+
+  useEffect(() => { const timer = setTimeout(() => setSplashTimerDone(true), 1500); return () => clearTimeout(timer); }, []);
 
   useEffect(() => {
     const handlePopState = (e) => {
@@ -96,6 +99,7 @@ function MangakageApp() {
           const unsubProfile = onSnapshot(profileRef, (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data();
+              // CORREÇÃO: Lendo caixas e lastDailyBox do banco e passando pra interface
               setUserProfileData({ bio: data.bio, avatarUrl: data.avatarUrl, coverUrl: data.coverUrl, xp: data.xp || 0, level: data.level || 1, coins: data.coins || 0, crystals: data.crystals || 0, inventory: data.inventory || [], equipped_items: data.equipped_items || {}, activeMission: data.activeMission || null, completedMissions: data.completedMissions || [], caixas: data.caixas || 0, lastDailyBox: data.lastDailyBox || 0 });
               if(data.settings) setUserSettings({ ...userSettings, ...data.settings }); 
             } else { setDoc(profileRef, { bio: "Leitor Nível 1.", settings: userSettings, xp: 0, level: 1, coins: 0, crystals: 0, inventory: [], equipped_items: {}, activeMission: null, completedMissions: [], caixas: 0, lastDailyBox: 0 }, { merge: true }); }
@@ -127,9 +131,107 @@ function MangakageApp() {
     return () => clearInterval(interval);
   }, [user, userProfileData.activeMission]);
 
-  // Se já tiver verificado o auth, libera a renderização. Sem travar mais a tela com timer.
-  if (!authReady) return null;
+  const showSplash = !splashTimerDone || !authReady || loadingMangas;
+  useEffect(() => { if (!showSplash && !user && !isGuest && currentView !== 'login') { setCurrentView('login'); } }, [showSplash, user, isGuest, currentView]);
 
+  const showToast = (text, type = 'info') => { setGlobalToast({ text, type }); setTimeout(() => setGlobalToast(null), 4000); };
+  const handleLevelUpAnim = (lvl) => { setLevelUpAlert(lvl); setTimeout(() => setLevelUpAlert(null), 5000); }
+
+  const navigateTo = (view, manga = null, chapter = null) => {
+    if (currentView === 'catalog') { setCatalogState(prev => ({ ...prev, scrollPos: window.scrollY })); }
+    if (manga) setSelectedManga(manga); if (chapter) setSelectedChapter(chapter);
+
+    // Muda de tela instantaneamente para não travar a interface
+    window.history.pushState({ view, mangaId: manga?.id, chapterId: chapter?.id }, '', ''); 
+    setCurrentView(view);
+    if (view !== 'catalog') { window.scrollTo(0, 0); }
+
+    // Roda a verificação de missão em segundo plano
+    if (view === 'details' && manga && userProfileData?.activeMission?.type === 'search_local' && user) {
+        setTimeout(async () => {
+            const m = userProfileData.activeMission;
+            const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+            
+            if (m.targetManga === manga.id) {
+                let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.rewardXp); 
+                let newCoins = (userProfileData.coins || 0) + m.rewardCoins;
+                let currentCompleted = userProfileData.completedMissions || []; 
+                if (!currentCompleted.includes("search_local_" + m.targetManga)) currentCompleted = [...currentCompleted, "search_local_" + m.targetManga];
+                await updateDoc(profileRef, { coins: newCoins, xp: newXp, level: newLvl, activeMission: null, completedMissions: currentCompleted });
+                showToast(`Alvo Encontrado! Missão Concluída: +${m.rewardXp} XP | +${m.rewardCoins} M`, "success"); 
+                if(didLevelUp) handleLevelUpAnim(newLvl);
+            } else {
+                let newCoins = Math.max(0, (userProfileData.coins || 0) - m.penaltyCoins); 
+                let { newXp, newLvl } = removeXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.penaltyXp);
+                await updateDoc(profileRef, { coins: newCoins, xp: newXp, level: newLvl, activeMission: null });
+                showToast(`Alvo Incorreto! A Missão Falhou. Penalidade: -${m.penaltyXp}XP`, "error");
+            }
+        }, 0);
+    }
+  };
+
+  const handleBack = () => { if (window.history.state !== null) { window.history.back(); } else { navigateTo('home'); } };
+  const handleSearchSubmit = (e) => { if (e.key === 'Enter' && globalSearch.trim() !== '') navigateTo('search'); };
+  const handleLogout = async () => { await signOut(auth); setIsGuest(false); setCurrentView('login'); };
+
+  const handleRandomManga = () => {
+    if (mangas.length === 0) { showToast("Catálogo vazio.", "error"); return; } setIsRandomizing(true);
+    setTimeout(() => { const random = mangas[Math.floor(Math.random() * mangas.length)]; navigateTo('details', random); setIsRandomizing(false); }, 600); 
+  };
+
+  const triggerRandomDrop = async () => { if (!user) return; const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'); try { await updateDoc(profileRef, { crystals: increment(1) }); setDropAlert(true); setTimeout(() => setDropAlert(false), 2000); } catch(e) {} };
+
+  const markAsRead = async (manga, chapter, isValidReading) => {
+    if (!user) return;
+    try {
+      const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'history', `${manga.id}_${chapter.id}`); const docSnap = await getDoc(ref); let isNewRead = false;
+      if (!docSnap.exists()) { isNewRead = true; await setDoc(ref, { mangaId: manga.id, mangaTitle: manga.title, chapterNumber: chapter.number, timestamp: Date.now(), id: `${manga.id}_${chapter.id}` }); } else { await updateDoc(ref, { timestamp: Date.now() }); }
+      if (isNewRead && userProfileData.activeMission?.type === 'read' && userProfileData.activeMission.targetManga === manga.id) {
+         if (!isValidReading) { showToast("⚠️ Tempo insuficiente (Mín. 45s).", "warning"); return; }
+         const m = userProfileData.activeMission; const newCount = m.currentCount + 1; const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+         if (newCount >= m.targetCount) {
+             let newCoins = (userProfileData.coins || 0) + m.rewardCoins; let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, m.rewardXp);
+             let currentCompleted = userProfileData.completedMissions || []; if (!currentCompleted.includes(m.targetManga)) currentCompleted = [...currentCompleted, m.targetManga];
+             await updateDoc(profileRef, { coins: newCoins, xp: newXp, level: newLvl, activeMission: null, completedMissions: currentCompleted }); showToast(`Missão Concluída! +${m.rewardXp} XP | +${m.rewardCoins} Moedas`, "success"); if(didLevelUp) handleLevelUpAnim(newLvl);
+         } else { await updateDoc(profileRef, { 'activeMission.currentCount': newCount }); showToast(`Progresso: ${newCount}/${m.targetCount}`, "info"); }
+      }
+    } catch(e) { console.error(e) }
+  };
+
+  const updateSettings = async (newSettings) => { const updated = { ...userSettings, ...newSettings }; setUserSettings(updated); if(user) { try { await setDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { settings: updated }, { merge: true }); } catch(e) {} } };
+
+  const buyItem = async (item) => {
+    const price = item.preco || item.price; if ((userProfileData.coins || 0) < price) { showToast("Moedas Insuficientes!", "error"); return; }
+    const newCoins = userProfileData.coins - price; const newInv = [...(userProfileData.inventory || []), item.id];
+    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { coins: newCoins, inventory: newInv }); showToast(`Adquirido com sucesso!`, "success");
+  };
+
+  const toggleEquipItem = async (item) => {
+    const cat = item.categoria || item.type; const currentEquipped = userProfileData.equipped_items || {};
+    const isEquipped = currentEquipped[cat]?.id === item.id; const newEquipped = { ...currentEquipped };
+    if (isEquipped) { delete newEquipped[cat]; } else { newEquipped[cat] = item; }
+    await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), { equipped_items: newEquipped });
+  };
+
+  const synthesizeCrystal = async () => {
+    if (userProfileData.crystals < 5) return null; const profileRef = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main');
+    if (Math.random() < 0.40) { await updateDoc(profileRef, { crystals: increment(-5) }); return { success: false }; }
+    const wonCoins = Math.floor(Math.random() * 10) + 5; const wonXp = Math.floor(Math.random() * 5) + 5;   
+    let { newXp, newLvl, didLevelUp } = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, wonXp);
+    await updateDoc(profileRef, { crystals: increment(-5), coins: increment(wonCoins), xp: newXp, level: newLvl }); if(didLevelUp) handleLevelUpAnim(newLvl);
+    return { success: true, wonCoins, wonXp, leveledUp: didLevelUp, newLvl };
+  };
+
+  const handleLibraryToggle = async (mangaId, status) => {
+      if (!user) { showToast("Faça login para favoritar obras.", "warning"); return; }
+      try {
+          const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'library', mangaId.toString());
+          if (status === "Remover") await deleteDoc(ref); else await setDoc(ref, { mangaId: mangaId, status: status, updatedAt: Date.now() });
+          if(status === 'Favoritos') showToast("Adicionado aos Favoritos!", "success"); else if(status === 'Remover') showToast("Removido da Biblioteca.", "info");
+      } catch(error) { showToast('Erro ao atualizar biblioteca.', 'error'); }
+  };
+
+  if (showSplash) return <SplashScreen />;
   if (currentView === 'login' || (!user && !isGuest)) { return <LoginView onLoginSuccess={() => { window.history.pushState({ view: 'home' }, '', ''); setCurrentView('home'); setIsGuest(false); }} onGuestAccess={() => { window.history.pushState({ view: 'home' }, '', ''); setIsGuest(true); setCurrentView('home'); }} showToast={showToast} />; }
 
   const unreadNotifCount = notifications.filter(n => !n.read).length;
@@ -161,9 +263,7 @@ function MangakageApp() {
         <nav className="sticky top-0 z-40 bg-[#0a0a0c]/80 backdrop-blur-xl border-b border-red-600/10 shadow-md relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              
               <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
-                {/* ATUALIZAÇÃO: KageLogo agora é apenas importado aqui */}
                 <KageLogo className="w-10 h-10 md:w-12 md:h-12 group-hover:scale-110 transition-transform duration-300" showContour={false} />
                 <span className="text-xl font-black text-white tracking-[0.2em] uppercase hidden sm:block">MANGA<span className="text-red-600">KAGE</span></span>
               </div>
