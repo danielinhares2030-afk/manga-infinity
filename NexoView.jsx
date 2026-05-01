@@ -156,6 +156,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     return (
         <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#030305]'}`}>
             
+            {/* ANIMAÇÃO ÉPICA DA CAIXA COM AS IMAGENS (AGORA ISOLADA PARA NÃO ESPREMER) */}
             {isOpeningBoxAnim && (
                 <div className="fixed inset-0 z-[9999] bg-[#000000] flex flex-col items-center justify-center overflow-hidden">
                     <style>{`
@@ -167,28 +168,28 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                         .text-show-after { animation: fade-in-late 2.5s forwards; }
                         
                         @keyframes chest-shake {
-                            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(220,38,38,0.5)); }
-                            10%, 30%, 50%, 70% { transform: scale(1.1) translate(-6px, 3px) rotate(-6deg); filter: drop-shadow(0 0 20px rgba(220,38,38,0.8)); }
-                            20%, 40%, 60%, 80% { transform: scale(1.1) translate(6px, -3px) rotate(6deg); filter: drop-shadow(0 0 35px rgba(220,38,38,0.9)); }
-                            85% { transform: scale(1.2) rotate(0deg); filter: brightness(1.5) drop-shadow(0 0 80px rgba(220,38,38,1)); opacity: 1; }
-                            90%, 100% { transform: scale(1.5); opacity: 0; }
+                            0% { transform: scale(1) translate(-50%, -50%); filter: drop-shadow(0 0 10px rgba(220,38,38,0.5)); }
+                            10%, 30%, 50%, 70% { transform: scale(1.1) translate(calc(-50% - 6px), calc(-50% + 3px)) rotate(-6deg); filter: drop-shadow(0 0 20px rgba(220,38,38,0.8)); }
+                            20%, 40%, 60%, 80% { transform: scale(1.1) translate(calc(-50% + 6px), calc(-50% - 3px)) rotate(6deg); filter: drop-shadow(0 0 35px rgba(220,38,38,0.9)); }
+                            85% { transform: scale(1.2) translate(-50%, -50%) rotate(0deg); filter: brightness(1.5) drop-shadow(0 0 80px rgba(220,38,38,1)); opacity: 1; }
+                            90%, 100% { transform: scale(1.5) translate(-50%, -50%); opacity: 0; }
                         }
                         @keyframes chest-burst {
-                            0%, 82% { opacity: 0; transform: scale(0); }
-                            86% { opacity: 1; transform: scale(1.5); background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(220,38,38,0.9) 40%, transparent 70%); }
-                            100% { opacity: 0; transform: scale(4.5); background: radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(220,38,38,0) 40%, transparent 70%); }
+                            0%, 82% { opacity: 0; transform: scale(0) translate(-50%, -50%); }
+                            86% { opacity: 1; transform: scale(1.5) translate(-50%, -50%); background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(220,38,38,0.9) 40%, transparent 70%); }
+                            100% { opacity: 0; transform: scale(4.5) translate(-50%, -50%); background: radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(220,38,38,0) 40%, transparent 70%); }
                         }
                         @keyframes chest-open {
-                            0%, 85% { opacity: 0; transform: scale(0.5) translateY(30px); filter: brightness(1); }
-                            90% { opacity: 1; transform: scale(1.3) translateY(-15px); filter: brightness(2) drop-shadow(0 0 60px rgba(255,255,255,1)); }
-                            100% { opacity: 1; transform: scale(1.1) translateY(0); filter: brightness(1.2) drop-shadow(0 0 40px rgba(220,38,38,0.8)); }
+                            0%, 85% { opacity: 0; transform: scale(0.5) translate(-50%, calc(-50% + 30px)); filter: brightness(1); }
+                            90% { opacity: 1; transform: scale(1.3) translate(-50%, calc(-50% - 15px)); filter: brightness(2) drop-shadow(0 0 60px rgba(255,255,255,1)); }
+                            100% { opacity: 1; transform: scale(1.1) translate(-50%, -50%); filter: brightness(1.2) drop-shadow(0 0 40px rgba(220,38,38,0.8)); }
                         }
                         @keyframes spin-rays {
                             0% { transform: rotate(0deg); }
                             100% { transform: rotate(360deg); }
                         }
                         @keyframes fade-out { 0%, 80% { opacity: 1; } 85%, 100% { opacity: 0; } }
-                        @keyframes fade-in-late { 0%, 85% { opacity: 0; transform: translateY(20px); } 90%, 100% { opacity: 1; transform: translateY(0); } }
+                        @keyframes fade-in-late { 0%, 85% { opacity: 0; transform: translateX(-50%) translateY(20px); } 90%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); } }
                     `}</style>
 
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.2)_0%,transparent_70%)] text-hide-after pointer-events-none"></div>
@@ -197,21 +198,23 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                         <div className="w-[150vw] h-[150vw] anim-rays" style={{ background: 'conic-gradient(from 0deg, transparent 0deg, rgba(220,38,38,0.3) 10deg, transparent 20deg, transparent 40deg, rgba(220,38,38,0.3) 50deg, transparent 60deg, transparent 80deg, rgba(220,38,38,0.3) 90deg, transparent 100deg, transparent 120deg, rgba(220,38,38,0.3) 130deg, transparent 140deg, transparent 160deg, rgba(220,38,38,0.3) 170deg, transparent 180deg, transparent 200deg, rgba(220,38,38,0.3) 210deg, transparent 220deg, transparent 240deg, rgba(220,38,38,0.3) 250deg, transparent 260deg, transparent 280deg, rgba(220,38,38,0.3) 290deg, transparent 300deg, transparent 320deg, rgba(220,38,38,0.3) 330deg, transparent 340deg, transparent 360deg)' }}></div>
                     </div>
 
-                    <div className="absolute w-96 h-96 rounded-full anim-chest-burst z-10 pointer-events-none"></div>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full anim-chest-burst z-10 pointer-events-none origin-top-left"></div>
 
-                    <div className="absolute inset-0 flex flex-col items-center justify-center anim-chest-shake z-20 pointer-events-none">
-                        <img src={CHEST_CLOSED} loading="eager" fetchPriority="high" className="w-36 h-36 md:w-48 md:h-48 object-contain drop-shadow-[0_0_15px_rgba(220,38,38,0.5)] flex-shrink-0" alt="Chest Closed" />
+                    {/* Baú Fechado: Isolado com posicionamento absoluto para evitar esmagamento */}
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-36 h-36 md:w-48 md:h-48 anim-chest-shake z-20 pointer-events-none origin-top-left">
+                        <img src={CHEST_CLOSED} loading="eager" fetchPriority="high" className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]" alt="Chest Closed" />
                     </div>
 
-                    <div className="absolute inset-0 flex flex-col items-center justify-center anim-chest-open z-30 pointer-events-none">
-                        <img src={CHEST_OPEN} loading="eager" fetchPriority="high" className="w-56 h-56 md:w-72 md:h-72 object-contain mix-blend-screen flex-shrink-0" alt="Chest Opened" />
+                    {/* Baú Aberto: Isolado */}
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-56 h-56 md:w-72 md:h-72 anim-chest-open z-30 pointer-events-none origin-top-left">
+                        <img src={CHEST_OPEN} loading="eager" fetchPriority="high" className="w-full h-full object-contain mix-blend-screen" alt="Chest Opened" />
                     </div>
 
-                    <div className="absolute bottom-1/4 left-0 w-full flex justify-center z-40 pointer-events-none">
-                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] text-hide-after absolute">
+                    <div className="absolute bottom-[20%] left-1/2 transform -translate-x-1/2 w-full text-center z-40 pointer-events-none">
+                        <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_10px_rgba(220,38,38,0.8)] text-hide-after absolute w-full left-0">
                             Rompendo Selo...
                         </h2>
-                        <h2 className="text-3xl md:text-4xl font-black text-red-500 uppercase tracking-[0.5em] drop-shadow-[0_0_20px_rgba(220,38,38,1)] text-show-after absolute">
+                        <h2 className="text-3xl md:text-4xl font-black text-red-500 uppercase tracking-[0.5em] drop-shadow-[0_0_20px_rgba(220,38,38,1)] text-show-after absolute w-full left-0">
                             Revelando!
                         </h2>
                     </div>
@@ -226,11 +229,11 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                         <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-6 relative z-10">Recompensa Extraída!</h3>
                         
                         <div className="flex justify-center mb-6 relative z-10">
-                            {boxReward.type === 'coins' && <div className="w-24 h-24 rounded-full bg-amber-950/40 border-2 border-amber-500 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.4)]"><div className="w-10 h-10 bg-amber-500 rotate-45 shadow-lg"></div></div>}
-                            {boxReward.type === 'xp' && <div className="w-24 h-24 rounded-full bg-blue-950/40 border-2 border-blue-500 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.4)]"><Zap className="w-12 h-12 text-blue-500 drop-shadow-lg"/></div>}
+                            {boxReward.type === 'coins' && <div className="w-24 h-24 rounded-full bg-amber-950/40 border-2 border-amber-500 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.4)] flex-shrink-0"><div className="w-10 h-10 bg-amber-500 rotate-45 shadow-lg"></div></div>}
+                            {boxReward.type === 'xp' && <div className="w-24 h-24 rounded-full bg-blue-950/40 border-2 border-blue-500 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.4)] flex-shrink-0"><Zap className="w-12 h-12 text-blue-500 drop-shadow-lg"/></div>}
                             {boxReward.type === 'cosmetic' && (
-                                <div className="w-24 h-24 rounded-full bg-[#050505] border-2 border-red-500 overflow-hidden flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.4)] relative p-2">
-                                    {cleanCosmeticUrl(boxReward.value.preview) ? <img src={cleanCosmeticUrl(boxReward.value.preview)} className="w-full h-full object-cover rounded-full" /> : <img src={CHEST_OPEN} className="w-12 h-12 object-contain" alt="Reward" />}
+                                <div className="w-24 h-24 rounded-full bg-[#050505] border-2 border-red-500 overflow-hidden flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.4)] relative p-2 flex-shrink-0">
+                                    {cleanCosmeticUrl(boxReward.value.preview) ? <img src={cleanCosmeticUrl(boxReward.value.preview)} className="w-full h-full object-cover rounded-full flex-shrink-0" /> : <img src={CHEST_OPEN} className="w-16 h-16 object-contain flex-shrink-0" alt="Reward" />}
                                 </div>
                             )}
                         </div>
