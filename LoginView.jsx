@@ -3,8 +3,6 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
 import { auth } from './firebase'; 
 import { Mail, Lock, User, Eye, EyeOff, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 
-const MAIN_LOGO = "https://i.ibb.co/gF4zyvkk/Gemini-Generated-Image-gj2yhugj2yhugj2y-removebg-preview.png";
-
 const Shuriken = ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
@@ -90,14 +88,13 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
                         <circle cx="50" cy="50" r="30" fill="currentColor" filter="blur(15px)" />
                         <circle cx="50" cy="50" r="20" fill="rgba(220,38,38,0.6)" filter="blur(8px)" />
                     </svg>
-                    <img 
-                        src={MAIN_LOGO} 
-                        className="w-56 h-auto object-contain relative z-10 drop-shadow-[0_0_20px_rgba(220,38,38,1)]" 
-                        alt="MangaKage Logo"
-                    />
+                    <h1 className="text-5xl font-black italic tracking-tighter flex items-center justify-center gap-1 drop-shadow-[0_0_15px_rgba(220,38,38,0.3)] relative z-10">
+                        <span className="text-white">MANGA</span>
+                        <span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)]">KAGE</span>
+                    </h1>
                 </div>
-                <p className="text-gray-400 text-xs tracking-[0.3em] mt-2 font-medium">影 の 領 域</p>
-                <div className="flex items-center justify-center gap-3 mt-3 text-red-600/70 text-[8px] font-black uppercase tracking-[0.4em]">
+                <p className="text-gray-400 text-xs tracking-[0.3em] mt-2 font-medium relative z-10">影 の 領 域</p>
+                <div className="flex items-center justify-center gap-3 mt-3 text-red-600/70 text-[8px] font-black uppercase tracking-[0.4em] relative z-10">
                     <div className="w-8 h-[1px] bg-red-600/50"></div>
                     <Shuriken className="w-3 h-3" />
                     DOMÍNIO DAS SOMBRAS
@@ -112,14 +109,13 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
               
               {isRegister && (
                   <fieldset className="border border-red-600/50 rounded-xl px-4 pb-4 pt-2 shadow-[inset_0_0_20px_rgba(220,38,38,0.05)] focus-within:border-red-500 focus-within:shadow-[0_0_15px_rgba(220,38,38,0.2),inset_0_0_20px_rgba(220,38,38,0.1)] transition-all">
                       <legend className="text-[9px] text-red-500 font-black uppercase tracking-[0.2em] px-2 flex items-center gap-1.5 ml-2">
                           <Shuriken className="w-3 h-3" /> NOME DE GUERRA
                       </legend>
-                      {/* Flex shrink e Min-w-0 para proteger o design */}
                       <div className="flex items-center gap-4 mt-1">
                           <HexagonIcon className="w-11 h-11 flex-shrink-0"><User className="w-4 h-4 text-red-500 drop-shadow-[0_0_5px_rgba(220,38,38,0.8)]" /></HexagonIcon>
                           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Digite seu nome" className="flex-1 min-w-0 bg-transparent text-gray-300 text-sm font-bold outline-none placeholder:text-gray-600" required />
@@ -132,7 +128,6 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
                   <legend className="text-[9px] text-red-500 font-black uppercase tracking-[0.2em] px-2 flex items-center gap-1.5 ml-2">
                       <Shuriken className="w-3 h-3" /> IDENTIDADE NINJA
                   </legend>
-                  {/* Flex shrink e Min-w-0 para proteger o design */}
                   <div className="flex items-center gap-4 mt-1">
                       <HexagonIcon className="w-11 h-11 flex-shrink-0"><Mail className="w-4 h-4 text-red-500 drop-shadow-[0_0_5px_rgba(220,38,38,0.8)]" /></HexagonIcon>
                       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Digite seu e-mail" className="flex-1 min-w-0 bg-transparent text-gray-300 text-sm font-bold outline-none placeholder:text-gray-600" required />
@@ -144,7 +139,6 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
                   <legend className="text-[9px] text-red-500 font-black uppercase tracking-[0.2em] px-2 flex items-center gap-1.5 ml-2">
                       <Shuriken className="w-3 h-3" /> CÓDIGO SECRETO
                   </legend>
-                  {/* Flex shrink e Min-w-0 aplicados para que a senha não vaze para fora! */}
                   <div className="flex items-center gap-4 mt-1">
                       <HexagonIcon className="w-11 h-11 flex-shrink-0"><Lock className="w-4 h-4 text-red-500 drop-shadow-[0_0_5px_rgba(220,38,38,0.8)]" /></HexagonIcon>
                       <input type={showPass ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Digite sua senha" className="flex-1 min-w-0 bg-transparent text-gray-300 text-sm font-bold outline-none placeholder:text-gray-600" required />
@@ -175,7 +169,7 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
               </div>
             </form>
 
-            <div className="mt-8 flex flex-col items-center gap-6 text-center pb-2">
+            <div className="mt-8 flex flex-col items-center gap-6 text-center pb-2 relative z-10">
                 <button onClick={() => { setIsRegister(!isRegister); setLocalError(null); }} className="text-[9px] text-gray-400 tracking-[0.15em] font-medium uppercase transition-colors">
                     {isRegister ? "JÁ TEM UM SELO? " : "AINDA NÃO É UM NINJA? " }
                     <span className="text-red-500 hover:text-red-400 underline underline-offset-4 font-black">{isRegister ? "FAZER LOGIN" : "ALISTAR-SE"}</span>
