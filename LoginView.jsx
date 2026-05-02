@@ -15,22 +15,8 @@ const NexonLogo = ({ className }) => (
         <stop offset="100%" stopColor="#818cf8" />
       </linearGradient>
     </defs>
-    {/* Design do "N" Exato da Imagem */}
-    <path 
-      d="M 30 75 V 25 L 70 65" 
-      stroke="url(#nexonBlue)" 
-      strokeWidth="14" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-    />
-    <path 
-      d="M 70 25 V 75 L 30 35" 
-      stroke="url(#nexonPurple)" 
-      strokeWidth="14" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      style={{ mixBlendMode: 'screen' }}
-    />
+    <path d="M 30 75 V 25 L 70 65" stroke="url(#nexonBlue)" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M 70 25 V 75 L 30 35" stroke="url(#nexonPurple)" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" style={{ mixBlendMode: 'screen' }} />
   </svg>
 );
 
@@ -50,7 +36,6 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
   const [localError, setLocalError] = useState(null);
   const [showPass, setShowPass] = useState(false);
 
-  // Carregar dados salvos ao iniciar (Lembrar de mim)
   useEffect(() => {
     const savedEmail = localStorage.getItem('nexon_email');
     const savedPass = localStorage.getItem('nexon_pass');
@@ -72,7 +57,6 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
         showToast("Registro concluído!", "success");
       } else {
         await signInWithEmailAndPassword(auth, email, password);
-        // Lógica real de "Lembrar de Mim"
         if (rememberMe) {
           localStorage.setItem('nexon_email', email);
           localStorage.setItem('nexon_pass', password);
@@ -92,13 +76,17 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
   };
 
   const handleForgotPassword = async () => {
-    if (!email.includes('@')) {
-      showToast("Digite seu e-mail no campo acima para recuperar.", "warning");
-      return;
+    let targetEmail = email;
+    if (!targetEmail || !targetEmail.includes('@')) {
+      targetEmail = window.prompt("Digite o e-mail da sua conta para recuperar a senha:");
+      if (!targetEmail || !targetEmail.includes('@')) {
+        showToast("Operação cancelada ou e-mail inválido.", "warning");
+        return;
+      }
     }
     try {
-      await sendPasswordResetEmail(auth, email);
-      showToast("E-mail de redefinição enviado!", "success");
+      await sendPasswordResetEmail(auth, targetEmail);
+      showToast("E-mail de redefinição enviado com sucesso!", "success");
     } catch (error) {
       showToast("Erro ao enviar e-mail de recuperação.", "error");
     }
@@ -108,7 +96,6 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
 
   return (
     <div className="min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#030108]">
-      {/* FUNDO AMBIENTE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
           <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.08)_0%,transparent_50%)] mix-blend-screen"></div>
           <div className="absolute bottom-[-10%] right-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] mix-blend-screen"></div>
@@ -117,25 +104,19 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
       </div>
 
       <div className="w-full max-w-[380px] relative z-10 animate-in fade-in duration-700">
-        
-        {/* CONTAINER COM BORDA CHANFRADA */}
         <div className="relative p-[1.5px] bg-gradient-to-br from-blue-500/50 via-[#1a1a2e] to-purple-600/50 shadow-[0_0_30px_rgba(59,130,246,0.15)]" style={clipStyle}>
            <div className="bg-[#05030A] pt-12 pb-10 px-8 relative flex flex-col items-center" style={clipStyle}>
               
-              {/* LINHAS LATERAIS TECNOLÓGICAS */}
               <div className="absolute top-1/4 -left-1 w-1.5 h-16 border-r-[2px] border-blue-500"></div>
               <div className="absolute bottom-1/4 -right-1 w-1.5 h-16 border-l-[2px] border-purple-500"></div>
               <div className="absolute bottom-32 -left-1 w-1.5 h-8 border-r-[2px] border-blue-500/30"></div>
 
-              {/* LOGO E TÍTULO NEXON SCAN */}
               <div className="flex flex-col items-center mb-6 text-center w-full">
                   <NexonLogo className="w-20 h-20 mb-4 drop-shadow-[0_0_15px_rgba(59,130,246,0.4)]" />
                   <h1 className="text-white text-[32px] font-bold tracking-[0.25em] leading-none mb-1 ml-2">N E X O</h1>
                   <h2 className="text-blue-500 text-[11px] font-black tracking-[0.7em] uppercase ml-2 mb-6">S C A N</h2>
                   
-                  <div className="flex items-center justify-center mb-3">
-                      <SparkleStar />
-                  </div>
+                  <div className="flex items-center justify-center mb-3"><SparkleStar /></div>
                   
                   <p className="text-gray-400 text-[11px] font-medium leading-relaxed">
                       Seu portal para o <br/><span className="text-purple-400">universo dos mangás</span>
@@ -148,9 +129,7 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
                   </div>
               )}
 
-              {/* FORMULÁRIO */}
               <form onSubmit={handleSubmit} className="w-full space-y-4">
-                 
                  {isRegister && (
                     <div className="space-y-1.5 w-full">
                       <label className="text-[9px] font-black text-blue-500 tracking-[0.1em] uppercase ml-1">NOME</label>
@@ -215,10 +194,8 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
                  <span className="text-[10px] font-bold text-gray-300 tracking-[0.15em] group-hover:text-white transition-colors uppercase">ACESSO DE ESPECTADOR</span>
                  <ChevronRight className="w-4 h-4 text-gray-500 mr-3 group-hover:translate-x-1 group-hover:text-white transition-all" />
               </button>
-
            </div>
         </div>
-
       </div>
     </div>
   );
