@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Target, Hexagon, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, AlertTriangle, Crown, ChevronDown, Globe, ChevronRight, User, Image, Circle, Calendar, BookOpen, EyeOff, X } from 'lucide-react';
 import { doc, updateDoc, collectionGroup, getDocs, query, increment, getDoc } from "firebase/firestore";
 import { auth, db } from './firebase';
-import { addXpLogic, removeXpLogic, getLevelTitle, cleanCosmeticUrl } from './helpers';
+import { addXpLogic, removeXpLogic, getLevelTitle, cleanCosmeticUrl, getRarityColor } from './helpers';
 import { APP_ID } from './constants';
 
 const CHEST_CLOSED = "https://i.ibb.co/1Y3D0wTp/file-0000000025a071f59ae3ef7fa83b5dab.png";
@@ -95,7 +95,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     const [isOpeningBoxAnim, setIsOpeningBoxAnim] = useState(false);
     const [boxReward, setBoxReward] = useState(null);
 
-    // ESTADOS DOS MODAIS CUSTOMIZADOS
     const [showSacrificeModal, setShowSacrificeModal] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(null);
 
@@ -164,6 +163,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         }
     };
 
+    // NOVO SISTEMA DE RARIDADES PARA A CAIXA NEXO
     const handleOpenBox = async () => {
         const caixas = userProfileData.caixas || 0;
         if (caixas < 1) return showToast("Você não possui Caixas Nexo.", "error");
@@ -178,30 +178,56 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 let { newXp, newLvl, didLevelUp } = { newXp: userProfileData.xp || 0, newLvl: userProfileData.level || 1, didLevelUp: false };
                 let newInv = [...(userProfileData.inventory || [])];
 
-                const roll = Math.random();
+                const mainRoll = Math.random();
                 
-                if (roll < 0.15) {
+                // 30% de chance de vir um Cosmético
+                if (mainRoll < 0.30) {
+                    
+                    // Cálculo de Raridade (Difícil)
+                    const rarityRoll = Math.random();
+                    let targetRarity = 'Comum';
+                    
+                    if (rarityRoll < 0.005) targetRarity = 'Mítico'; // 0.5% de chance
+                    else if (rarityRoll < 0.05) targetRarity = 'Lendário'; // 4.5% de chance
+                    else if (rarityRoll < 0.20) targetRarity = 'Épico'; // 15% de chance
+                    else if (rarityRoll < 0.50) targetRarity = 'Raro'; // 30% de chance
+                    else targetRarity = 'Comum'; // 50% de chance
+
                     const availableItems = shopItems.filter(i => !newInv.includes(i.id));
-                    if (availableItems.length > 0) {
+                    
+                    // Tenta achar itens da raridade sorteada
+                    let possibleItems = availableItems.filter(i => (i.raridade || 'Comum').toLowerCase() === targetRarity.toLowerCase());
+                    
+                    // Fallback: Se não tiver itens da raridade sorteada (ex: usuário já tem todos os míticos), busca de qualquer raridade
+                    if (possibleItems.length === 0) {
+                        possibleItems = availableItems;
+                    }
+
+                    if (possibleItems.length > 0) {
                         rewardType = 'cosmetic';
-                        const randomItem = availableItems[Math.floor(Math.random() * availableItems.length)];
+                        const randomItem = possibleItems[Math.floor(Math.random() * possibleItems.length)];
                         rewardValue = randomItem;
                         newInv.push(randomItem.id);
                     } else {
+                        // Usuário já comprou TUDO da loja
                         rewardType = 'coins';
-                        rewardValue = 1000;
+                        rewardValue = 2500; // Super prêmio em moedas
                         newCoins += rewardValue;
                     }
-                } else if (roll < 0.45) {
+                } 
+                // 40% de chance de vir XP
+                else if (mainRoll < 0.70) {
                     rewardType = 'xp';
-                    rewardValue = Math.floor(Math.random() * 500) + 150; 
+                    rewardValue = Math.floor(Math.random() * 500) + 200; // Entre 200 e 700 XP
                     const xpLogic = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, rewardValue);
                     newXp = xpLogic.newXp;
                     newLvl = xpLogic.newLvl;
                     didLevelUp = xpLogic.didLevelUp;
-                } else {
+                } 
+                // 30% de chance de vir Moedas
+                else {
                     rewardType = 'coins';
-                    rewardValue = Math.floor(Math.random() * 300) + 50; 
+                    rewardValue = Math.floor(Math.random() * 400) + 100; // Entre 100 e 500 Moedas
                     newCoins += rewardValue;
                 }
 
@@ -216,7 +242,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 setBoxReward({ type: rewardType, value: rewardValue });
                 if (didLevelUp) onLevelUp(newLvl);
             } catch (e) {
-                showToast("Erro ao abrir a caixa.", "error");
+                showToast("Erro ao processar a abertura.", "error");
             } finally {
                 setIsOpeningBoxAnim(false);
             }
@@ -236,9 +262,8 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     const equipped = userProfileData.equipped_items || {};
 
     return (
-        <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#020205]'}`}>
+        <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-gray-200 ${equipped.tema_perfil ? equipped.tema_perfil.cssClass : 'bg-[#030108]'}`}>
             
-            {/* MODAL CUSTOMIZADO: CONVERSÃO DE XP */}
             {showSacrificeModal && (
                 <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
                     <div className="bg-[#05050a] border border-cyan-500/60 rounded-2xl p-8 max-w-sm w-full shadow-[0_0_50px_rgba(6,182,212,0.2)] text-center relative overflow-hidden">
@@ -254,7 +279,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 </div>
             )}
 
-            {/* MODAL: PERFIL PÚBLICO */}
             {selectedUserId && <PublicProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} currentUserId={user?.uid} />}
 
             {isOpeningBoxAnim && (
@@ -310,23 +334,26 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-in zoom-in-95 duration-300">
                     <div className="bg-[#0a0a16] border border-cyan-500/50 rounded-2xl p-8 max-w-md w-full text-center shadow-[0_0_50px_rgba(6,182,212,0.3)] relative overflow-hidden">
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.2),transparent_70%)] pointer-events-none"></div>
-                        <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-6 relative z-10">Recompensa Adquirida!</h3>
+                        <h3 className="text-xl font-black text-white uppercase tracking-widest mb-6 relative z-10">Recompensa Recebida</h3>
                         <div className="flex justify-center mb-6 relative z-10">
                             {boxReward.type === 'coins' && <div className="w-24 h-24 rounded-full bg-amber-950/40 border-2 border-amber-500 flex items-center justify-center shadow-[0_0_20px_rgba(245,158,11,0.4)] flex-shrink-0"><div className="w-10 h-10 bg-amber-500 rotate-45 shadow-lg"></div></div>}
                             {boxReward.type === 'xp' && <div className="w-24 h-24 rounded-full bg-blue-950/40 border-2 border-cyan-500 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] flex-shrink-0"><Zap className="w-12 h-12 text-cyan-400 drop-shadow-lg"/></div>}
                             {boxReward.type === 'cosmetic' && (
-                                <div className="w-24 h-24 rounded-full bg-[#05050a] border-2 border-cyan-500 overflow-hidden flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] relative p-2 flex-shrink-0">
-                                    {cleanCosmeticUrl(boxReward.value.preview) ? <img src={cleanCosmeticUrl(boxReward.value.preview)} className="w-full h-full object-cover rounded-full flex-shrink-0" /> : <img src={CHEST_OPEN} className="w-16 h-16 object-contain flex-shrink-0" alt="Reward" />}
+                                <div className={`w-28 h-28 rounded-xl bg-[#05050a] border-2 overflow-hidden flex flex-col items-center justify-center relative p-2 flex-shrink-0 ${boxReward.value.raridade === 'Mítico' ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.5)]' : boxReward.value.raridade === 'Lendário' ? 'border-yellow-500 shadow-[0_0_30px_rgba(234,179,8,0.5)]' : boxReward.value.raridade === 'Épico' ? 'border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.5)]' : 'border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]'}`}>
+                                    {cleanCosmeticUrl(boxReward.value.preview) ? <img src={cleanCosmeticUrl(boxReward.value.preview)} className="w-16 h-16 object-cover rounded-full mb-2" /> : <img src={CHEST_OPEN} className="w-12 h-12 object-contain mb-2" alt="Reward" />}
+                                    <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-black/80 border ${getRarityColor(boxReward.value.raridade)}`}>
+                                        {boxReward.value.raridade || 'Comum'}
+                                    </div>
                                 </div>
                             )}
                         </div>
-                        <h4 className="text-lg font-black text-white uppercase relative z-10">
+                        <h4 className={`text-lg font-black uppercase relative z-10 ${boxReward.type === 'cosmetic' && boxReward.value.raridade === 'Mítico' ? 'text-red-400' : boxReward.type === 'cosmetic' && boxReward.value.raridade === 'Lendário' ? 'text-yellow-400' : 'text-white'}`}>
                             {boxReward.type === 'coins' && `+${boxReward.value} Moedas`}
                             {boxReward.type === 'xp' && `+${boxReward.value} XP`}
                             {boxReward.type === 'cosmetic' && boxReward.value.nome}
                         </h4>
-                        {boxReward.type === 'cosmetic' && <p className="text-cyan-400 text-[10px] font-black uppercase tracking-widest mt-1 relative z-10">Item Visual Adquirido</p>}
-                        <button onClick={() => setBoxReward(null)} className="mt-8 bg-cyan-600 hover:bg-cyan-500 text-white font-black w-full py-3 rounded-xl text-xs uppercase tracking-widest transition-colors relative z-10 shadow-lg">Confirmar Recebimento</button>
+                        {boxReward.type === 'cosmetic' && <p className="text-cyan-400 text-[10px] font-bold uppercase tracking-widest mt-1 relative z-10">Item Visual Adicionado ao Inventário</p>}
+                        <button onClick={() => setBoxReward(null)} className="mt-8 bg-cyan-600 hover:bg-cyan-500 text-white font-black w-full py-4 rounded-xl text-xs uppercase tracking-widest transition-colors relative z-10 shadow-lg">Confirmar</button>
                     </div>
                 </div>
             )}
@@ -360,7 +387,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
                             <div className="relative z-10">
                                 <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none">CAIXAS <span className="text-cyan-500">NEXO</span></h2>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-3 mb-6 max-w-md">Abra as caixas para adquirir Moedas, XP ou itens cosméticos para seu perfil.</p>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-3 mb-6 max-w-md">Abra as caixas para adquirir Moedas, XP ou itens cosméticos para seu perfil com base na raridade do sistema.</p>
                             </div>
                         </div>
 
