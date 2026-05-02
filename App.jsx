@@ -266,7 +266,7 @@ function NexoScanApp() {
               
               <div className="hidden md:block flex-1 max-w-lg mx-8 relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Search className="h-4 w-4 text-gray-500 group-focus-within:text-cyan-500 transition-colors" /></div>
-                <input type="text" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} onKeyDown={handleSearchSubmit} className="w-full pl-10 pr-4 py-2 rounded-xl border border-white/5 bg-[#0a0a16]/80 text-gray-100 outline-none focus:border-cyan-500/50 transition-all text-sm shadow-inner" placeholder="Buscar no acervo..." />
+                <input type="text" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} onKeyDown={handleSearchSubmit} className="w-full pl-10 pr-4 py-2 rounded-xl border border-white/5 bg-[#0a0a16]/80 text-gray-100 outline-none focus:border-cyan-500/50 transition-all text-sm shadow-inner" placeholder="Buscar obras..." />
               </div>
 
               <div className="flex items-center gap-4 md:gap-6">
@@ -316,7 +316,7 @@ function NexoScanApp() {
             <div className="absolute top-full left-0 w-full bg-[#05050a]/95 backdrop-blur-xl border-b border-white/10 p-3 shadow-xl md:hidden animate-in slide-in-from-top-2 z-50">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input type="text" value={globalSearch} onChange={e => setGlobalSearch(e.target.value)} onKeyDown={(e) => { handleSearchSubmit(e); if(e.key === 'Enter') setShowMobileSearch(false); }} className="w-full pl-9 pr-4 py-2 border border-white/10 rounded-xl bg-[#0a0a16] text-gray-100 outline-none focus:border-cyan-500 text-sm transition-colors duration-300" placeholder="Buscar no acervo..." autoFocus />
+                <input type="text" value={globalSearch} onChange={e => setGlobalSearch(e.target.value)} onKeyDown={(e) => { handleSearchSubmit(e); if(e.key === 'Enter') setShowMobileSearch(false); }} className="w-full pl-9 pr-4 py-2 border border-white/10 rounded-xl bg-[#0a0a16] text-gray-100 outline-none focus:border-cyan-500 text-sm transition-colors duration-300" placeholder="Buscar obras..." autoFocus />
               </div>
             </div>
           )}
@@ -347,7 +347,7 @@ function NexoScanApp() {
                     <Swords className="w-6 h-6 relative z-10" fill={currentView === 'nexo' ? "currentColor" : "none"}/><span className="text-[8px] font-black relative z-10 mt-0.5">NEXO</span>
                 </button>
             </div>
-            <button onClick={() => user ? navigateTo('library') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'library' ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-500'}`}><Library className="w-5 h-5" /><span className="text-[9px] font-bold">Guarda</span></button>
+            <button onClick={() => user ? navigateTo('library') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'library' ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-500'}`}><Library className="w-5 h-5" /><span className="text-[9px] font-bold">Biblioteca</span></button>
             <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'profile' ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-500'}`}><UserCircle className="w-5 h-5" /><span className="text-[9px] font-bold">Perfil</span></button>
           </div>
         </div>
