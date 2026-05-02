@@ -36,6 +36,11 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
   const [localError, setLocalError] = useState(null);
   const [showPass, setShowPass] = useState(false);
 
+  // Estados do Novo Modal de Esqueci a Senha
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+
   useEffect(() => {
     const savedEmail = localStorage.getItem('nexon_email');
     const savedPass = localStorage.getItem('nexon_pass');
@@ -75,20 +80,26 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
     } finally { setLoading(false); }
   };
 
-  const handleForgotPassword = async () => {
-    let targetEmail = email;
-    if (!targetEmail || !targetEmail.includes('@')) {
-      targetEmail = window.prompt("Digite o e-mail da sua conta para recuperar a senha:");
-      if (!targetEmail || !targetEmail.includes('@')) {
-        showToast("Operação cancelada ou e-mail inválido.", "warning");
-        return;
-      }
+  const handleSendResetLink = async (e) => {
+    e.preventDefault();
+    if (!resetEmail || !resetEmail.includes('@')) {
+      showToast("Por favor, insira um e-mail válido.", "warning");
+      return;
     }
+    setResetLoading(true);
     try {
-      await sendPasswordResetEmail(auth, targetEmail);
-      showToast("E-mail de redefinição enviado com sucesso!", "success");
+      await sendPasswordResetEmail(auth, resetEmail);
+      showToast("Link de redefinição enviado! Verifique seu e-mail (e caixa de spam).", "success");
+      setShowForgotModal(false);
+      setResetEmail('');
     } catch (error) {
-      showToast("Erro ao enviar e-mail de recuperação.", "error");
+      if (error.code === 'auth/user-not-found') {
+        showToast("Nenhuma conta encontrada com este e-mail.", "error");
+      } else {
+        showToast("Erro ao enviar o link de recuperação.", "error");
+      }
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -96,6 +107,61 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
 
   return (
     <div className="min-h-screen font-sans flex flex-col items-center justify-center p-4 relative overflow-hidden bg-[#030108]">
+      
+      {/* SOLUÇÃO PARA O FUNDO BRANCO DO AUTOFILL */}
+      <style>{`
+        body, html { background-color: #030108 !important; }
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active{
+            -webkit-box-shadow: 0 0 0 30px #080510 inset !important;
+            -webkit-text-fill-color: #d1d5db !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+      `}</style>
+
+      {/* NOVO MODAL DE ESQUECI A SENHA */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-[#05030A] border border-blue-900/50 rounded-2xl p-6 md:p-8 max-w-sm w-full relative overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.15)]">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-blue-500 rounded-b-full shadow-[0_0_20px_rgba(59,130,246,0.8)]"></div>
+            
+            <div className="w-12 h-12 rounded-full bg-blue-950/30 flex items-center justify-center mx-auto mb-4 border border-blue-900/50">
+                <Mail className="w-5 h-5 text-blue-500" />
+            </div>
+            
+            <h3 className="text-center text-white font-black text-lg uppercase tracking-widest mb-2">Recuperar Acesso</h3>
+            <p className="text-center text-gray-400 text-[10px] font-medium mb-6 leading-relaxed">
+                O sistema enviará um <b className="text-blue-400">link seguro</b> para redefinição. Por favor, insira o e-mail associado à sua conta.
+            </p>
+            
+            <form onSubmit={handleSendResetLink} className="space-y-4">
+                <div className="flex items-center bg-[#080510] border border-[#1a1a2e] rounded-xl p-2 focus-within:border-blue-500/40 transition-all">
+                   <input 
+                      type="email" 
+                      value={resetEmail} 
+                      onChange={(e) => setResetEmail(e.target.value)} 
+                      placeholder="Seu e-mail cadastrado" 
+                      className="flex-1 bg-transparent border-none text-gray-300 text-xs px-3 outline-none" 
+                      required 
+                   />
+                </div>
+                
+                <div className="flex gap-3">
+                    <button type="button" onClick={() => setShowForgotModal(false)} className="flex-1 bg-transparent border border-white/10 text-gray-400 py-3.5 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-white/5 hover:text-white transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" disabled={resetLoading} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(59,130,246,0.4)] disabled:opacity-50">
+                        {resetLoading ? <Loader2 className="w-4 h-4 animate-spin mx-auto"/> : 'Enviar Link'}
+                    </button>
+                </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* FUNDO AMBIENTE */}
       <div className="fixed inset-0 z-0 pointer-events-none">
           <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.08)_0%,transparent_50%)] mix-blend-screen"></div>
           <div className="absolute bottom-[-10%] right-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[120px] mix-blend-screen"></div>
@@ -157,16 +223,16 @@ export function LoginView({ onLoginSuccess, onGuestAccess, showToast }) {
                     </div>
                  </div>
 
+                 {/* NOVA INTERFACE "LEMBRAR DE MIM" E "ESQUECI A SENHA" */}
                  {!isRegister && (
                      <div className="flex items-center justify-between px-1 pt-1 w-full">
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                          <div className="relative w-[14px] h-[14px]">
-                            <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} className="peer appearance-none w-[14px] h-[14px] border border-gray-600 rounded bg-transparent checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer" />
-                            <Check className="absolute inset-0 w-2.5 h-2.5 m-auto text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
+                        <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setRememberMe(!rememberMe)}>
+                          <div className={`w-4 h-4 rounded-[4px] flex items-center justify-center transition-all duration-300 border ${rememberMe ? 'bg-blue-600 border-blue-500 shadow-[0_0_8px_rgba(37,99,235,0.5)]' : 'bg-[#080510] border-gray-600 group-hover:border-gray-500'}`}>
+                            <Check className={`w-3 h-3 text-white transition-opacity duration-300 ${rememberMe ? 'opacity-100' : 'opacity-0'}`} />
                           </div>
                           <span className="text-[10px] text-gray-500 font-medium group-hover:text-gray-400 transition-colors">Lembrar de mim</span>
-                        </label>
-                        <button type="button" onClick={handleForgotPassword} className="text-[10px] text-blue-500 hover:text-cyan-400 font-medium transition-colors">Esqueci minha senha</button>
+                        </div>
+                        <button type="button" onClick={() => setShowForgotModal(true)} className="text-[10px] text-blue-500 hover:text-cyan-400 font-medium transition-colors">Esqueci minha senha</button>
                      </div>
                  )}
 
