@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, BookOpen, Zap, Heart } from 'lucide-react';
 
-export const NexonLogo = React.memo(({ className = "w-64 h-64" }) => {
+// O nome do componente voltou para NexoLogo para não quebrar os outros arquivos,
+// mas o visual continua sendo o N moderno do Nexon Scan!
+export const NexoLogo = React.memo(({ className = "w-64 h-64" }) => {
   return (
     <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -59,7 +61,7 @@ export const SplashScreen = React.memo(() => {
         {/* LOGO CENTRAL */}
         <div className="relative flex flex-col items-center mb-8">
             <div className="absolute inset-0 bg-blue-500/20 blur-[50px] rounded-full"></div>
-            <NexonLogo className="w-24 h-24 mb-6 relative z-10 drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
+            <NexoLogo className="w-24 h-24 mb-6 relative z-10 drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]" />
             <h1 className="text-white text-[38px] font-bold tracking-[0.3em] leading-none mb-2 ml-3 relative z-10">N E X O</h1>
             <h2 className="text-blue-500 text-[12px] font-black tracking-[0.8em] uppercase ml-3 relative z-10">S C A N</h2>
         </div>
@@ -146,7 +148,7 @@ export function Footer() {
         <footer className="w-full bg-[#030108] border-t border-blue-900/20 py-12 mt-auto pb-24 md:pb-12 flex flex-col items-center justify-center relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
             <div className="max-w-7xl mx-auto px-4 text-center flex flex-col items-center relative z-10">
-                <NexonLogo className="w-16 h-16 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 mb-4" />
+                <NexoLogo className="w-16 h-16 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500 mb-4" />
                 <span className="font-black text-[10px] text-gray-600 tracking-[0.5em] uppercase mt-2">NEXON SCAN</span>
                 <span className="font-bold text-[8px] text-gray-700 tracking-[0.2em] uppercase mt-1">SEU PORTAL PARA O UNIVERSO DOS MANGÁS</span>
             </div>
