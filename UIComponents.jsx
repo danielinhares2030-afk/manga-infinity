@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, BookOpen, Zap, Heart } from 'lucide-react';
 
-export const NexonLogo = React.memo(({ className = "w-64 h-64" }) => {
+export const NexoLogo = React.memo(({ className = "w-64 h-64" }) => {
   return (
     <svg className={className} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
