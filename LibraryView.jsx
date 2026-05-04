@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, SlidersHorizontal, BookOpen, Heart, CheckCircle, PauseCircle, XCircle, MoreHorizontal, Bell } from 'lucide-react';
+import { Search, SlidersHorizontal, BookOpen, Heart, CheckCircle, PauseCircle, XCircle, MoreHorizontal, Bell, Lock, ChevronDown } from 'lucide-react';
 
 export function LibraryView({ mangas, user, libraryData, onNavigate, onRequireLogin, dataSaver }) {
   const [activeTab, setActiveTab] = useState("Lendo");
@@ -132,7 +132,6 @@ export function LibraryView({ mangas, user, libraryData, onNavigate, onRequireLo
                                     <MoreHorizontal className="w-5 h-5" />
                                 </button>
                                 <button className="p-1">
-                                    {/* Sino vermelho de notificação simulado */}
                                     <Bell className={`w-4 h-4 ${idx % 2 === 0 ? 'text-red-500 fill-red-500/20' : 'text-gray-600'}`} />
                                 </button>
                             </div>
