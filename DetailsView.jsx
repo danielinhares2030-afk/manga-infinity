@@ -1,346 +1,301 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, MoreHorizontal, Star, ChevronDown, Bookmark, AlertCircle, ChevronUp, Send, User as UserIcon } from 'lucide-react';
-import { timeAgo, cleanCosmeticUrl } from './helpers';
-import { doc, setDoc, deleteDoc, collection, addDoc, query, orderBy, onSnapshot, getDoc } from 'firebase/firestore';
+import { ArrowLeft, Star, Play, Library, Share2, BookOpen, CheckCircle, Clock, Zap, ChevronDown, ChevronUp, Users, Bookmark, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { doc, updateDoc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { APP_ID } from './constants';
+import { CommentsSection } from './CommentsSection';
+import { timeAgo } from './helpers';
 
-export default function DetailsView({ manga, libraryData, historyData, user, onBack, onChapterClick, onRequireLogin, showToast, db }) {
-  const [activeTab, setActiveTab] = useState('Capítulos');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [isSynopsisExpanded, setIsSynopsisExpanded] = useState(false);
-  
-  // Estados para Avaliação e Comentários
-  const [myRating, setMyRating] = useState(0);
-  const [commentText, setCommentText] = useState('');
-  const [commentsList, setCommentsList] = useState([]);
+export default function DetailsView({ manga, libraryData, historyData, user, userProfileData, onBack, onChapterClick, onRequireLogin, showToast, db }) {
+    const [isSharing, setIsSharing] = useState(false);
+    const [localRating, setLocalRating] = useState(Number(manga?.rating) || 5.0);
+    const [detailsTab, setDetailsTab] = useState('capitulos'); 
+    const [showLibraryMenu, setShowLibraryMenu] = useState(false); 
+    const [expandedSynopsis, setExpandedSynopsis] = useState(false);
+    const [animateRating, setAnimateRating] = useState(false); 
+    const [sortOrder, setSortOrder] = useState('desc');
 
-  // Verifica se está salvo na biblioteca
-  const isFavorite = libraryData[manga?.id] === 'Favoritos' || libraryData[manga?.id] === 'Lendo';
+    const libraryStatuses = ['Lendo', 'Concluído', 'Pausado', 'Dropado', 'Planejo Ler'];
 
-  // Buscar comentários em tempo real
-  useEffect(() => {
-    if (!manga) return;
-    const q = query(collection(db, 'obras', manga.id, 'comments'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-        setCommentsList(list);
+    useEffect(() => {
+        if (!manga?.id) return;
+        const addView = async () => {
+            const sessionKey = `viewed_${manga.id}`;
+            if (!sessionStorage.getItem(sessionKey)) {
+                try {
+                    const mangaRef = doc(db, 'obras', manga.id);
+                    await updateDoc(mangaRef, { views: increment(1) });
+                    sessionStorage.setItem(sessionKey, 'true');
+                } catch (error) {
+                    console.error("Erro ao registrar visualização", error);
+                }
+            }
+        };
+        addView();
+    }, [manga?.id, db]);
+
+    useEffect(() => { setLocalRating(Number(manga?.rating) || 5.0); }, [manga?.rating]);
+
+    const handleRate = async (ratingValue) => {
+        if (!user) return showToast("Apenas usuários conectados podem avaliar.", "warning");
+        setAnimateRating(true);
+        setTimeout(() => setAnimateRating(false), 600); 
+
+        try {
+            const newRating = ((localRating + ratingValue) / 2).toFixed(1);
+            const finalRating = Number(newRating);
+            setLocalRating(finalRating);
+            showToast(`Avaliação de ${ratingValue} estrelas registrada.`, "success");
+            const mangaRef = doc(db, 'obras', manga.id);
+            await updateDoc(mangaRef, { rating: finalRating });
+            if (manga) manga.rating = finalRating; 
+        } catch (error) {
+            setLocalRating(Number(manga?.rating) || 5.0);
+            showToast("Erro de sincronização no sistema.", "error");
+        }
+    };
+
+    if (!manga) return null;
+
+    const inLibrary = libraryData && libraryData[manga.id];
+    
+    const updateLibraryStatus = async (status) => {
+        if (!user) { onRequireLogin(); return; }
+        try {
+            const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'library', manga.id.toString());
+            if (status === 'Remover') {
+                await deleteDoc(ref); showToast("Removido da biblioteca.", "info");
+            } else {
+                await setDoc(ref, { mangaId: manga.id, status: status, updatedAt: Date.now() }); showToast(`Salvo como: ${status}`, "success");
+            }
+            setShowLibraryMenu(false);
+        } catch (error) { showToast("Erro ao atualizar biblioteca.", "error"); }
+    };
+
+    const handleShare = () => {
+        setIsSharing(true); navigator.clipboard.writeText(window.location.href);
+        showToast("Link copiado para a área de transferência!", "success"); setTimeout(() => setIsSharing(false), 2000);
+        setShowLibraryMenu(false);
+    };
+
+    const mangaHistory = (historyData || []).filter(h => h.mangaId === manga.id);
+    const lastRead = mangaHistory.length > 0 ? mangaHistory[0] : null;
+    const chapters = manga.chapters || [];
+    const firstChapter = chapters.length > 0 ? chapters[chapters.length - 1] : null;
+    const nextChapterToRead = lastRead ? chapters.find(c => Number(c.number) === Number(lastRead.chapterNumber) + 1) || chapters.find(c => c.id === lastRead.id) : firstChapter;
+
+    const sortedChapters = [...chapters].sort((a, b) => {
+        return sortOrder === 'desc' ? b.number - a.number : a.number - b.number;
     });
-    return () => unsub();
-  }, [manga, db]);
 
-  // Buscar avaliação do usuário
-  useEffect(() => {
-    if (!user || !manga) return;
-    getDoc(doc(db, 'obras', manga.id, 'ratings', user.uid)).then(snap => {
-        if (snap.exists()) setMyRating(snap.data().rating);
-    });
-  }, [user, manga, db]);
+    const getRatingLabel = (rate) => {
+        if(rate >= 4.8) return "OBRA-PRIMA";
+        if(rate >= 4.0) return "EXCELENTE";
+        if(rate >= 3.0) return "MUITO BOM";
+        if(rate >= 2.0) return "BOM";
+        if(rate >= 1.0) return "MEDÍOCRE";
+        return "RUIM";
+    };
 
-  if (!manga) return null;
+    const formatReaders = (num) => {
+        if (!num) return '0';
+        return num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
+    };
+    
+    const realReaders = formatReaders(manga.views || manga.leitores || 0);
 
-  const chapters = manga.chapters || [];
-  const sortedChapters = [...chapters].sort((a, b) => {
-    return sortOrder === 'desc' ? b.number - a.number : a.number - b.number;
-  });
-
-  // Função para Salvar/Favoritar
-  const handleToggleLibrary = async () => {
-    if (!user) return onRequireLogin();
-    try {
-      const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'library', manga.id.toString());
-      if (isFavorite) {
-        await deleteDoc(ref);
-        showToast("Removido da biblioteca", "info");
-      } else {
-        await setDoc(ref, { mangaId: manga.id, status: 'Lendo', updatedAt: Date.now() });
-        showToast("Adicionado à biblioteca", "success");
-      }
-    } catch (e) {
-      showToast("Erro ao atualizar biblioteca", "error");
-    }
-  };
-
-  // Função para Avaliar
-  const handleRate = async (star) => {
-      if (!user) return onRequireLogin();
-      setMyRating(star);
-      try {
-          await setDoc(doc(db, 'obras', manga.id, 'ratings', user.uid), {
-              rating: star,
-              timestamp: Date.now()
-          });
-          showToast("Sua avaliação foi salva!", "success");
-      } catch(e) {
-          showToast("Erro ao avaliar", "error");
-      }
-  };
-
-  // Função para Enviar Comentário
-  const handleAddComment = async (e) => {
-      e.preventDefault();
-      if (!user) return onRequireLogin();
-      if (!commentText.trim()) return;
-      
-      try {
-          await addDoc(collection(db, 'obras', manga.id, 'comments'), {
-              userId: user.uid,
-              userName: user.displayName || 'Leitor',
-              userAvatar: user.photoURL || '',
-              text: commentText.trim(),
-              createdAt: Date.now()
-          });
-          setCommentText('');
-          showToast("Comentário enviado!", "success");
-      } catch(e) {
-          showToast("Erro ao enviar comentário", "error");
-      }
-  };
-
-  const totalReviews = manga.reviewsCount || 0;
-
-  return (
-    <div className="min-h-screen bg-black text-white font-sans animate-in fade-in duration-300 pb-20">
-      
-      {/* HEADER FIXO */}
-      <div className="sticky top-0 z-50 bg-black/90 backdrop-blur-md px-4 py-4 flex items-center justify-between border-b border-white/5">
-        <button onClick={onBack} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-          <ChevronLeft className="w-6 h-6 text-white" />
-        </button>
-        <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
-          <MoreHorizontal className="w-6 h-6 text-white" />
-        </button>
-      </div>
-
-      <div className="px-4 mt-6">
-        {/* TOPO: CAPA E INFORMAÇÕES */}
-        <div className="flex gap-4 mb-6">
-          <div className="w-28 sm:w-36 flex-shrink-0 relative">
-            <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(220,38,38,0.2)] bg-[#111] border border-white/5">
-              <img src={manga.coverUrl} alt={manga.title} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://placehold.co/300x450/111/444?text=Capa'} />
-            </div>
-          </div>
-          
-          <div className="flex flex-col justify-start py-1">
-            <h1 className="text-xl sm:text-2xl font-bold leading-tight mb-1 line-clamp-2">{manga.title}</h1>
-            <p className="text-gray-400 text-xs mb-3 truncate">{manga.author || 'Autor Desconhecido'}</p>
+    return (
+        <div className="min-h-screen bg-[#000000] text-gray-200 font-sans pb-24 animate-in fade-in duration-300 relative">
             
-            <div className="flex flex-wrap gap-2 mb-4">
-              {manga.genres?.slice(0, 3).map(g => (
-                <span key={g} className="px-2 py-0.5 rounded text-[10px] text-gray-300 border border-gray-600 bg-transparent">
-                  {g}
-                </span>
-              ))}
-              <span className="px-2 py-0.5 rounded text-[10px] text-white bg-red-600 font-medium shadow-[0_0_10px_rgba(220,38,38,0.4)]">
-                {manga.status || 'Em andamento'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* BARRA DE AÇÕES: SALVAR E AVALIAR */}
-        <div className="flex items-center justify-around bg-[#0a0a0a] p-4 rounded-2xl mb-6 border border-white/5 shadow-lg">
-            <button onClick={handleToggleLibrary} className={`flex flex-col items-center gap-1.5 transition-colors ${isFavorite ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}>
-                <Bookmark className={`w-6 h-6 ${isFavorite ? 'fill-current drop-shadow-[0_0_8px_rgba(220,38,38,0.8)]' : ''}`} />
-                <span className="text-[10px] font-bold uppercase tracking-widest">{isFavorite ? 'Salvo' : 'Salvar Obra'}</span>
-            </button>
-            
-            <div className="h-10 w-[1px] bg-gray-800"></div>
-            
-            <div className="flex flex-col items-center gap-1.5">
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sua Avaliação</span>
-                <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map(star => (
-                        <Star 
-                            key={star} 
-                            onClick={() => handleRate(star)} 
-                            className={`w-6 h-6 cursor-pointer transition-all hover:scale-110 ${myRating >= star ? 'text-yellow-500 fill-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]' : 'text-gray-700 hover:text-yellow-500/50'}`} 
-                        />
-                    ))}
-                </div>
-            </div>
-        </div>
-
-        {/* ESTATÍSTICAS GERAIS DE AVALIAÇÃO */}
-        <div className="flex items-center gap-6 mb-6 px-2">
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-              <span className="text-3xl font-bold">{manga.rating ? Number(manga.rating).toFixed(1) : "0.0"}</span>
-            </div>
-            <span className="text-[10px] text-gray-400 mt-1">{totalReviews} avaliações</span>
-          </div>
-          
-          <div className="flex-1 flex flex-col gap-1">
-            {[5, 4, 3, 2, 1].map((star) => {
-              const dist = manga.ratingDistribution || {};
-              const count = dist[star] || 0;
-              const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
-              
-              return (
-                <div key={star} className="flex items-center gap-2 text-[8px] text-gray-400">
-                  <span className="w-2">{star}</span>
-                  <Star className="w-2 h-2 text-yellow-500 fill-yellow-500" />
-                  <div className="flex-1 h-1 bg-gray-900 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-500 rounded-full transition-all duration-1000" style={{ width: `${percent}%` }}></div>
-                  </div>
-                  <span className="w-6 text-right">{count}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* SINOPSE */}
-        <div className="mb-6 relative">
-          <p className={`text-sm text-gray-300 leading-relaxed ${!isSynopsisExpanded ? 'line-clamp-2' : ''}`}>
-            {manga.synopsis || "Nenhuma sinopse disponível para esta obra."}
-          </p>
-          <button 
-            onClick={() => setIsSynopsisExpanded(!isSynopsisExpanded)} 
-            className="w-full flex justify-center py-2 text-gray-500 hover:text-white transition-colors"
-          >
-            {isSynopsisExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-        </div>
-
-        {/* ABAS (SOMENTE CAPÍTULOS E COMENTÁRIOS) */}
-        <div className="flex border-b border-gray-800 mb-6">
-          {['Capítulos', 'Comentários'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 pb-3 text-sm font-bold uppercase tracking-widest transition-all relative ${
-                activeTab === tab ? 'text-white' : 'text-gray-600 hover:text-gray-400'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-1.5">
-                {tab}
-                {tab === 'Comentários' && commentsList.length > 0 && (
-                  <span className="bg-red-600 text-white text-[8px] px-1.5 py-0.5 rounded-sm ml-1">
-                    {commentsList.length > 99 ? '99+' : commentsList.length}
-                  </span>
-                )}
-              </div>
-              {activeTab === tab && (
-                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)]"></div>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* CONTEÚDO: CAPÍTULOS */}
-        {activeTab === 'Capítulos' && (
-          <div className="animate-in fade-in">
-            <div className="flex items-center justify-between mb-4 px-1">
-              <h3 className="text-sm font-bold text-white">
-                Total <span className="text-red-500 ml-1">{chapters.length}</span>
-              </h3>
-              <button 
-                onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} 
-                className="text-xs text-gray-400 flex items-center gap-1 hover:text-white transition-colors"
-              >
-                {sortOrder === 'desc' ? 'Mais recentes' : 'Mais antigos'} <ChevronDown className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              {sortedChapters.map((cap, index) => {
-                const readId = `${manga.id}_${cap.id}`;
-                const isRead = historyData.some(h => h.id === readId);
-                const isNew = index === 0 && sortOrder === 'desc' && (Date.now() - (cap.rawTime || cap.timestamp || 0)) < 3 * 24 * 60 * 60 * 1000;
-
-                return (
-                  <div 
-                    key={cap.id} 
-                    onClick={() => onChapterClick(manga, cap)}
-                    className="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-red-500/30 transition-all group"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${isNew ? 'bg-red-500 shadow-[0_0_8px_rgba(220,38,38,0.8)]' : 'bg-transparent'}`}></div>
-                      
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`text-sm font-bold ${isRead ? 'text-gray-600' : 'text-gray-200'}`}>
-                            Capítulo {cap.number}
-                          </h4>
-                          {isNew && <span className="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">Novo</span>}
-                        </div>
-                        
-                        {cap.title && (
-                          <p className="text-xs text-gray-400 mb-1 line-clamp-1">{cap.title}</p>
-                        )}
-                        <p className="text-[10px] text-gray-600">
-                          {timeAgo(cap.rawTime || cap.timestamp || Date.now())}
-                        </p>
-                      </div>
-                    </div>
-
-                    <button className="p-2 text-gray-600 hover:text-red-500 transition-colors">
-                      <Bookmark className="w-5 h-5" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {chapters.length === 0 && (
-              <div className="text-center py-12 bg-[#0a0a0a] rounded-xl border border-white/5">
-                <AlertCircle className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Nenhum capítulo disponível.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* CONTEÚDO: COMENTÁRIOS */}
-        {activeTab === 'Comentários' && (
-          <div className="animate-in fade-in">
-            {/* Campo de Enviar Comentário */}
-            <form onSubmit={handleAddComment} className="flex gap-2 mb-8">
-                <input 
-                    type="text" 
-                    value={commentText}
-                    onChange={e => setCommentText(e.target.value)}
-                    placeholder="Escreva seu comentário..." 
-                    className="flex-1 bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-sm outline-none focus:border-red-600/50 text-white placeholder:text-gray-600 transition-colors"
-                />
-                <button type="submit" disabled={!commentText.trim()} className="bg-red-600 text-white px-4 py-3 rounded-xl hover:bg-red-500 disabled:opacity-50 disabled:grayscale transition-all shadow-[0_0_15px_rgba(220,38,38,0.3)]">
-                    <Send className="w-4 h-4" />
+            {/* HEADER FIXO - IDÊNTICO À IMAGEM */}
+            <div className="sticky top-0 z-50 bg-[#000000]/90 backdrop-blur-md px-4 py-4 flex items-center justify-between">
+                <button onClick={onBack} className="p-1.5 hover:bg-white/10 rounded-full transition-colors">
+                    <ChevronLeft className="w-7 h-7 text-white" />
                 </button>
-            </form>
+                <div className="relative">
+                    <button onClick={() => setShowLibraryMenu(!showLibraryMenu)} className="p-1.5 hover:bg-white/10 rounded-full transition-colors">
+                        <MoreHorizontal className="w-7 h-7 text-white" />
+                    </button>
+                    {/* MENU DE BIBLIOTECA ACOPLADO AO MORE */}
+                    {showLibraryMenu && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-[#111] border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                            {libraryStatuses.map(status => (
+                                <button key={status} onClick={() => updateLibraryStatus(status)} className="w-full text-left px-4 py-3 text-xs font-bold text-gray-300 hover:bg-gray-800 transition-colors">
+                                    {status}
+                                </button>
+                            ))}
+                            {inLibrary && (
+                                <button onClick={() => updateLibraryStatus('Remover')} className="w-full text-left px-4 py-3 text-xs font-bold text-red-500 hover:bg-gray-800 border-t border-gray-800 transition-colors">
+                                    Remover
+                                </button>
+                            )}
+                            <button onClick={handleShare} className="w-full text-left px-4 py-3 text-xs font-bold text-blue-400 hover:bg-gray-800 border-t border-gray-800 transition-colors flex items-center gap-2">
+                                <Share2 className="w-4 h-4"/> Compartilhar
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
 
-            {/* Lista de Comentários */}
-            <div className="flex flex-col gap-4">
-                {commentsList.length === 0 ? (
-                    <div className="text-center py-10 bg-[#0a0a0a] rounded-xl border border-white/5">
-                        <p className="text-sm text-gray-500 font-medium">Seja o primeiro a comentar!</p>
+            <div className="max-w-5xl mx-auto px-4 pt-4 relative z-10">
+                
+                {/* TOPO: CAPA E INFORMAÇÕES - IDÊNTICO À IMAGEM */}
+                <div className="flex gap-4 mb-8">
+                    <div className="w-[120px] sm:w-[140px] flex-shrink-0">
+                        <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[#111] shadow-[0_4px_15px_rgba(0,0,0,0.8)]">
+                            <img src={manga.coverUrl} alt={manga.title} className="w-full h-full object-cover" />
+                        </div>
                     </div>
-                ) : (
-                    commentsList.map(comment => (
-                        <div key={comment.id} className="bg-[#0a0a0a] p-4 rounded-xl border border-white/5 flex gap-3">
-                            <div className="w-10 h-10 rounded-full border border-gray-700 bg-gray-900 overflow-hidden flex-shrink-0">
-                                {comment.userAvatar ? (
-                                    <img src={cleanCosmeticUrl(comment.userAvatar)} className="w-full h-full object-cover" alt="Avatar" />
+                    
+                    <div className="flex flex-col justify-center">
+                        {/* Tags de Gênero Baseado no Banco */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {manga.genres?.slice(0, 3).map(g => (
+                                <span key={g} className="px-2.5 py-1 rounded text-[10px] text-gray-300 border border-gray-700 bg-transparent">
+                                    {g}
+                                </span>
+                            ))}
+                        </div>
+                        {/* Status */}
+                        <div className="mb-2">
+                            <span className="px-2.5 py-1 rounded text-[10px] text-white bg-red-600 font-medium">
+                                {manga.status || 'Em Lançamento'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* SISTEMA DE AVALIAÇÃO - FUNÇÕES ORIGINAIS + VISUAL DA FOTO */}
+                <div className="flex items-center gap-6 mb-6">
+                    <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-2">
+                            <Star className={`w-8 h-8 transition-transform duration-300 ${animateRating ? 'scale-125' : ''} text-yellow-500 fill-yellow-500`} />
+                            <span className="text-4xl font-bold text-white">{localRating.toFixed(1)}</span>
+                        </div>
+                        <span className="text-[10px] text-gray-500 mt-1">{realReaders} avaliações</span>
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col gap-1.5">
+                        {[5, 4, 3, 2, 1].map(star => {
+                            const diff = Math.max(0, 1 - Math.abs(localRating - star));
+                            const widthPct = star <= localRating ? (star === Math.floor(localRating) ? 100 : 80 - (5-star)*10) : diff * 100;
+                            
+                            return (
+                                <div key={star} onClick={() => handleRate(star)} className="flex items-center gap-2 text-[10px] text-gray-400 cursor-pointer group">
+                                    <span className="w-2">{star}</span>
+                                    <Star className={`w-2.5 h-2.5 transition-colors ${localRating >= star ? 'text-yellow-500 fill-yellow-500' : 'text-gray-700 group-hover:text-yellow-500'}`} />
+                                    <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                        <div className="h-full bg-yellow-500 rounded-full transition-all duration-500" style={{width: `${widthPct}%`}}></div>
+                                    </div>
+                                    <span className="w-8 text-right opacity-0 group-hover:opacity-100 transition-opacity text-yellow-500">Avaliar</span>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* SINOPSE */}
+                <div className="mb-6">
+                    <p className={`text-[13px] text-gray-300 leading-relaxed font-medium ${expandedSynopsis ? '' : 'line-clamp-2'}`}>
+                        {manga.synopsis || "Os dados do sistema ainda não decifraram os mistérios desta obra."}
+                    </p>
+                    {manga.synopsis && manga.synopsis.length > 100 && (
+                        <button onClick={() => setExpandedSynopsis(!expandedSynopsis)} className="w-full flex justify-center py-2 text-gray-500 hover:text-white transition-colors">
+                            {expandedSynopsis ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </button>
+                    )}
+                </div>
+
+                {/* BOTÃO LER AGORA */}
+                <div className="mb-8">
+                    <button onClick={() => nextChapterToRead ? onChapterClick(manga, nextChapterToRead) : showToast("Nenhum capítulo disponível", "warning")} className="w-full bg-[#111] border border-gray-800 hover:border-red-600/50 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-all">
+                        <BookOpen className="w-5 h-5 text-red-500" />
+                        <span className="text-sm tracking-widest">{lastRead ? 'CONTINUAR LEITURA' : 'LER AGORA'}</span>
+                    </button>
+                </div>
+
+                {/* ABAS */}
+                <div className="flex border-b border-gray-800 mb-4">
+                    <button onClick={() => setDetailsTab('sobre')} className={`flex-1 pb-3 text-[13px] font-medium transition-colors relative ${detailsTab === 'sobre' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                        Sobre
+                        {detailsTab === 'sobre' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-600"></div>}
+                    </button>
+                    <button onClick={() => setDetailsTab('capitulos')} className={`flex-1 pb-3 text-[13px] font-medium transition-colors relative ${detailsTab === 'capitulos' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                        Capítulos
+                        {detailsTab === 'capitulos' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-600"></div>}
+                    </button>
+                    <button onClick={() => setDetailsTab('comentarios')} className={`flex-1 pb-3 text-[13px] font-medium transition-colors relative flex items-center justify-center gap-1 ${detailsTab === 'comentarios' ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}>
+                        Comentários
+                        {detailsTab === 'comentarios' && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-red-600"></div>}
+                    </button>
+                </div>
+
+                {/* CONTEÚDO DAS ABAS */}
+                <div className="w-full">
+                    
+                    {detailsTab === 'sobre' && (
+                        <div className="animate-in slide-in-from-left-4 duration-300 py-4">
+                            <h3 className="text-white font-bold mb-4">Detalhes da Obra</h3>
+                            <div className="bg-[#111] rounded-xl p-4 flex flex-col gap-3">
+                                <div className="flex justify-between border-b border-gray-800 pb-2"><span className="text-gray-500 text-xs">Leitores</span><span className="text-white text-xs font-bold">{realReaders}</span></div>
+                                <div className="flex justify-between border-b border-gray-800 pb-2"><span className="text-gray-500 text-xs">Capítulos Totais</span><span className="text-white text-xs font-bold">{chapters.length}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-500 text-xs">Classificação</span><span className="text-white text-xs font-bold">{getRatingLabel(localRating)}</span></div>
+                            </div>
+                        </div>
+                    )}
+
+                    {detailsTab === 'capitulos' && (
+                        <div className="animate-in slide-in-from-left-4 duration-300">
+                            {/* Header da lista de capítulos */}
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-[15px] font-bold text-white">
+                                    Capítulos <span className="text-red-600 ml-1">{chapters.length}</span>
+                                </h3>
+                                <button onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} className="text-[11px] text-gray-400 flex items-center gap-1 hover:text-white transition-colors">
+                                    {sortOrder === 'desc' ? 'Mais recentes' : 'Mais antigos'} <ChevronDown className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Lista de Capítulos */}
+                            <div className="flex flex-col gap-2.5">
+                                {chapters.length === 0 ? (
+                                    <div className="text-center py-16 bg-[#111] rounded-xl"><BookOpen className="w-8 h-8 text-gray-700 mx-auto mb-3" /><p className="text-gray-500 font-bold text-xs">Nenhum capítulo publicado.</p></div>
                                 ) : (
-                                    <UserIcon className="w-full h-full p-2 text-gray-500" />
+                                    sortedChapters.map((chapter, index) => {
+                                        const isRead = mangaHistory.some(h => h.chapterNumber === chapter.number);
+                                        const isNew = index === 0 && sortOrder === 'desc';
+
+                                        return (
+                                            <div key={chapter.id} onClick={() => onChapterClick(manga, chapter)} className="bg-[#111] hover:bg-[#1a1a1a] rounded-xl p-4 flex items-center justify-between cursor-pointer transition-colors group">
+                                                <div className="flex items-start gap-3">
+                                                    {/* Ponto Vermelho (Não lido) */}
+                                                    <div className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${!isRead ? 'bg-red-600' : 'bg-transparent'}`}></div>
+                                                    
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className={`text-[13px] font-bold ${isRead ? 'text-gray-500' : 'text-white'}`}>Capítulo {chapter.number}</h4>
+                                                            {isNew && <span className="bg-red-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase">Novo</span>}
+                                                        </div>
+                                                        <p className="text-[11px] text-gray-400 mb-1 line-clamp-1">{manga.title} - Cap {chapter.number}</p>
+                                                        <p className="text-[10px] text-gray-600">{timeAgo(chapter.rawTime || Date.now())}</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <Bookmark className={`w-5 h-5 ${isRead ? 'text-gray-700' : 'text-gray-400 group-hover:text-white'}`} />
+                                            </div>
+                                        );
+                                    })
                                 )}
                             </div>
-                            <div className="flex-1">
-                                <div className="flex items-center justify-between mb-1.5">
-                                    <span className="text-xs font-bold text-gray-300">{comment.userName}</span>
-                                    <span className="text-[9px] text-gray-600 uppercase tracking-widest font-bold">{timeAgo(comment.createdAt)}</span>
-                                </div>
-                                <p className="text-xs text-gray-400 leading-relaxed">{comment.text}</p>
-                            </div>
                         </div>
-                    ))
-                )}
-            </div>
-          </div>
-        )}
+                    )}
 
-      </div>
-    </div>
-  );
+                    {detailsTab === 'comentarios' && (
+                        <div className="animate-in slide-in-from-right-4 duration-300 pt-2">
+                            <CommentsSection mangaId={manga.id} user={user} userProfileData={userProfileData} onRequireLogin={onRequireLogin} showToast={showToast} />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 }
