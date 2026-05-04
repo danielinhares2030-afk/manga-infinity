@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Clock, Star, ChevronDown, LayoutGrid, List, SlidersHorizontal, Moon, Database, Zap, Flame } from 'lucide-react';
+import { Search, Clock, Star, ChevronDown, ChevronRight, LayoutGrid, List, SlidersHorizontal, Moon, Database, Zap, Flame, Bookmark } from 'lucide-react';
 import { timeAgo } from './helpers';
 
 export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCatalogState }) {
