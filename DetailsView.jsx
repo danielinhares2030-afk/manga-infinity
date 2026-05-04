@@ -34,6 +34,10 @@ export default function DetailsView({ manga, libraryData, historyData, user, onB
     }
   };
 
+  // Valores reais baseados no banco de dados (se não existir, fica 0)
+  const totalReviews = manga.reviewsCount || 0;
+  const commentsCount = manga.commentsCount || 0;
+
   return (
     <div className="min-h-screen bg-black text-white font-sans animate-in fade-in duration-300 pb-20">
       
@@ -73,28 +77,32 @@ export default function DetailsView({ manga, libraryData, historyData, user, onB
           </div>
         </div>
 
-        {/* SEÇÃO DE AVALIAÇÃO (VISUAL SIMULADO DA IMAGEM) */}
+        {/* SEÇÃO DE AVALIAÇÃO (DADOS REAIS AGORA) */}
         <div className="flex items-center gap-6 mb-6 px-2">
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2">
               <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-              <span className="text-3xl font-bold">{manga.rating ? Number(manga.rating).toFixed(1) : "4.9"}</span>
+              <span className="text-3xl font-bold">{manga.rating ? Number(manga.rating).toFixed(1) : "0.0"}</span>
             </div>
-            <span className="text-[10px] text-gray-400 mt-1">12.8K avaliações</span>
+            <span className="text-[10px] text-gray-400 mt-1">{totalReviews} avaliações</span>
           </div>
           
+          {/* Barras de distribuição dinâmicas (sem dados falsos) */}
           <div className="flex-1 flex flex-col gap-1">
-            {[5, 4, 3, 2, 1].map((star, idx) => {
-              const widths = ['80%', '15%', '3%', '1%', '1%'];
-              const counts = ['10.5K', '1.6K', '420', '180', '120'];
+            {[5, 4, 3, 2, 1].map((star) => {
+              // Se o mangá tiver dados reais de distribuição, usamos. Se não, fica 0%.
+              const dist = manga.ratingDistribution || {};
+              const count = dist[star] || 0;
+              const percent = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+              
               return (
                 <div key={star} className="flex items-center gap-2 text-[8px] text-gray-400">
                   <span className="w-2">{star}</span>
                   <Star className="w-2 h-2 text-yellow-500 fill-yellow-500" />
                   <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-yellow-500 rounded-full" style={{ width: widths[idx] }}></div>
+                    <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${percent}%` }}></div>
                   </div>
-                  <span className="w-6 text-right">{counts[idx]}</span>
+                  <span className="w-6 text-right">{count}</span>
                 </div>
               );
             })}
@@ -126,7 +134,11 @@ export default function DetailsView({ manga, libraryData, historyData, user, onB
             >
               <div className="flex items-center justify-center gap-1">
                 {tab}
-                {tab === 'Comentários' && <span className="bg-red-600 text-white text-[8px] px-1.5 py-0.5 rounded-sm ml-1">999+</span>}
+                {tab === 'Comentários' && commentsCount > 0 && (
+                  <span className="bg-red-600 text-white text-[8px] px-1.5 py-0.5 rounded-sm ml-1">
+                    {commentsCount > 99 ? '99+' : commentsCount}
+                  </span>
+                )}
               </div>
               {activeTab === tab && (
                 <div className="absolute bottom-0 left-0 w-full h-0.5 bg-red-600"></div>
@@ -154,7 +166,8 @@ export default function DetailsView({ manga, libraryData, historyData, user, onB
               {sortedChapters.map((cap, index) => {
                 const readId = `${manga.id}_${cap.id}`;
                 const isRead = historyData.some(h => h.id === readId);
-                const isNew = index === 0 && sortOrder === 'desc'; // Simulando tag de novo no primeiro item
+                // Apenas marca como novo se for o primeiro da lista e tiver menos de 3 dias.
+                const isNew = index === 0 && sortOrder === 'desc' && (Date.now() - (cap.rawTime || cap.timestamp || 0)) < 3 * 24 * 60 * 60 * 1000;
 
                 return (
                   <div 
@@ -163,7 +176,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, onB
                     className="bg-[#111111] rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-[#1a1a1a] transition-colors group"
                   >
                     <div className="flex items-start gap-3">
-                      {/* Ponto vermelho para novo */}
                       <div className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${isNew ? 'bg-red-500' : 'bg-transparent'}`}></div>
                       
                       <div>
@@ -178,7 +190,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, onB
                           <p className="text-xs text-gray-300 mb-1 line-clamp-1">{cap.title}</p>
                         )}
                         <p className="text-[10px] text-gray-500">
-                          {isNew ? 'Hoje' : timeAgo(cap.rawTime || Date.now())}
+                          {timeAgo(cap.rawTime || cap.timestamp || Date.now())}
                         </p>
                       </div>
                     </div>
