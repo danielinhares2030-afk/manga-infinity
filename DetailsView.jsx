@@ -98,9 +98,9 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
     const displayGenre = manga.genres && manga.genres.length > 0 ? manga.genres.slice(0, 2).join(', ') : 'Ação, Fantasia';
 
     return (
-        <div className="min-h-screen bg-[#0a0c10] text-gray-200 font-sans pb-24 animate-in fade-in duration-500 relative selection:bg-blue-500/30">
+        <div className="min-h-screen bg-[#0a0c10] text-gray-200 font-sans pb-24 animate-in fade-in duration-500 relative selection:bg-blue-500/30 overflow-x-hidden w-full">
             {/* TOQUE DE LUZ LEVE NO FUNDO (SEM AFETAR PERFORMANCE) */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-900/10 blur-[100px] pointer-events-none rounded-full"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] bg-blue-900/10 blur-[100px] pointer-events-none rounded-full"></div>
 
             <div className="absolute top-0 left-0 w-full p-4 md:p-6 z-50 flex justify-between items-center">
                 <button onClick={onBack} className="p-3 bg-[#13161c] rounded-full border border-gray-800 hover:border-blue-500/50 hover:bg-[#1a1d24] transition-all shadow-sm group">
