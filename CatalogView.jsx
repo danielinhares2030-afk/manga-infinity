@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Search, Star, ChevronDown, LayoutGrid, List, SlidersHorizontal, Moon, Database, Clock, Compass, Filter, X } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, Star, ChevronDown, LayoutGrid, List, SlidersHorizontal, Moon, Clock, Compass, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { timeAgo } from './helpers';
 
 export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCatalogState }) {
@@ -12,13 +12,19 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
     const [selectedStatus, setSelectedStatus] = useState('Todos');
     const [sortBy, setSortBy] = useState('Recentes');
 
-    const visibleCount = catalogState?.visibleCount || 24;
+    // PAGINAÇÃO
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 24; 
 
     const typeOptions = ['TODOS', 'MANGÁ', 'MANHWA', 'MANHUA', 'SHOUJO'];
     
     const genreOptions = ['Todos', 'Ação', 'Artes Marciais', 'Aventura', 'Comédia', 'Drama', 'Esportes', 'Fantasia', 'Ficção Científica', 'Isekai', 'Magia', 'Mistério', 'Romance', 'Seinen', 'Shoujo', 'Shounen', 'Slice of Life', 'Terror'];
     const statusOptions = ['Todos', 'Em Lançamento', 'Completo', 'Hiato'];
     const sortOptions = ['Recentes', 'Melhor Avaliação', 'A - Z', 'Z - A'];
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, selectedType, selectedGenre, selectedStatus, sortBy]);
 
     const filteredMangas = useMemo(() => {
         let result = [...(mangas || [])];
@@ -58,17 +64,31 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
         return result;
     }, [mangas, searchTerm, selectedType, selectedGenre, selectedStatus, sortBy]);
 
-    const currentItems = filteredMangas.slice(0, visibleCount);
+    const totalPages = Math.ceil(filteredMangas.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredMangas.slice(indexOfFirstItem, indexOfLastItem);
 
-    const handleLoadMore = () => {
-        setCatalogState({ ...catalogState, visibleCount: visibleCount + 24 });
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // FUNÇÃO PARA CORES DINÂMICAS DA ORIGEM
+    const getTypeColor = (type) => {
+        const t = (type || 'MANGÁ').toUpperCase();
+        if (t === 'MANGÁ' || t === 'MANGA') return 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]';
+        if (t === 'MANHWA') return 'text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]';
+        if (t === 'MANHUA') return 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]';
+        if (t === 'SHOUJO') return 'text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]';
+        return 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]';
     };
 
     return (
         <div className="pb-32 min-h-screen relative font-sans text-white bg-[#050508] overflow-x-hidden selection:bg-cyan-500/30">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6">
                 
-                {/* BARRA DE PESQUISA E FILTRO FLUTUANTE (Super Leve) */}
+                {/* BARRA DE PESQUISA E FILTRO */}
                 <div className="relative flex items-center gap-3 mb-6 z-40">
                     <div className="relative flex-1">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
@@ -90,7 +110,6 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                         <span className="hidden sm:inline">Filtros</span>
                     </button>
 
-                    {/* MENU DE FILTROS FLUTUANTE (ABSOLUTE) */}
                     {showFilters && (
                         <div className="absolute top-[110%] right-0 w-full md:w-[340px] bg-[#0a0a0d] border border-white/10 rounded-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 origin-top-right animate-in fade-in zoom-in-95 duration-200">
                             <div className="flex flex-col gap-4">
@@ -126,7 +145,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     )}
                 </div>
 
-                {/* NAVEGAÇÃO DE TIPOS (Tabs) */}
+                {/* TABS DE TIPO */}
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-6 snap-x pb-2 w-full">
                     {typeOptions.map(opt => (
                         <button 
@@ -142,7 +161,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     ))}
                 </div>
 
-                {/* CONTADOR E CONTROLES DE VISUALIZAÇÃO */}
+                {/* VISUALIZAÇÃO E CONTADOR */}
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                         <Compass className="w-4 h-4 text-cyan-500" />
@@ -158,12 +177,11 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     </div>
                 </div>
 
-                {/* GRID DE OBRAS - OTIMIZADO E ELEGANTE */}
+                {/* GRID DE OBRAS */}
                 <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 relative z-0" : "flex flex-col gap-3 relative z-0"}>
                     {currentItems.length > 0 ? currentItems.map(manga => (
                         <div key={manga.id} onClick={() => onNavigate('details', manga)} className={`cursor-pointer group relative bg-[#0a0a0d] border border-white/5 hover:border-cyan-500/30 rounded-2xl overflow-hidden transition-colors duration-300 ${viewMode === 'list' ? 'flex flex-row items-center h-32 pr-4' : 'flex flex-col aspect-[2/3]'}`}>
                             
-                            {/* IMAGEM */}
                             <div className={`relative bg-[#121218] ${viewMode === 'grid' ? 'absolute inset-0 w-full h-full' : 'w-24 h-full flex-shrink-0'}`}>
                                 <img src={manga.coverUrl} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" onError={(e) => e.target.src = `https://placehold.co/300x450/0a0a0d/06b6d4?text=Nexo`} />
                                 
@@ -172,21 +190,20 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                                 )}
                             </div>
                             
-                            {/* BADGES REFINADOS (Apenas no Grid) */}
                             {viewMode === 'grid' && (
                                 <>
-                                    {/* BADGE ELEGANTE: ORIGEM (Manga, Manhwa) */}
-                                    <div className="absolute top-2 left-2 bg-black/80 px-2 py-0.5 rounded border border-white/10 shadow-sm z-10">
-                                        <span className="text-[8px] font-bold text-gray-200 uppercase tracking-widest">{manga.type || 'MANGÁ'}</span>
+                                    {/* BADGE ELEGANTE: ORIGEM SEM FUNDO E COM CORES DINÂMICAS */}
+                                    <div className="absolute top-3 left-3 z-10">
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${getTypeColor(manga.type)}`}>
+                                            {manga.type || 'MANGÁ'}
+                                        </span>
                                     </div>
                                     
-                                    {/* BADGE: AVALIAÇÃO */}
                                     <div className="absolute top-2 right-2 bg-black/80 px-1.5 py-0.5 rounded border border-white/10 flex items-center gap-1 z-10">
                                         <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
                                         <span className="text-[9px] font-bold text-white">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
                                     </div>
 
-                                    {/* INFORMAÇÕES: SINOPSE NO LUGAR DO AUTOR */}
                                     <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-3 z-10">
                                         <h3 className="font-bold text-sm text-gray-100 line-clamp-1 mb-1 group-hover:text-cyan-400 transition-colors">
                                             {manga.title}
@@ -201,20 +218,19 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                                 </>
                             )}
 
-                            {/* INFORMAÇÕES NO MODO LISTA */}
                             {viewMode === 'list' && (
                                 <div className="flex-1 flex flex-col justify-center pl-4 min-w-0">
                                     <div className="flex items-center gap-2 mb-1.5">
-                                        <span className="text-[8px] font-bold text-gray-300 bg-[#121218] px-2 py-0.5 rounded border border-white/10 uppercase tracking-widest">
+                                        {/* ORIGEM NA LISTA (Também com cor dinâmica e sem fundo pesado) */}
+                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${getTypeColor(manga.type)}`}>
                                             {manga.type || 'MANGÁ'}
                                         </span>
-                                        <span className="text-[10px] font-medium text-gray-500 flex items-center gap-1">
+                                        <span className="text-[10px] font-medium text-gray-600 flex items-center gap-1 border-l border-white/10 pl-2">
                                             <Clock className="w-3 h-3"/> {timeAgo(manga.createdAt)}
                                         </span>
                                     </div>
                                     <h3 className="text-sm font-bold text-white mb-1 line-clamp-1 group-hover:text-cyan-400 transition-colors">{manga.title}</h3>
                                     
-                                    {/* SINOPSE TAMBÉM NO MODO LISTA */}
                                     <p className="text-[10px] text-gray-500 mb-2 line-clamp-1 font-medium">{manga.synopsis || "Sem sinopse."}</p>
                                     
                                     <div className="flex items-center gap-3">
@@ -237,11 +253,29 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     )}
                 </div>
 
-                {/* BOTÃO CARREGAR MAIS */}
-                {filteredMangas.length > visibleCount && (
-                    <div className="mt-8 flex justify-center">
-                        <button onClick={handleLoadMore} className="bg-[#0e0e12] border border-white/5 text-gray-400 hover:border-cyan-500/30 hover:text-cyan-400 font-bold px-8 py-3 rounded-xl flex items-center gap-2 transition-all duration-300 text-xs">
-                            <Database className="w-3 h-3" /> Expandir Registros
+                {/* PAGINAÇÃO */}
+                {totalPages > 1 && (
+                    <div className="mt-14 flex items-center justify-center gap-2">
+                        <button disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)} className="p-3.5 rounded-xl bg-[#0e0e12] text-gray-400 border border-white/5 disabled:opacity-30 hover:bg-cyan-900/30 hover:text-cyan-400 hover:border-cyan-500/50 transition-all active:scale-95 shadow-sm">
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="flex items-center gap-1 bg-[#0e0e12] p-1.5 rounded-xl border border-white/5 shadow-sm">
+                            {[...Array(totalPages)].map((_, i) => {
+                                if (totalPages > 5 && (i + 1 !== 1 && i + 1 !== totalPages && Math.abs(currentPage - (i + 1)) > 1)) {
+                                    if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-gray-600 px-2 font-black">...</span>;
+                                    return null;
+                                }
+                                return (
+                                    <button key={i} onClick={() => handlePageChange(i + 1)} className={`w-11 h-11 rounded-lg font-black text-sm transition-all duration-200 ${currentPage === i + 1 ? 'bg-cyan-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]' : 'bg-transparent text-gray-500 hover:bg-white/10 hover:text-white'}`}>
+                                        {i + 1}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        
+                        <button disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)} className="p-3.5 rounded-xl bg-[#0e0e12] text-gray-400 border border-white/5 disabled:opacity-30 hover:bg-cyan-900/30 hover:text-cyan-400 hover:border-cyan-500/50 transition-all active:scale-95 shadow-sm">
+                            <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
                 )}
