@@ -53,8 +53,20 @@ function NexoScanApp() {
         if (e.state && e.state.view) {
             setCurrentView(e.state.view);
             if (e.state.mangaId) { const m = mangas.find(mg => mg.id === e.state.mangaId); if (m) setSelectedManga(m); }
-            if (e.state.chapterId && e.state.mangaId) { const m = mangas.find(mg => mg.id === e.state.mangaId); if (m && m.chapters) { const c = m.chapters.find(ch => ch.id === e.state.chapterId); if (c) setSelectedChapter(c); } }
-        } else { setCurrentView('home'); }
+            if (e.state.chapterId && e.state.mangaId) { 
+                const m = mangas.find(mg => mg.id === e.state.mangaId); 
+                if (m && m.chapters) { 
+                    const c = m.chapters.find(ch => ch.id === e.state.chapterId); 
+                    if (c) setSelectedChapter(c); 
+                } 
+            } else {
+                // CORREÇÃO: Força a limpeza do capítulo caso volte para uma tela sem capítulo
+                setSelectedChapter(null);
+            }
+        } else { 
+            setCurrentView('home'); 
+            setSelectedChapter(null);
+        }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -124,7 +136,15 @@ function NexoScanApp() {
 
   const navigateTo = (view, manga = null, chapter = null) => {
     if (currentView === 'catalog') { setCatalogState(prev => ({ ...prev, scrollPos: window.scrollY })); }
-    if (manga) setSelectedManga(manga); if (chapter) setSelectedChapter(chapter);
+    
+    if (manga) setSelectedManga(manga); 
+    
+    // CORREÇÃO: Atualiza o capítulo ou limpa o estado anterior caso navegue para fora do leitor
+    if (chapter) {
+        setSelectedChapter(chapter);
+    } else if (view !== 'reader') {
+        setSelectedChapter(null);
+    }
 
     window.history.pushState({ view, mangaId: manga?.id, chapterId: chapter?.id }, '', ''); 
     setCurrentView(view);
@@ -304,8 +324,10 @@ function NexoScanApp() {
         {currentView === 'library' && <LibraryView mangas={mangas} user={user} libraryData={libraryData} onNavigate={navigateTo} onRequireLogin={() => navigateTo('login')} dataSaver={userSettings.dataSaver} />}
         {currentView === 'profile' && user && <ProfileView user={user} userProfileData={userProfileData} historyData={historyData} libraryData={libraryData} dataLoaded={dataLoaded} userSettings={userSettings} updateSettings={updateSettings} onLogout={handleLogout} onUpdateData={(n) => setUserProfileData({...userProfileData, ...n})} showToast={showToast} mangas={mangas} onNavigate={navigateTo} shopItems={shopItems} />}
         {currentView === 'popular' && <PopularView mangas={mangas} onNavigate={navigateTo} dataSaver={userSettings.dataSaver} />}
-        {currentView === 'details' && selectedManga && <DetailsView manga={selectedManga} libraryData={libraryData} historyData={historyData} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} onRequireLogin={() => navigateTo('login')} showToast={showToast} db={db} />}
-        {currentView === 'reader' && selectedManga && selectedChapter && <ReaderView manga={selectedManga} chapter={selectedChapter} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} triggerRandomDrop={triggerRandomDrop} onMarkAsRead={markAsRead} readMode={userSettings.readMode} onRequireLogin={() => navigateTo('login')} showToast={showToast} libraryData={libraryData} onToggleLibrary={handleLibraryToggle} />}
+        
+        {/* CORREÇÃO APLICADA AQUI: key={selectedManga.id} e key={selectedChapter.id} para forçar a renderização limpa */}
+        {currentView === 'details' && selectedManga && <DetailsView key={selectedManga.id} manga={selectedManga} libraryData={libraryData} historyData={historyData} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} onRequireLogin={() => navigateTo('login')} showToast={showToast} db={db} />}
+        {currentView === 'reader' && selectedManga && selectedChapter && <ReaderView key={selectedChapter.id} manga={selectedManga} chapter={selectedChapter} user={user} userProfileData={userProfileData} onBack={handleBack} onChapterClick={(m, c) => navigateTo('reader', m, c)} triggerRandomDrop={triggerRandomDrop} onMarkAsRead={markAsRead} readMode={userSettings.readMode} onRequireLogin={() => navigateTo('login')} showToast={showToast} libraryData={libraryData} onToggleLibrary={handleLibraryToggle} />}
       </main>
 
       {currentView !== 'reader' && currentView !== 'login' && <Footer />}
