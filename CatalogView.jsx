@@ -5,7 +5,7 @@ import { timeAgo } from './helpers';
 export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCatalogState }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [showFilters, setShowFilters] = useState(false);
-    const [viewMode, setViewMode] = useState('grid'); // or 'list'
+    const [viewMode, setViewMode] = useState('grid'); 
 
     const [selectedType, setSelectedType] = useState('TODOS');
     const [selectedGenre, setSelectedGenre] = useState('Todos');
@@ -64,171 +64,132 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
     };
 
     return (
-        <div className="pb-32 min-h-screen relative font-sans text-zinc-100 bg-zinc-950 overflow-x-hidden selection:bg-violet-500/30">
-            
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-4 md:pt-8">
+        <div className="pb-32 min-h-screen relative font-sans text-white bg-[#0a0a0c] overflow-x-hidden">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6">
                 
-                {/* CABEÇALHO DE PESQUISA E CONTROLES */}
+                {/* CABEÇALHO DE PESQUISA */}
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500 group-focus-within:text-violet-400 transition-colors" />
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
                         <input 
                             type="text" 
                             value={searchTerm} 
                             onChange={(e) => setSearchTerm(e.target.value)} 
-                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-white/5 bg-zinc-900 text-white outline-none focus:border-violet-500/50 transition-all font-medium text-sm placeholder:text-zinc-600 shadow-sm" 
+                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-[#13131a] text-white outline-none focus:ring-2 focus:ring-purple-600/50 transition-all font-medium text-sm placeholder:text-gray-500" 
                             placeholder="Pesquisar obras, autores..." 
                         />
                     </div>
                     
                     <button 
                         onClick={() => setShowFilters(!showFilters)} 
-                        className={`p-3.5 rounded-2xl border transition-all duration-300 ${showFilters ? 'bg-violet-500/20 border-violet-500/50 text-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.15)]' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:border-white/10 hover:text-zinc-200 shadow-sm'}`}
+                        className={`p-3.5 rounded-2xl transition-all duration-300 ${showFilters ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]' : 'bg-[#13131a] text-gray-400 hover:text-white'}`}
                     >
                         {showFilters ? <X className="w-5 h-5"/> : <SlidersHorizontal className="w-5 h-5" />}
                     </button>
-
-                    <div className="hidden md:flex items-center bg-zinc-900 border border-white/5 rounded-2xl p-1 shadow-sm h-[54px]">
-                        <button onClick={() => setViewMode('grid')} className={`p-2.5 rounded-xl transition-colors duration-200 ${viewMode === 'grid' ? 'bg-violet-600 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                            <LayoutGrid className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => setViewMode('list')} className={`p-2.5 rounded-xl transition-colors duration-200 ${viewMode === 'list' ? 'bg-violet-600 text-white shadow-md' : 'text-zinc-500 hover:text-zinc-300'}`}>
-                            <List className="w-4 h-4" />
-                        </button>
-                    </div>
                 </div>
 
-                {/* PAINEL DE FILTROS MODERNO */}
+                {/* PAINEL DE FILTROS */}
                 {showFilters && (
-                    <div className="bg-zinc-900/80 border border-white/5 rounded-3xl p-6 mb-8 shadow-xl animate-in slide-in-from-top-4 duration-300 relative z-20">
+                    <div className="bg-[#13131a] rounded-3xl p-6 mb-8 shadow-xl animate-in slide-in-from-top-4 duration-300 relative z-20">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="flex flex-col gap-2.5">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                                     <BookOpen className="w-3 h-3" /> Gênero
                                 </label>
-                                <div className={`relative rounded-xl border transition-colors ${selectedGenre !== 'Todos' ? 'border-violet-500/50 bg-violet-950/20' : 'border-white/5 bg-zinc-950'}`}>
-                                    <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)} className="w-full bg-transparent text-zinc-200 text-xs font-bold rounded-xl px-4 py-3.5 outline-none cursor-pointer appearance-none">
-                                        {genreOptions.map(opt => <option key={opt} value={opt} className="bg-zinc-900">{opt}</option>)}
+                                <div className={`relative rounded-xl transition-colors ${selectedGenre !== 'Todos' ? 'bg-purple-900/20 ring-1 ring-purple-500/50' : 'bg-[#1a1a24]'}`}>
+                                    <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)} className="w-full bg-transparent text-white text-sm font-bold rounded-xl px-4 py-3.5 outline-none cursor-pointer appearance-none">
+                                        {genreOptions.map(opt => <option key={opt} value={opt} className="bg-[#13131a]">{opt}</option>)}
                                     </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2.5">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                                     <Zap className="w-3 h-3" /> Status
                                 </label>
-                                <div className={`relative rounded-xl border transition-colors ${selectedStatus !== 'Todos' ? 'border-violet-500/50 bg-violet-950/20' : 'border-white/5 bg-zinc-950'}`}>
-                                    <select value={selectedStatus} onChange={e=>setSelectedStatus(e.target.value)} className="w-full bg-transparent text-zinc-200 text-xs font-bold rounded-xl px-4 py-3.5 outline-none cursor-pointer appearance-none">
-                                        {statusOptions.map(opt => <option key={opt} value={opt} className="bg-zinc-900">{opt}</option>)}
+                                <div className={`relative rounded-xl transition-colors ${selectedStatus !== 'Todos' ? 'bg-purple-900/20 ring-1 ring-purple-500/50' : 'bg-[#1a1a24]'}`}>
+                                    <select value={selectedStatus} onChange={e=>setSelectedStatus(e.target.value)} className="w-full bg-transparent text-white text-sm font-bold rounded-xl px-4 py-3.5 outline-none cursor-pointer appearance-none">
+                                        {statusOptions.map(opt => <option key={opt} value={opt} className="bg-[#13131a]">{opt}</option>)}
                                     </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2.5">
-                                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
                                     <Clock className="w-3 h-3" /> Ordenar Por
                                 </label>
-                                <div className={`relative rounded-xl border transition-colors ${sortBy !== 'Recentes' ? 'border-violet-500/50 bg-violet-950/20' : 'border-white/5 bg-zinc-950'}`}>
-                                    <select value={sortBy} onChange={e=>setSortBy(e.target.value)} className="w-full bg-transparent text-zinc-200 text-xs font-bold rounded-xl px-4 py-3.5 outline-none cursor-pointer appearance-none">
-                                        {sortOptions.map(opt => <option key={opt} value={opt} className="bg-zinc-900">{opt}</option>)}
+                                <div className={`relative rounded-xl transition-colors ${sortBy !== 'Recentes' ? 'bg-purple-900/20 ring-1 ring-purple-500/50' : 'bg-[#1a1a24]'}`}>
+                                    <select value={sortBy} onChange={e=>setSortBy(e.target.value)} className="w-full bg-transparent text-white text-sm font-bold rounded-xl px-4 py-3.5 outline-none cursor-pointer appearance-none">
+                                        {sortOptions.map(opt => <option key={opt} value={opt} className="bg-[#13131a]">{opt}</option>)}
                                     </select>
-                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* CAIXAS SELECIONÁVEIS (TIPOS) */}
-                <div className="flex items-center gap-2 md:gap-3 overflow-x-auto no-scrollbar mb-8 snap-x pb-2">
+                {/* CAIXAS SELECIONÁVEIS (TIPOS) - IDÊNTICO À PRINT */}
+                <div className="flex items-center gap-3 overflow-x-auto no-scrollbar mb-8 snap-x pb-2">
                     {typeOptions.map(opt => (
                         <button 
                             key={opt} 
                             onClick={() => setSelectedType(opt)} 
-                            className={`flex-1 min-w-[90px] md:min-w-[110px] px-5 py-3 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-300 snap-start
+                            className={`flex-none px-6 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 snap-start
                             ${selectedType === opt 
-                                ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white shadow-[0_4px_20px_rgba(139,92,246,0.3)] border border-transparent scale-105' 
-                                : 'bg-zinc-900 border border-white/5 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
+                                ? 'bg-gradient-to-r from-[#a855f7] to-[#d946ef] text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] transform scale-105' 
+                                : 'bg-[#13131a] text-gray-400 hover:text-white hover:bg-[#1a1a24]'}`}
                         >
                             {opt}
                         </button>
                     ))}
                 </div>
 
-                {/* VISUALIZAÇÃO DAS OBRAS (GRID / LIST) */}
-                <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative z-0" : "flex flex-col gap-4 relative z-0"}>
+                {/* VISUALIZAÇÃO DAS OBRAS (GRID ESTILO NATIVO) */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5 relative z-0">
                     {currentItems.length > 0 ? currentItems.map(manga => (
-                        <div key={manga.id} onClick={() => onNavigate('details', manga)} className={`cursor-pointer group relative overflow-hidden bg-zinc-900 border border-white/5 rounded-2xl hover:border-violet-500/40 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-violet-500/10 hover:-translate-y-1 ${viewMode === 'grid' ? 'aspect-[2/3]' : 'flex h-32 p-3 gap-4 items-center'}`}>
+                        <div key={manga.id} onClick={() => onNavigate('details', manga)} className="cursor-pointer group relative overflow-hidden bg-[#13131a] rounded-2xl aspect-[2/3] transform transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                             
-                            <div className={`${viewMode === 'grid' ? 'absolute inset-0 w-full h-full' : 'w-20 h-full flex-shrink-0 relative rounded-xl overflow-hidden'}`}>
-                                <img src={manga.coverUrl} className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out ${dataSaver ? 'blur-[1px]' : ''}`} loading="lazy" onError={(e) => e.target.src = `https://placehold.co/300x450/09090b/8b5cf6?text=Oculto`} />
-                                {viewMode === 'grid' && <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>}
+                            {/* IMAGEM E GRADIENTE */}
+                            <img src={manga.coverUrl} className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 ${dataSaver ? 'blur-[1px]' : ''}`} loading="lazy" onError={(e) => e.target.src = `https://placehold.co/300x450/13131a/a855f7?text=Sem+Capa`} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#05050a] via-[#05050a]/40 to-transparent opacity-90"></div>
+                            
+                            {/* BADGE ESQUERDO: TIPO DA OBRA (Roxo Sólido) */}
+                            <div className="absolute top-2 left-2 bg-[#8b5cf6] px-2 py-1 rounded-md z-10 shadow-md">
+                                <span className="text-[9px] font-black text-white uppercase tracking-wider">{manga.type || 'MANGÁ'}</span>
                             </div>
                             
-                            {/* BADGES DO GRID */}
-                            {viewMode === 'grid' && (
-                                <>
-                                    {/* Badge: Origem da Obra (Manga, Manhwa, etc) */}
-                                    <div className="absolute top-2 left-2 bg-violet-600/90 backdrop-blur-sm px-2 py-1 rounded border border-violet-500/50 z-10 shadow-lg">
-                                        <span className="text-[9px] font-black text-white uppercase tracking-wider">{manga.type || 'MANGÁ'}</span>
-                                    </div>
-                                    
-                                    {/* Badge: Avaliação */}
-                                    <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm px-1.5 py-1 rounded border border-white/10 flex items-center gap-1 z-10 shadow-lg">
-                                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                                        <span className="text-[10px] font-bold text-white">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
-                                    </div>
+                            {/* BADGE DIREITO: AVALIAÇÃO (Fundo Escuro) */}
+                            <div className="absolute top-2 right-2 bg-black/80 px-1.5 py-1 rounded-md flex items-center gap-1 z-10 shadow-md">
+                                <Star className="w-3 h-3 text-[#eab308] fill-[#eab308]" />
+                                <span className="text-[10px] font-black text-white">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
+                            </div>
 
-                                    {/* Informações da Base */}
-                                    <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-3.5 z-10">
-                                        <h3 className="font-bold text-xs text-zinc-100 line-clamp-2 mb-2 group-hover:text-violet-400 transition-colors">
-                                            {manga.title}
-                                        </h3>
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-[9px] font-bold text-zinc-400 bg-black/50 px-2 py-1 rounded border border-white/5">
-                                                Capítulo {manga.chapters?.length ? manga.chapters[0].number : 0}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </>
-                            )}
-
-                            {/* INFORMAÇÕES DO MODO LISTA */}
-                            {viewMode === 'list' && (
-                                <div className="flex-1 flex flex-col justify-center min-w-0 pr-2">
-                                    <div className="flex items-center gap-2 mb-1.5">
-                                        <span className="text-[9px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded uppercase border border-violet-500/20">
-                                            {manga.type || 'MANGÁ'}
-                                        </span>
-                                    </div>
-                                    <h3 className="text-sm font-bold text-zinc-100 mb-1 line-clamp-1 group-hover:text-violet-400 transition-colors">{manga.title}</h3>
-                                    <p className="text-xs text-zinc-500 mb-3 line-clamp-1 font-medium">{manga.author || "Autor Desconhecido"}</p>
-                                    
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-zinc-950 px-2 py-1 rounded border border-white/5 flex items-center gap-1.5 shadow-sm">
-                                            <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                                            <span className="text-[10px] font-bold text-zinc-200">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
-                                        </div>
-                                        <p className="text-[10px] font-medium text-zinc-500 flex items-center gap-1">
-                                            <Clock className="w-3 h-3"/> {timeAgo(manga.createdAt)}
-                                        </p>
-                                    </div>
+                            {/* INFORMAÇÕES DA BASE */}
+                            <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-3.5 z-10">
+                                <h3 className="font-extrabold text-sm text-white line-clamp-2 mb-2 leading-tight drop-shadow-md">
+                                    {manga.title}
+                                </h3>
+                                <div>
+                                    <span className="inline-block bg-black/60 px-2 py-1 rounded-md text-[10px] font-bold text-gray-300">
+                                        Capítulo {manga.chapters?.length ? manga.chapters[0].number : 0}
+                                    </span>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     )) : (
-                        <div className="col-span-full py-24 flex flex-col items-center justify-center bg-zinc-900/50 rounded-3xl border border-white/5 border-dashed">
-                            <Moon className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
-                            <p className="text-zinc-500 font-bold text-xs uppercase tracking-widest">Nenhuma obra compatível com os filtros.</p>
+                        <div className="col-span-full py-24 flex flex-col items-center justify-center bg-[#13131a]/50 rounded-3xl border border-gray-800/50 border-dashed">
+                            <Moon className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                            <p className="text-gray-500 font-bold text-xs uppercase tracking-widest">Nenhuma obra compatível com os filtros.</p>
                         </div>
                     )}
                 </div>
 
                 {/* BOTÃO CARREGAR MAIS */}
                 {filteredMangas.length > visibleCount && (
-                    <div className="mt-14 flex justify-center">
-                        <button onClick={handleLoadMore} className="bg-zinc-900 border border-white/5 text-zinc-400 hover:border-violet-500/50 hover:bg-violet-950/30 hover:text-white font-bold px-10 py-4 rounded-2xl flex items-center gap-3 transition-all duration-300 text-[11px] uppercase tracking-widest group">
-                            <Database className="w-4 h-4 text-violet-500 group-hover:text-violet-400 transition-colors" /> Expandir Registros
+                    <div className="mt-12 flex justify-center">
+                        <button onClick={handleLoadMore} className="bg-[#13131a] text-gray-400 hover:bg-purple-900/30 hover:text-white font-bold px-10 py-4 rounded-2xl flex items-center gap-3 transition-all duration-300 text-[11px] uppercase tracking-widest group shadow-lg">
+                            <Database className="w-4 h-4 text-purple-500 group-hover:text-purple-400 transition-colors" /> Expandir Registros
                         </button>
                     </div>
                 )}
