@@ -1,20 +1,23 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Star, ChevronDown, LayoutGrid, List, SlidersHorizontal, Moon, Clock, Compass, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Star, ChevronDown, LayoutGrid, List, Filter, X, ChevronLeft, ChevronRight, Clock, Compass } from 'lucide-react';
 import { timeAgo } from './helpers';
 
 export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCatalogState }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [showFilters, setShowFilters] = useState(false);
     const [viewMode, setViewMode] = useState('grid'); 
+    
+    // ESTADO PARA OS DROPDOWNS CUSTOMIZADOS
+    const [openDropdown, setOpenDropdown] = useState(null);
 
     const [selectedType, setSelectedType] = useState('TODOS');
     const [selectedGenre, setSelectedGenre] = useState('Todos');
     const [selectedStatus, setSelectedStatus] = useState('Todos');
     const [sortBy, setSortBy] = useState('Recentes');
 
-    // PAGINAÇÃO
+    // PAGINAÇÃO - MÁXIMO 10 OBRAS POR PÁGINA
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 24; 
+    const itemsPerPage = 10; 
 
     const typeOptions = ['TODOS', 'MANGÁ', 'MANHWA', 'MANHUA', 'SHOUJO'];
     
@@ -74,18 +77,24 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // FUNÇÃO PARA CORES DINÂMICAS DA ORIGEM
-    const getTypeColor = (type) => {
+    // CORES E FUNDOS DA ORIGEM (NEON GLASS)
+    const getTypeStyle = (type) => {
         const t = (type || 'MANGÁ').toUpperCase();
-        if (t === 'MANGÁ' || t === 'MANGA') return 'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]';
-        if (t === 'MANHWA') return 'text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]';
-        if (t === 'MANHUA') return 'text-orange-400 drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]';
-        if (t === 'SHOUJO') return 'text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]';
-        return 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]';
+        if (t === 'MANGÁ' || t === 'MANGA') return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+        if (t === 'MANHWA') return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+        if (t === 'MANHUA') return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+        if (t === 'SHOUJO') return 'bg-pink-500/20 text-pink-400 border-pink-500/30';
+        return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
     };
 
     return (
         <div className="pb-32 min-h-screen relative font-sans text-white bg-[#050508] overflow-x-hidden selection:bg-cyan-500/30">
+            
+            {/* OVERLAY INVISÍVEL PARA FECHAR DROPDOWNS AO CLICAR FORA */}
+            {openDropdown && (
+                <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+            )}
+
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-6">
                 
                 {/* BARRA DE PESQUISA E FILTRO */}
@@ -102,7 +111,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     </div>
                     
                     <button 
-                        onClick={() => setShowFilters(!showFilters)} 
+                        onClick={() => { setShowFilters(!showFilters); setOpenDropdown(null); }} 
                         className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl border transition-all duration-200 text-xs font-bold uppercase tracking-wider
                         ${showFilters ? 'bg-cyan-900/30 border-cyan-500/50 text-cyan-400' : 'bg-[#0e0e12] border-white/5 text-gray-400 hover:text-white'}`}
                     >
@@ -113,33 +122,88 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                     {showFilters && (
                         <div className="absolute top-[110%] right-0 w-full md:w-[340px] bg-[#0a0a0d] border border-white/10 rounded-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 origin-top-right animate-in fade-in zoom-in-95 duration-200">
                             <div className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-1.5">
+                                
+                                {/* DROPDOWN CUSTOMIZADO: GÊNERO */}
+                                <div className="flex flex-col gap-1.5 relative z-30">
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Gênero</label>
-                                    <div className="relative rounded-xl border border-white/5 bg-[#121218]">
-                                        <select value={selectedGenre} onChange={e=>setSelectedGenre(e.target.value)} className="w-full bg-transparent text-white text-sm font-medium rounded-xl px-4 py-3 outline-none cursor-pointer appearance-none">
-                                            {genreOptions.map(opt => <option key={opt} value={opt} className="bg-[#0a0a0d]">{opt}</option>)}
-                                        </select>
-                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
+                                    <div 
+                                        onClick={() => setOpenDropdown(openDropdown === 'genre' ? null : 'genre')}
+                                        className="w-full bg-[#121218] border border-white/5 text-white text-sm font-medium rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:border-cyan-500/30 transition-colors"
+                                    >
+                                        <span className="truncate">{selectedGenre}</span>
+                                        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${openDropdown === 'genre' ? 'rotate-180 text-cyan-400' : ''}`} />
                                     </div>
+                                    {openDropdown === 'genre' && (
+                                        <div className="absolute top-[105%] left-0 right-0 bg-[#121218] border border-white/10 rounded-xl overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.9)] z-50 max-h-56 overflow-y-auto no-scrollbar animate-in fade-in slide-in-from-top-2">
+                                            {genreOptions.map(opt => (
+                                                <div 
+                                                    key={opt}
+                                                    onClick={() => { setSelectedGenre(opt); setOpenDropdown(null); }}
+                                                    className={`px-4 py-3 text-sm font-bold flex items-center justify-between cursor-pointer transition-colors border-b border-white/5 last:border-0
+                                                    ${selectedGenre === opt ? 'bg-cyan-900/20 text-cyan-400' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                                >
+                                                    {opt}
+                                                    {selectedGenre === opt && <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex flex-col gap-1.5">
+
+                                {/* DROPDOWN CUSTOMIZADO: STATUS */}
+                                <div className="flex flex-col gap-1.5 relative z-20">
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Status</label>
-                                    <div className="relative rounded-xl border border-white/5 bg-[#121218]">
-                                        <select value={selectedStatus} onChange={e=>setSelectedStatus(e.target.value)} className="w-full bg-transparent text-white text-sm font-medium rounded-xl px-4 py-3 outline-none cursor-pointer appearance-none">
-                                            {statusOptions.map(opt => <option key={opt} value={opt} className="bg-[#0a0a0d]">{opt}</option>)}
-                                        </select>
-                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
+                                    <div 
+                                        onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
+                                        className="w-full bg-[#121218] border border-white/5 text-white text-sm font-medium rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:border-cyan-500/30 transition-colors"
+                                    >
+                                        <span className="truncate">{selectedStatus}</span>
+                                        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${openDropdown === 'status' ? 'rotate-180 text-cyan-400' : ''}`} />
                                     </div>
+                                    {openDropdown === 'status' && (
+                                        <div className="absolute top-[105%] left-0 right-0 bg-[#121218] border border-white/10 rounded-xl overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.9)] z-50 animate-in fade-in slide-in-from-top-2">
+                                            {statusOptions.map(opt => (
+                                                <div 
+                                                    key={opt}
+                                                    onClick={() => { setSelectedStatus(opt); setOpenDropdown(null); }}
+                                                    className={`px-4 py-3 text-sm font-bold flex items-center justify-between cursor-pointer transition-colors border-b border-white/5 last:border-0
+                                                    ${selectedStatus === opt ? 'bg-cyan-900/20 text-cyan-400' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                                >
+                                                    {opt}
+                                                    {selectedStatus === opt && <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="flex flex-col gap-1.5">
+
+                                {/* DROPDOWN CUSTOMIZADO: ORDENAR */}
+                                <div className="flex flex-col gap-1.5 relative z-10">
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Ordenar por</label>
-                                    <div className="relative rounded-xl border border-white/5 bg-[#121218]">
-                                        <select value={sortBy} onChange={e=>setSortBy(e.target.value)} className="w-full bg-transparent text-white text-sm font-medium rounded-xl px-4 py-3 outline-none cursor-pointer appearance-none">
-                                            {sortOptions.map(opt => <option key={opt} value={opt} className="bg-[#0a0a0d]">{opt}</option>)}
-                                        </select>
-                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
+                                    <div 
+                                        onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')}
+                                        className="w-full bg-[#121218] border border-white/5 text-white text-sm font-medium rounded-xl px-4 py-3 flex items-center justify-between cursor-pointer hover:border-cyan-500/30 transition-colors"
+                                    >
+                                        <span className="truncate">{sortBy}</span>
+                                        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${openDropdown === 'sort' ? 'rotate-180 text-cyan-400' : ''}`} />
                                     </div>
+                                    {openDropdown === 'sort' && (
+                                        <div className="absolute top-[105%] left-0 right-0 bg-[#121218] border border-white/10 rounded-xl overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.9)] z-50 animate-in fade-in slide-in-from-top-2">
+                                            {sortOptions.map(opt => (
+                                                <div 
+                                                    key={opt}
+                                                    onClick={() => { setSortBy(opt); setOpenDropdown(null); }}
+                                                    className={`px-4 py-3 text-sm font-bold flex items-center justify-between cursor-pointer transition-colors border-b border-white/5 last:border-0
+                                                    ${sortBy === opt ? 'bg-cyan-900/20 text-cyan-400' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                                >
+                                                    {opt}
+                                                    {sortBy === opt && <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
+
                             </div>
                         </div>
                     )}
@@ -192,9 +256,9 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                             
                             {viewMode === 'grid' && (
                                 <>
-                                    {/* BADGE ELEGANTE: ORIGEM SEM FUNDO E COM CORES DINÂMICAS */}
-                                    <div className="absolute top-3 left-3 z-10">
-                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${getTypeColor(manga.type)}`}>
+                                    {/* BADGE ORIGEM: NEON GLASSMORPHISM COM FUNDO E BORDA */}
+                                    <div className={`absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md border backdrop-blur-md shadow-lg ${getTypeStyle(manga.type)}`}>
+                                        <span className="text-[8px] font-black uppercase tracking-[0.2em]">
                                             {manga.type || 'MANGÁ'}
                                         </span>
                                     </div>
@@ -204,12 +268,13 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                                         <span className="text-[9px] font-bold text-white">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
                                     </div>
 
+                                    {/* INFORMAÇÕES: GÊNEROS (NO LUGAR DA SINOPSE) */}
                                     <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-3 z-10">
                                         <h3 className="font-bold text-sm text-gray-100 line-clamp-1 mb-1 group-hover:text-cyan-400 transition-colors">
                                             {manga.title}
                                         </h3>
-                                        <p className="text-[10px] text-gray-400 line-clamp-2 leading-snug mb-2 font-medium">
-                                            {manga.synopsis || "Os mistérios desta obra ainda não foram revelados."}
+                                        <p className="text-[9px] text-gray-400 line-clamp-2 leading-snug mb-2 font-black uppercase tracking-wider">
+                                            {manga.genres && manga.genres.length > 0 ? manga.genres.slice(0, 2).join(' • ') : "Gênero Desconhecido"}
                                         </p>
                                         <span className="text-[10px] font-bold text-cyan-500">
                                             Capítulo {manga.chapters?.length ? manga.chapters[0].number : 0}
@@ -221,8 +286,8 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                             {viewMode === 'list' && (
                                 <div className="flex-1 flex flex-col justify-center pl-4 min-w-0">
                                     <div className="flex items-center gap-2 mb-1.5">
-                                        {/* ORIGEM NA LISTA (Também com cor dinâmica e sem fundo pesado) */}
-                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${getTypeColor(manga.type)}`}>
+                                        {/* ORIGEM NA LISTA */}
+                                        <span className={`px-2 py-0.5 rounded border backdrop-blur-md text-[8px] font-black uppercase tracking-[0.2em] ${getTypeStyle(manga.type)}`}>
                                             {manga.type || 'MANGÁ'}
                                         </span>
                                         <span className="text-[10px] font-medium text-gray-600 flex items-center gap-1 border-l border-white/10 pl-2">
@@ -231,6 +296,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                                     </div>
                                     <h3 className="text-sm font-bold text-white mb-1 line-clamp-1 group-hover:text-cyan-400 transition-colors">{manga.title}</h3>
                                     
+                                    {/* SINOPSE SE MANTÉM NA LISTA */}
                                     <p className="text-[10px] text-gray-500 mb-2 line-clamp-1 font-medium">{manga.synopsis || "Sem sinopse."}</p>
                                     
                                     <div className="flex items-center gap-3">
