@@ -77,14 +77,14 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // CORES E FUNDOS DA ORIGEM (NEON GLASS)
+    // CORES DINÂMICAS PARA A ORIGEM DA OBRA (SEM FUNDO)
     const getTypeStyle = (type) => {
         const t = (type || 'MANGÁ').toUpperCase();
-        if (t === 'MANGÁ' || t === 'MANGA') return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-        if (t === 'MANHWA') return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-        if (t === 'MANHUA') return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-        if (t === 'SHOUJO') return 'bg-pink-500/20 text-pink-400 border-pink-500/30';
-        return 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30';
+        if (t === 'MANGÁ' || t === 'MANGA') return 'text-blue-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]';
+        if (t === 'MANHWA') return 'text-purple-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]';
+        if (t === 'MANHUA') return 'text-orange-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]';
+        if (t === 'SHOUJO') return 'text-pink-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]';
+        return 'text-cyan-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]';
     };
 
     return (
@@ -256,9 +256,9 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                             
                             {viewMode === 'grid' && (
                                 <>
-                                    {/* BADGE ORIGEM: NEON GLASSMORPHISM COM FUNDO E BORDA */}
-                                    <div className={`absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md border backdrop-blur-md shadow-lg ${getTypeStyle(manga.type)}`}>
-                                        <span className="text-[8px] font-black uppercase tracking-[0.2em]">
+                                    {/* BADGE ORIGEM: APENAS TEXTO COM CORES DINÂMICAS */}
+                                    <div className="absolute top-3 left-3 z-10">
+                                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${getTypeStyle(manga.type)}`}>
                                             {manga.type || 'MANGÁ'}
                                         </span>
                                     </div>
@@ -286,8 +286,8 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                             {viewMode === 'list' && (
                                 <div className="flex-1 flex flex-col justify-center pl-4 min-w-0">
                                     <div className="flex items-center gap-2 mb-1.5">
-                                        {/* ORIGEM NA LISTA */}
-                                        <span className={`px-2 py-0.5 rounded border backdrop-blur-md text-[8px] font-black uppercase tracking-[0.2em] ${getTypeStyle(manga.type)}`}>
+                                        {/* ORIGEM NA LISTA (APENAS TEXTO) */}
+                                        <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${getTypeStyle(manga.type)}`}>
                                             {manga.type || 'MANGÁ'}
                                         </span>
                                         <span className="text-[10px] font-medium text-gray-600 flex items-center gap-1 border-l border-white/10 pl-2">
@@ -296,7 +296,7 @@ export function CatalogView({ mangas, onNavigate, dataSaver, catalogState, setCa
                                     </div>
                                     <h3 className="text-sm font-bold text-white mb-1 line-clamp-1 group-hover:text-cyan-400 transition-colors">{manga.title}</h3>
                                     
-                                    {/* SINOPSE SE MANTÉM NA LISTA */}
+                                    {/* SINOPSE NA LISTA */}
                                     <p className="text-[10px] text-gray-500 mb-2 line-clamp-1 font-medium">{manga.synopsis || "Sem sinopse."}</p>
                                     
                                     <div className="flex items-center gap-3">
