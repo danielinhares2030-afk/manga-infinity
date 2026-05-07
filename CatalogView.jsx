@@ -1,19 +1,20 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, RefreshCcw, Star, LayoutGrid, List, Flame, Bookmark, ChevronDown } from 'lucide-react';
+import { Search, Filter, RefreshCcw, Star, LayoutGrid, List, Flame, Bookmark, ChevronDown, Play } from 'lucide-react';
 
-export function CatalogView({ mangas, onNavigate }) {
+export function CatalogView({ mangas = [], onNavigate }) {
     const [showFullFilters, setShowFullFilters] = useState(true);
     const [viewMode, setViewMode] = useState('grid');
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedType, setSelectedType] = useState('Todos');
 
     const types = ['Todos', 'Mangá', 'Manhwa', 'Manhua', 'Shoujo'];
-    const dropdowns = ['Gênero', 'Tema', 'Status', 'Ordenar por', 'Lançamento', 'Ano'];
+    const dropdowns = ['Gênero', 'Status', 'Ordenar', 'Ano'];
 
+    // Lógica de Filtro 100% Funcional
     const filteredMangas = useMemo(() => {
-        return (mangas || []).filter(m => {
+        return mangas.filter(m => {
             const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesType = selectedType === 'Todos' || m.type === selectedType;
+            const matchesType = selectedType === 'Todos' || (m.type && m.type.toLowerCase() === selectedType.toLowerCase());
             return matchesSearch && matchesType;
         });
     }, [mangas, searchTerm, selectedType]);
@@ -21,41 +22,41 @@ export function CatalogView({ mangas, onNavigate }) {
     return (
         <div className="pb-32 min-h-screen bg-[#050505] text-white font-sans overflow-x-hidden">
             
-            {/* SEARCH TOP */}
-            <div className="p-4 md:p-8">
-                <div className="relative max-w-3xl mx-auto group">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-red-500 transition-colors" />
+            {/* BARRA DE BUSCA PREMIUM */}
+            <div className="p-6 md:p-10">
+                <div className="relative max-w-4xl mx-auto group">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-red-500 transition-colors" />
                     <input 
                         type="text" 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Buscar obras..." 
-                        className="w-full bg-[#111] border border-white/5 rounded-2xl py-4 pl-14 pr-6 outline-none focus:border-red-500/50 transition-all font-bold text-sm"
+                        placeholder="Pesquisar no Império..." 
+                        className="w-full bg-[#0A0A0A] border border-white/5 rounded-[2rem] py-5 pl-16 pr-8 outline-none focus:border-red-600/50 transition-all font-bold text-sm shadow-inner"
                     />
                 </div>
             </div>
 
-            {/* FILTER PANEL */}
-            <div className="px-4 md:px-8 mb-8">
-                <div className="bg-[#0A0A0A] border border-white/5 rounded-[2rem] p-6 shadow-2xl">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2 text-red-500 font-black uppercase text-xs tracking-widest">
-                            <Filter className="w-4 h-4" /> Filtros
+            {/* PAINEL DE FILTROS IGUAL DA IMAGEM */}
+            <div className="px-6 md:px-10 mb-10">
+                <div className="bg-[#0A0A0A] border border-white/5 rounded-[3rem] p-8 shadow-2xl">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3 text-red-600 font-black uppercase text-xs tracking-[0.3em]">
+                            <Filter className="w-4 h-4" /> Filtros Avançados
                         </div>
-                        <button className="text-[10px] font-black uppercase text-gray-500 flex items-center gap-2 hover:text-white transition-colors">
-                            <RefreshCcw className="w-3 h-3" /> Limpar
+                        <button onClick={() => {setSearchTerm(""); setSelectedType('Todos');}} className="text-[9px] font-black uppercase text-gray-600 flex items-center gap-2 hover:text-white transition-colors">
+                            <RefreshCcw className="w-3 h-3" /> Resetar
                         </button>
                     </div>
 
-                    <div className="mb-6">
-                        <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3">Tipo de Obra</p>
-                        <div className="flex flex-wrap gap-2">
+                    <div className="mb-8">
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Origem da Obra</p>
+                        <div className="flex flex-wrap gap-3">
                             {types.map(type => (
                                 <button 
                                     key={type}
                                     onClick={() => setSelectedType(type)}
-                                    className={`px-6 py-2 rounded-xl text-xs font-bold transition-all border
-                                    ${selectedType === type ? 'bg-red-600 border-red-600 text-white shadow-[0_5px_15px_rgba(239,68,68,0.3)]' : 'bg-[#111] border-white/5 text-gray-500 hover:text-white'}`}
+                                    className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border
+                                    ${selectedType === type ? 'bg-red-600 border-red-600 text-white shadow-lg' : 'bg-[#111] border-white/5 text-gray-500 hover:text-white'}`}
                                 >
                                     {type}
                                 </button>
@@ -63,69 +64,53 @@ export function CatalogView({ mangas, onNavigate }) {
                         </div>
                     </div>
 
-                    {showFullFilters && (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 animate-in slide-in-from-top-2">
-                            {dropdowns.map(label => (
-                                <div key={label}>
-                                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2">{label}</p>
-                                    <div className="bg-[#111] border border-white/5 rounded-xl px-4 py-3 flex items-center justify-between text-xs font-bold text-gray-400 cursor-pointer hover:border-white/20 transition-all">
-                                        Todos <ChevronDown className="w-4 h-4" />
-                                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        {dropdowns.map(label => (
+                            <div key={label}>
+                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">{label}</p>
+                                <div className="bg-[#111] border border-white/5 rounded-2xl px-5 py-4 flex items-center justify-between text-[10px] font-black text-gray-400 cursor-pointer hover:border-white/20 transition-all uppercase tracking-widest">
+                                    Todos <ChevronDown className="w-4 h-4" />
                                 </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <button 
-                        onClick={() => setShowFullFilters(!showFullFilters)}
-                        className="w-full text-center text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mt-6 hover:text-white transition-colors"
-                    >
-                        {showFullFilters ? 'Menos filtros' : 'Mais filtros'}
-                    </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* RESULTS HEADER */}
-            <div className="px-4 md:px-8 flex items-center justify-between mb-8">
+            {/* CABEÇALHO DE RESULTADOS */}
+            <div className="px-6 md:px-10 flex items-center justify-between mb-10">
                 <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-red-600"></div>
-                    <span className="text-sm font-black uppercase tracking-widest">{filteredMangas.length} obras encontradas</span>
+                    <span className="text-xs font-black uppercase tracking-[0.2em]">{filteredMangas.length} Obras Disponíveis</span>
                 </div>
-                <div className="flex bg-[#0A0A0A] p-1 rounded-lg border border-white/5">
-                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-[#222] text-white' : 'text-gray-600'}`}><LayoutGrid className="w-4 h-4"/></button>
-                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-[#222] text-white' : 'text-gray-600'}`}><List className="w-4 h-4"/></button>
+                <div className="flex bg-[#0A0A0A] p-1 rounded-xl border border-white/5">
+                    <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-red-600 text-white' : 'text-gray-600'}`}><LayoutGrid className="w-4 h-4"/></button>
+                    <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-red-600 text-white' : 'text-gray-600'}`}><List className="w-4 h-4"/></button>
                 </div>
             </div>
 
-            {/* CARDS */}
-            <div className="px-4 md:px-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8">
+            {/* GRID DE CARDS IGUAL DA IMAGEM */}
+            <div className="px-6 md:px-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-10">
                 {filteredMangas.map(manga => (
                     <div key={manga.id} className="group cursor-pointer" onClick={() => onNavigate('details', manga)}>
-                        <div className="relative aspect-[2/3] rounded-[1.5rem] overflow-hidden mb-4 border border-white/5 shadow-2xl">
-                            <img src={manga.coverUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={manga.title} />
-                            
-                            {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <Play className="w-12 h-12 text-white fill-current" />
+                        <div className="relative aspect-[2/3] rounded-[2.5rem] overflow-hidden mb-5 border border-white/5 shadow-2xl transition-all group-hover:scale-[1.03]">
+                            <img src={manga.coverUrl} className="w-full h-full object-cover" alt={manga.title} />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                                <Play className="w-14 h-14 text-white fill-current" />
                             </div>
-
-                            {/* Badge */}
-                            <div className="absolute top-3 left-3 bg-red-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase shadow-lg">
+                            <div className="absolute top-4 left-4 bg-red-600 px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] shadow-2xl">
                                 {manga.type || 'Manga'}
                             </div>
-                            <button className="absolute top-3 right-3 p-1.5 bg-black/40 backdrop-blur-md rounded-lg text-white/70 hover:text-white transition-colors">
-                                <Bookmark className="w-4 h-4" />
-                            </button>
                         </div>
-                        <h4 className="font-extrabold text-base truncate mb-1 group-hover:text-red-500 transition-colors uppercase italic">{manga.title}</h4>
-                        <div className="flex items-center gap-3 text-gray-500">
-                            <div className="flex items-center gap-1">
-                                <Flame className="w-4 h-4 text-orange-500" />
-                                <span className="text-[11px] font-black tracking-tighter">98.7K</span>
+                        <h4 className="font-black text-sm truncate mb-2 group-hover:text-red-500 transition-colors uppercase italic tracking-tighter">{manga.title}</h4>
+                        <div className="flex items-center gap-4 text-gray-500">
+                            <div className="flex items-center gap-1.5">
+                                <Flame className="w-3.5 h-3.5 text-red-500" />
+                                <span className="text-[10px] font-black tracking-widest uppercase">98K</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                <span className="text-[11px] font-black tracking-tighter">{manga.rating || '5.0'}</span>
+                            <div className="flex items-center gap-1.5">
+                                <Star className="w-3.5 h-3.5 text-yellow-500 fill-current" />
+                                <span className="text-[10px] font-black tracking-widest uppercase">{manga.rating || '5.0'}</span>
                             </div>
                         </div>
                     </div>
