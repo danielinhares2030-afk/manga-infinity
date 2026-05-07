@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bookmark, Share2, MoreVertical, Star, Calendar, Book, Layout, Tag, MessageSquare, Play, CheckCircle, ChevronDown, Download } from 'lucide-react';
+// IMPORTAÇÃO CORRIGIDA: Adicionado o BookOpen
+import { ArrowLeft, Bookmark, Share2, MoreVertical, Star, Calendar, Book, Layout, Tag, MessageSquare, Play, CheckCircle, ChevronDown, Download, BookOpen } from 'lucide-react';
 import { doc, updateDoc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { APP_ID } from './constants';
 import { CommentsSection } from './CommentsSection';
