@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Target, Hexagon, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, AlertTriangle, Crown, ChevronDown, Globe, ChevronRight, User, Image, Circle, Calendar, BookOpen, EyeOff, X, Shield } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Target, Hexagon, Trophy, Timer, Skull, Zap, Loader2, ArrowRight, Key, Sparkles, AlertTriangle, Crown, ChevronDown, Globe, ChevronRight, User, Image, Circle, Calendar, BookOpen, EyeOff, X, Shield, Flame, Swords, MessageSquare, Bookmark } from 'lucide-react';
 import { doc, updateDoc, collectionGroup, getDocs, query, increment, getDoc } from "firebase/firestore";
 import { auth, db } from './firebase';
 import { addXpLogic, removeXpLogic, getLevelTitle, cleanCosmeticUrl, getRarityColor } from './helpers';
@@ -84,11 +84,14 @@ const PublicProfileModal = ({ userId, onClose, currentUserId }) => {
 };
 
 export function NexoView({ user, userProfileData, showToast, mangas, onNavigate, onLevelUp, synthesizeCrystal, shopItems }) {
-    const [activeTab, setActiveTab] = useState("Caixas");
+    const [activeTab, setActiveTab] = useState("Ranking"); // Começa no Ranking para exibir a tela
     const [synthesizing, setSynthesizing] = useState(false);
-    const [rankingList, setRankingList] = useState([]);
-    const [loadingRank, setLoadingRank] = useState(false);
     
+    // ESTADOS DO RANKING (Real do banco de dados)
+    const [allUsers, setAllUsers] = useState([]);
+    const [loadingRank, setLoadingRank] = useState(false);
+    const [rankCategory, setRankCategory] = useState('Geral'); // Abas do Ranking
+
     const [isOpeningBoxAnim, setIsOpeningBoxAnim] = useState(false);
     const [boxReward, setBoxReward] = useState(null);
 
@@ -97,15 +100,10 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     const [countdown, setCountdown] = useState("00:00:00");
 
     useEffect(() => {
-        if(activeTab === 'Ranking') fetchRanking();
-    }, [activeTab]);
-
-    // LÓGICA DO CRONÔMETRO CORRIGIDA
-    useEffect(() => {
         const updateTimer = () => {
             const now = new Date();
             const tomorrow = new Date(now);
-            tomorrow.setHours(24, 0, 0, 0); // Próxima meia-noite
+            tomorrow.setHours(24, 0, 0, 0);
             const diff = tomorrow - now;
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24).toString().padStart(2, '0');
             const m = Math.floor((diff / 1000 / 60) % 60).toString().padStart(2, '0');
@@ -117,30 +115,75 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         return () => clearInterval(interval);
     }, []);
 
-    const fetchRanking = async () => {
-        setLoadingRank(true);
-        try {
-            const snap = await getDocs(query(collectionGroup(db, 'profile')));
-            let rankData = [];
-            snap.forEach(doc => {
-                if(doc.ref.path.includes('main')) {
-                    const data = doc.data();
-                    if ((data.xp && data.xp > 0) || (data.level && data.level > 1)) {
-                        rankData.push({ id: doc.ref.parent.parent.id, ...data });
+    // BUSCA REAL DOS DADOS DE RANKING NO FIREBASE
+    useEffect(() => {
+        if(activeTab !== 'Ranking') return;
+        
+        const fetchAllProfiles = async () => {
+            setLoadingRank(true);
+            try {
+                const snap = await getDocs(query(collectionGroup(db, 'profile')));
+                let usersList = [];
+                snap.forEach(doc => {
+                    if(doc.ref.path.includes('main')) {
+                        usersList.push({ id: doc.ref.parent.parent.id, ...doc.data() });
                     }
-                }
-            });
-            rankData.sort((a, b) => {
-                if (b.level !== a.level) return (b.level || 1) - (a.level || 1);
-                return (b.xp || 0) - (a.xp || 0);
-            });
-            setRankingList(rankData.slice(0, 50));
-        } catch (e) {
-            showToast("Falha ao se conectar aos servidores Nexo.", "error");
-        } finally {
-            setLoadingRank(false);
+                });
+                setAllUsers(usersList);
+            } catch (e) {
+                showToast("Falha ao sincronizar Ranking.", "error");
+            } finally {
+                setLoadingRank(false);
+            }
+        };
+        fetchAllProfiles();
+    }, [activeTab]);
+
+    // ORDENAÇÃO MATEMÁTICA DAS ABAS DO RANKING
+    const sortedUsers = useMemo(() => {
+        let sorted = [...allUsers];
+        switch (rankCategory) {
+            case 'Geral':
+                sorted.sort((a, b) => (b.level || 0) - (a.level || 0) || (b.xp || 0) - (a.xp || 0));
+                break;
+            case 'Ativos':
+                sorted.sort((a, b) => (b.coins || 0) - (a.coins || 0));
+                break;
+            case 'Colecionadores':
+                sorted.sort((a, b) => (b.inventory?.length || 0) - (a.inventory?.length || 0));
+                break;
+            case 'Leitores':
+                sorted.sort((a, b) => (b.xp || 0) - (a.xp || 0));
+                break;
+            case 'Comentadores':
+                sorted.sort((a, b) => (b.crystals || 0) - (a.crystals || 0));
+                break;
+            default:
+                break;
         }
+        return sorted;
+    }, [allUsers, rankCategory]);
+
+    const top3 = sortedUsers.slice(0, 3);
+    const restOfUsers = sortedUsers.slice(3, 100);
+
+    const getRankBadge = (level) => {
+        const lvl = level || 1;
+        if (lvl >= 50) return { text: "Rank S", color: "text-purple-400" };
+        if (lvl >= 40) return { text: "Rank A+", color: "text-red-400" };
+        if (lvl >= 30) return { text: "Rank A", color: "text-blue-400" };
+        if (lvl >= 20) return { text: "Rank B", color: "text-green-400" };
+        if (lvl >= 10) return { text: "Rank C", color: "text-yellow-400" };
+        return { text: "Rank E", color: "text-gray-400" };
     };
+
+    const rankingTabs = [
+        { id: 'Geral', title: 'MONARCAS', subtitle: 'Geral', icon: <Flame className="w-4 h-4" /> },
+        { id: 'Ativos', title: 'HUNTERS', subtitle: 'Mais ativos', icon: <Swords className="w-4 h-4" /> },
+        { id: 'Leitores', title: 'LEITORES', subtitle: 'Mais XP', icon: <BookOpen className="w-4 h-4" /> },
+        { id: 'Comentadores', title: 'INTERAÇÃO', subtitle: 'Mais cristais', icon: <MessageSquare className="w-4 h-4" /> },
+        { id: 'Colecionadores', title: 'COLEÇÃO', subtitle: 'Mais itens', icon: <Bookmark className="w-4 h-4" /> },
+    ];
 
     const lastClaim = userProfileData.lastDailyBox || 0;
     const today = new Date();
@@ -160,9 +203,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     };
 
     const handleBuyBoxWithXPClick = () => {
-        if ((userProfileData.xp || 0) < 1000) {
-            return showToast("XP Insuficiente. Você precisa de 1000 XP.", "error");
-        }
+        if ((userProfileData.xp || 0) < 1000) return showToast("XP Insuficiente.", "error");
         setShowSacrificeModal(true);
     };
 
@@ -171,13 +212,11 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         try {
             let { newXp, newLvl } = removeXpLogic(userProfileData.xp || 0, userProfileData.level || 1, 1000);
             await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), {
-                xp: newXp,
-                level: newLvl,
-                caixas: increment(1)
+                xp: newXp, level: newLvl, caixas: increment(1)
             });
-            showToast("Conversão aceita. Você forjou 1 Caixa Nexo.", "success");
+            showToast("Você forjou 1 Caixa Nexo.", "success");
         } catch (e) {
-            showToast("Falha no processo de conversão.", "error");
+            showToast("Falha na conversão.", "error");
         }
     };
 
@@ -186,7 +225,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
         if (caixas < 1) return showToast("Você não possui Caixas Nexo.", "error");
 
         setIsOpeningBoxAnim(true);
-        
         setTimeout(async () => {
             try {
                 let rewardType = '';
@@ -196,7 +234,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 let newInv = [...(userProfileData.inventory || [])];
 
                 const mainRoll = Math.random();
-                
                 if (mainRoll < 0.30) {
                     const rarityRoll = Math.random();
                     let targetRarity = 'Comum';
@@ -204,18 +241,15 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     else if (rarityRoll < 0.05) targetRarity = 'Lendário'; 
                     else if (rarityRoll < 0.20) targetRarity = 'Épico'; 
                     else if (rarityRoll < 0.50) targetRarity = 'Raro'; 
-                    else targetRarity = 'Comum'; 
 
                     const availableItems = shopItems.filter(i => !newInv.includes(i.id));
                     let possibleItems = availableItems.filter(i => (i.raridade || 'Comum').toLowerCase() === targetRarity.toLowerCase());
-                    
                     if (possibleItems.length === 0) possibleItems = availableItems;
 
                     if (possibleItems.length > 0) {
                         rewardType = 'cosmetic';
-                        const randomItem = possibleItems[Math.floor(Math.random() * possibleItems.length)];
-                        rewardValue = randomItem;
-                        newInv.push(randomItem.id);
+                        rewardValue = possibleItems[Math.floor(Math.random() * possibleItems.length)];
+                        newInv.push(rewardValue.id);
                     } else {
                         rewardType = 'coins';
                         rewardValue = 2500; 
@@ -225,9 +259,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     rewardType = 'xp';
                     rewardValue = Math.floor(Math.random() * 500) + 200;
                     const xpLogic = addXpLogic(userProfileData.xp || 0, userProfileData.level || 1, rewardValue);
-                    newXp = xpLogic.newXp;
-                    newLvl = xpLogic.newLvl;
-                    didLevelUp = xpLogic.didLevelUp;
+                    newXp = xpLogic.newXp; newLvl = xpLogic.newLvl; didLevelUp = xpLogic.didLevelUp;
                 } else {
                     rewardType = 'coins';
                     rewardValue = Math.floor(Math.random() * 400) + 100;
@@ -235,17 +267,13 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                 }
 
                 await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'profile', 'main'), {
-                    caixas: increment(-1),
-                    coins: newCoins,
-                    xp: newXp,
-                    level: newLvl,
-                    inventory: newInv
+                    caixas: increment(-1), coins: newCoins, xp: newXp, level: newLvl, inventory: newInv
                 });
 
                 setBoxReward({ type: rewardType, value: rewardValue });
                 if (didLevelUp) onLevelUp(newLvl);
             } catch (e) {
-                showToast("Erro ao processar a abertura.", "error");
+                showToast("Erro ao abrir.", "error");
             } finally {
                 setIsOpeningBoxAnim(false);
             }
@@ -253,25 +281,31 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
     };
 
     const runSynthesis = async () => {
-        if ((userProfileData.crystals || 0) < 5) return showToast("Massa insuficiente. Colete 5 Cristais.", "error");
+        if ((userProfileData.crystals || 0) < 5) return showToast("Matéria insuficiente.", "error");
         setSynthesizing(true);
         setTimeout(async () => {
           const res = await synthesizeCrystal(); setSynthesizing(false);
-          if (res?.success) showToast(`Transmutação Bem-Sucedida!`, 'success');
-          else showToast(`Colapso! Matéria desintegrada.`, 'error');
+          if (res?.success) showToast(`Sucesso!`, 'success');
+          else showToast(`Falha.`, 'error');
         }, 1500);
     };
 
     const equipped = userProfileData.equipped_items || {};
 
     return (
-        <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-white bg-[#030014] overflow-x-hidden`}>
+        <div className={`pb-24 animate-in fade-in duration-500 relative font-sans min-h-screen text-white overflow-x-hidden ${activeTab === 'Ranking' ? 'bg-[#060014]' : 'bg-[#030014]'}`}>
             
-            {/* BACKGROUND ANIMADO NEXO */}
+            {/* LUZES DE FUNDO GERAIS */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-cyan-600/10 blur-[150px] rounded-full mix-blend-screen"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-blue-600/10 blur-[120px] rounded-full mix-blend-screen"></div>
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50 mix-blend-overlay"></div>
+                {activeTab === 'Ranking' ? (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-2xl h-[500px] bg-purple-600/20 blur-[150px] rounded-full"></div>
+                ) : (
+                    <>
+                        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-cyan-600/10 blur-[150px] rounded-full mix-blend-screen"></div>
+                        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-blue-600/10 blur-[120px] rounded-full mix-blend-screen"></div>
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wMykiLz48L3N2Zz4=')] opacity-50 mix-blend-overlay"></div>
+                    </>
+                )}
             </div>
             
             {showSacrificeModal && (
@@ -291,6 +325,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
 
             {selectedUserId && <PublicProfileModal userId={selectedUserId} onClose={() => setSelectedUserId(null)} currentUserId={user?.uid} />}
 
+            {/* ANIMAÇÃO DA CAIXA */}
             {isOpeningBoxAnim && (
                 <div className="fixed inset-0 z-[9999] bg-[#030014]/95 backdrop-blur-md flex flex-col items-center justify-center overflow-hidden">
                     <style>{`
@@ -298,28 +333,10 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                         .anim-chest-shake { animation: chest-shake 2.2s cubic-bezier(.36,.07,.19,.97) both; }
                         .anim-chest-burst { animation: chest-burst 2.5s ease-out both; }
                         .anim-chest-open { animation: chest-open 2.5s ease-out both; }
-                        
-                        @keyframes float {
-                            0%, 100% { transform: translateY(0); }
-                            50% { transform: translateY(-15px); }
-                        }
-                        @keyframes chest-shake {
-                            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(6,182,212,0.5)); }
-                            10%, 30%, 50%, 70% { transform: scale(1.1) translate(-6px, 3px) rotate(-6deg); filter: drop-shadow(0 0 30px rgba(6,182,212,0.8)); }
-                            20%, 40%, 60%, 80% { transform: scale(1.1) translate(6px, -3px) rotate(6deg); filter: drop-shadow(0 0 50px rgba(139,92,246,0.9)); }
-                            85% { transform: scale(1.2) rotate(0deg); filter: brightness(1.5) drop-shadow(0 0 100px rgba(6,182,212,1)); opacity: 1; }
-                            90%, 100% { transform: scale(1.5); opacity: 0; }
-                        }
-                        @keyframes chest-burst {
-                            0%, 82% { opacity: 0; transform: scale(0); }
-                            86% { opacity: 1; transform: scale(1.5); background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(6,182,212,0.9) 40%, transparent 70%); }
-                            100% { opacity: 0; transform: scale(4.5); background: radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(6,182,212,0) 40%, transparent 70%); }
-                        }
-                        @keyframes chest-open {
-                            0%, 85% { opacity: 0; transform: scale(0.5) translateY(30px); filter: brightness(1); }
-                            90% { opacity: 1; transform: scale(1.3) translateY(-15px); filter: brightness(2) drop-shadow(0 0 60px rgba(255,255,255,1)); }
-                            100% { opacity: 1; transform: scale(1.1) translateY(0); filter: brightness(1.2) drop-shadow(0 0 40px rgba(6,182,212,0.8)); }
-                        }
+                        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+                        @keyframes chest-shake { 0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(6,182,212,0.5)); } 10%, 30%, 50%, 70% { transform: scale(1.1) translate(-6px, 3px) rotate(-6deg); filter: drop-shadow(0 0 30px rgba(6,182,212,0.8)); } 20%, 40%, 60%, 80% { transform: scale(1.1) translate(6px, -3px) rotate(6deg); filter: drop-shadow(0 0 50px rgba(139,92,246,0.9)); } 85% { transform: scale(1.2) rotate(0deg); filter: brightness(1.5) drop-shadow(0 0 100px rgba(6,182,212,1)); opacity: 1; } 90%, 100% { transform: scale(1.5); opacity: 0; } }
+                        @keyframes chest-burst { 0%, 82% { opacity: 0; transform: scale(0); } 86% { opacity: 1; transform: scale(1.5); background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(6,182,212,0.9) 40%, transparent 70%); } 100% { opacity: 0; transform: scale(4.5); background: radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(6,182,212,0) 40%, transparent 70%); } }
+                        @keyframes chest-open { 0%, 85% { opacity: 0; transform: scale(0.5) translateY(30px); filter: brightness(1); } 90% { opacity: 1; transform: scale(1.3) translateY(-15px); filter: brightness(2) drop-shadow(0 0 60px rgba(255,255,255,1)); } 100% { opacity: 1; transform: scale(1.1) translateY(0); filter: brightness(1.2) drop-shadow(0 0 40px rgba(6,182,212,0.8)); } }
                     `}</style>
                     <div className="absolute w-[30rem] h-[30rem] rounded-full anim-chest-burst z-10 pointer-events-none"></div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center anim-chest-shake z-20 pointer-events-none">
@@ -378,22 +395,20 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     </div>
                 </div>
 
-                {/* FORJA (REATOR) - OTIMIZADO E ANIMADO */}
+                {/* --- CONTEÚDO DAS ABAS --- */}
+
+                {/* FORJA */}
                 {activeTab === "Forja" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-lg mx-auto relative z-10 mt-2">
                         <div className="bg-[#0a0a0f]/80 backdrop-blur-2xl border border-cyan-500/30 p-10 rounded-[2.5rem] relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-                            
-                            {/* ANEIS ROTATIVOS DA FORJA (GPU Accelerated) */}
                             <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none -mt-16">
                                 <div className="w-[320px] h-[320px] rounded-full border border-cyan-500/40 animate-[spin_12s_linear_infinite]"></div>
                                 <div className="w-[240px] h-[240px] rounded-full border-[2px] border-blue-400/30 absolute animate-[spin_8s_linear_infinite_reverse] border-dashed"></div>
                                 <div className="w-[160px] h-[160px] rounded-full border-2 border-cyan-300/50 absolute animate-pulse"></div>
                             </div>
-                            
                             <div className="w-28 h-28 mx-auto mb-6 flex items-center justify-center relative z-10 bg-[#121520] rounded-full border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.2)]">
                                 <Zap className="w-14 h-14 text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]" fill="currentColor" fillOpacity="0.2"/>
                             </div>
-                            
                             <h2 className="text-3xl font-black text-white text-center mb-2 relative z-10 tracking-widest drop-shadow-md">
                                 REATOR <span className="text-cyan-400">NEXO</span>
                             </h2>
@@ -401,7 +416,6 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                 TRANSMUTE <span className="text-cyan-400">5 CRISTAIS</span> EM PODER BRUTO.<br/>
                                 <span className="text-red-400">40% DE CHANCE</span> DE COLAPSO.
                             </p>
-                            
                             <div className="bg-[#121520]/80 border border-white/5 rounded-3xl p-6 mb-8 relative z-10">
                                 <h3 className="text-center text-blue-400 text-[10px] font-black tracking-[0.3em] uppercase mb-4 opacity-80">
                                     Carga de Matéria
@@ -412,38 +426,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                     </span>
                                     <Hexagon className="w-12 h-12 text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)]" strokeWidth={2}/>
                                 </div>
-                                <div className="flex items-center justify-center gap-4 max-w-[200px] mx-auto relative mt-2">
-                                    <div className="absolute left-0 top-1/2 w-full h-[2px] bg-[#0a0a0f] -translate-y-1/2 z-0"></div>
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                        <div key={i} className={`relative z-10 w-3 h-3 rounded-full transition-all duration-500 ${i <= (userProfileData.crystals || 0) ? 'bg-cyan-400 shadow-[0_0_15px_rgba(6,182,212,1)] scale-125' : 'bg-[#0a0a0f] border border-white/10'}`}></div>
-                                    ))}
-                                </div>
                             </div>
-                            
-                            <div className="flex justify-between items-center bg-[#121520]/50 border border-white/5 rounded-2xl p-4 mb-8 relative z-10 divide-x divide-white/5">
-                                <div className="flex flex-col items-center flex-1 px-1">
-                                    <div className="flex items-center gap-1.5 mb-2 h-6">
-                                        <Hexagon className="w-3.5 h-3.5 text-cyan-500"/>
-                                        <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest leading-tight">Custo</span>
-                                    </div>
-                                    <span className="text-base font-black text-white">5</span>
-                                </div>
-                                <div className="flex flex-col items-center flex-1 px-1">
-                                    <div className="flex items-center gap-1.5 mb-2 h-6">
-                                        <Zap className="w-3.5 h-3.5 text-blue-500"/>
-                                        <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest leading-tight">Sucesso</span>
-                                    </div>
-                                    <span className="text-base font-black text-blue-400">60%</span>
-                                </div>
-                                <div className="flex flex-col items-center flex-1 px-1">
-                                    <div className="flex items-center gap-1.5 mb-2 h-6">
-                                        <Shield className="w-3.5 h-3.5 text-gray-500"/>
-                                        <span className="text-[7px] font-black text-gray-500 uppercase tracking-widest leading-tight">Falha</span>
-                                    </div>
-                                    <span className="text-base font-black text-red-400">40%</span>
-                                </div>
-                            </div>
-                            
                             <button onClick={runSynthesis} disabled={synthesizing || (userProfileData.crystals || 0) < 5} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 disabled:grayscale text-white font-black py-5 rounded-[1.2rem] text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all relative z-10 shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-1 transform-gpu">
                                 {synthesizing ? <Loader2 className="w-5 h-5 animate-spin" /> : <>INICIAR SÍNTESE <ArrowRight className="w-4 h-4"/></>}
                             </button>
@@ -451,117 +434,7 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                     </div>
                 )}
 
-                {/* RANKING - PÓDIOS ILUMINADOS */}
-                {activeTab === "Ranking" && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto pb-10">
-                        <div className="flex justify-center mb-16">
-                            <div className="flex items-center gap-3 bg-[#0a0a0f] border border-white/5 px-8 py-4 rounded-full shadow-lg">
-                                <Trophy className="w-6 h-6 text-blue-500 fill-blue-500 drop-shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
-                                <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-[0.3em] drop-shadow-md">Ranking Global</h2>
-                            </div>
-                        </div>
-
-                        {loadingRank ? (
-                            <div className="flex justify-center py-20"><Loader2 className="w-12 h-12 text-cyan-500 animate-spin"/></div>
-                        ) : (
-                            <>
-                                <div className="flex justify-center items-end gap-3 md:gap-8 mb-20 mt-8">
-                                    {/* 2º LUGAR */}
-                                    {rankingList[1] && (
-                                        <div onClick={() => setSelectedUserId(rankingList[1].id)} className="w-[30%] max-w-[170px] relative flex flex-col items-center order-1 cursor-pointer group transform hover:-translate-y-2 transition-transform duration-300">
-                                            <div className="absolute -top-12 text-center">
-                                                <div className="w-10 h-10 mx-auto bg-[#0a0a0f] border-2 border-blue-400 flex items-center justify-center rounded-lg transform rotate-45 shadow-[0_0_15px_rgba(96,165,250,0.5)] group-hover:bg-blue-900/30 transition-colors">
-                                                    <span className="text-xl font-black text-blue-100 -rotate-45">2</span>
-                                                </div>
-                                            </div>
-                                            <div className="relative mt-4">
-                                                <div className="absolute inset-0 rounded-full bg-blue-500 blur-[20px] opacity-40 group-hover:opacity-60 transition-opacity"></div>
-                                                <div className="w-24 h-24 rounded-full border-[3px] border-blue-400 overflow-hidden relative z-10 bg-[#05050a]">
-                                                    <img src={cleanCosmeticUrl(rankingList[1].avatarUrl) || 'https://placehold.co/100x100/0a0a0f/3b82f6?text=N'} className="w-full h-full object-cover" />
-                                                </div>
-                                            </div>
-                                            <div className="mt-5 text-center w-full bg-[#0a0a0f]/80 backdrop-blur-md border border-white/5 p-3 rounded-2xl">
-                                                <h4 className="font-black text-xs text-white uppercase truncate">{rankingList[1].displayName || rankingList[1].name || "Leitor"}</h4>
-                                                <div className="mt-2 bg-[#121520] border border-blue-500/30 text-blue-400 px-3 py-1 rounded-full text-[9px] font-black inline-block uppercase tracking-widest">NV. {rankingList[1].level || 1}</div>
-                                            </div>
-                                            {/* Pedestal */}
-                                            <div className="w-[80%] h-8 bg-gradient-to-b from-blue-900/40 to-transparent mt-2 rounded-t-xl border-t-2 border-blue-500/50"></div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* 1º LUGAR */}
-                                    {rankingList[0] && (
-                                        <div onClick={() => setSelectedUserId(rankingList[0].id)} className="w-[35%] max-w-[200px] relative flex flex-col items-center order-2 z-10 cursor-pointer group transform hover:-translate-y-2 transition-transform duration-300">
-                                            <div className="absolute -top-16 text-center z-20">
-                                                <Crown className="w-8 h-8 text-yellow-400 fill-yellow-400 mx-auto -mb-2 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] animate-bounce" />
-                                                <div className="w-12 h-12 mx-auto bg-[#0a0a0f] border-[3px] border-yellow-400 flex items-center justify-center rounded-lg transform rotate-45 shadow-[0_0_20px_rgba(250,204,21,0.5)] group-hover:bg-yellow-900/30 transition-colors">
-                                                    <span className="text-2xl font-black text-yellow-100 -rotate-45">1</span>
-                                                </div>
-                                            </div>
-                                            <div className="relative mt-2">
-                                                <div className="absolute inset-0 rounded-full bg-purple-500 blur-[25px] opacity-50 group-hover:opacity-80 transition-opacity"></div>
-                                                <div className="w-32 h-32 rounded-full border-[4px] border-yellow-400 overflow-hidden relative z-10 bg-[#05050a] shadow-[0_0_30px_rgba(250,204,21,0.3)]">
-                                                    <img src={cleanCosmeticUrl(rankingList[0].avatarUrl) || 'https://placehold.co/100x100/0a0a0f/eab308?text=N'} className="w-full h-full object-cover" />
-                                                </div>
-                                            </div>
-                                            <div className="mt-5 text-center w-full bg-[#0a0a0f]/90 backdrop-blur-md border border-yellow-500/30 p-4 rounded-2xl shadow-xl">
-                                                <h4 className="font-black text-sm text-white uppercase truncate">{rankingList[0].displayName || rankingList[0].name || "Lenda"}</h4>
-                                                <p className="text-[9px] text-purple-400 font-bold uppercase tracking-widest mt-1">{getLevelTitle(rankingList[0].level)}</p>
-                                                <div className="mt-2.5 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500/50 text-white px-4 py-1.5 rounded-full text-[10px] font-black inline-block shadow-inner">NÍVEL {rankingList[0].level || 1}</div>
-                                            </div>
-                                            {/* Pedestal */}
-                                            <div className="w-[90%] h-12 bg-gradient-to-b from-yellow-900/30 to-transparent mt-2 rounded-t-xl border-t-[3px] border-yellow-400/60"></div>
-                                        </div>
-                                    )}
-
-                                    {/* 3º LUGAR */}
-                                    {rankingList[2] && (
-                                        <div onClick={() => setSelectedUserId(rankingList[2].id)} className="w-[30%] max-w-[170px] relative flex flex-col items-center order-3 cursor-pointer group transform hover:-translate-y-2 transition-transform duration-300">
-                                            <div className="absolute -top-12 text-center">
-                                                <div className="w-10 h-10 mx-auto bg-[#0a0a0f] border-2 border-orange-400 flex items-center justify-center rounded-lg transform rotate-45 shadow-[0_0_15px_rgba(249,115,22,0.5)] group-hover:bg-orange-900/30 transition-colors">
-                                                    <span className="text-xl font-black text-orange-100 -rotate-45">3</span>
-                                                </div>
-                                            </div>
-                                            <div className="relative mt-4">
-                                                <div className="absolute inset-0 rounded-full bg-orange-500 blur-[20px] opacity-40 group-hover:opacity-60 transition-opacity"></div>
-                                                <div className="w-24 h-24 rounded-full border-[3px] border-orange-400 overflow-hidden relative z-10 bg-[#05050a]">
-                                                    <img src={cleanCosmeticUrl(rankingList[2].avatarUrl) || 'https://placehold.co/100x100/0a0a0f/f97316?text=N'} className="w-full h-full object-cover" />
-                                                </div>
-                                            </div>
-                                            <div className="mt-5 text-center w-full bg-[#0a0a0f]/80 backdrop-blur-md border border-white/5 p-3 rounded-2xl">
-                                                <h4 className="font-black text-xs text-white uppercase truncate">{rankingList[2].displayName || rankingList[2].name || "Leitor"}</h4>
-                                                <div className="mt-2 bg-[#121520] border border-orange-500/30 text-orange-400 px-3 py-1 rounded-full text-[9px] font-black inline-block uppercase tracking-widest">NV. {rankingList[2].level || 1}</div>
-                                            </div>
-                                            {/* Pedestal */}
-                                            <div className="w-[80%] h-6 bg-gradient-to-b from-orange-900/40 to-transparent mt-2 rounded-t-xl border-t-2 border-orange-500/50"></div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="flex flex-col gap-3 mt-4 px-2">
-                                    {rankingList.slice(3, 20).map((player, idx) => (
-                                        <div key={player.id} onClick={() => setSelectedUserId(player.id)} className="bg-[#0a0a0f] border border-white/5 p-4 flex items-center gap-4 hover:border-cyan-500/30 transition-all duration-300 group cursor-pointer rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transform-gpu">
-                                            <div className="w-8 text-center text-lg font-black text-gray-500 group-hover:text-cyan-400 transition-colors">{idx + 4}</div>
-                                            <div className="w-12 h-12 rounded-full border-2 border-[#121520] overflow-hidden flex-shrink-0 bg-[#121520] group-hover:border-cyan-500/50 transition-colors">
-                                                <img src={cleanCosmeticUrl(player.avatarUrl) || 'https://placehold.co/100x100/0a0a0f/06b6d4?text=N'} className="w-full h-full object-cover" />
-                                            </div>
-                                            <div className="flex-1 flex flex-col justify-center min-w-0">
-                                                <h4 className="text-gray-100 font-black text-xs uppercase truncate group-hover:text-white transition-colors">{player.displayName || player.name || "Leitor"}</h4>
-                                                <p className="text-cyan-600 font-bold text-[9px] uppercase tracking-widest truncate mt-1">{getLevelTitle(player.level)}</p>
-                                            </div>
-                                            <div className="bg-[#121520] border border-white/5 text-cyan-400 px-4 py-1.5 rounded-xl font-black text-[10px] uppercase shadow-inner">
-                                                NV. {player.level || 1}
-                                            </div>
-                                            <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-cyan-400 transition-colors hidden sm:block flex-shrink-0" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {/* CAIXAS - PREMIUM E ELEGANTE */}
+                {/* CAIXAS */}
                 {activeTab === "Caixas" && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-lg mx-auto pb-10">
                         <div className="text-center mb-10">
@@ -572,30 +445,22 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                 Abra caixas e ganhe itens <span className="text-fuchsia-400">raros</span> para seu perfil.
                             </p>
                         </div>
-                        
                         <div className="bg-[#0a0a0f]/80 backdrop-blur-xl border border-cyan-500/20 rounded-[2.5rem] p-8 relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)] mb-6 flex flex-col items-center group hover:border-cyan-500/40 transition-colors">
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.1),transparent_70%)] pointer-events-none"></div>
-                            
                             <div className="relative w-full flex flex-col items-center mt-4">
                                 <div className="absolute bottom-6 w-56 h-12 bg-transparent border-t-[2px] border-cyan-600/50 rounded-[100%] shadow-[0_-15px_30px_rgba(6,182,212,0.3)]"></div>
-                                {/* Animação de Flutuação da Caixa */}
                                 <img src={CHEST_CLOSED} className="w-56 h-56 object-contain relative z-10 drop-shadow-[0_15px_20px_rgba(0,0,0,0.5)] anim-float -translate-y-2" alt="Caixa Nexo" />
                             </div>
-                            
                             <div className="text-center mt-6 mb-8 w-full">
                                 <h3 className="text-6xl font-black text-white leading-none drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-tighter">{userProfileData.caixas || 0}</h3>
                                 <p className="text-[9px] text-cyan-500 font-bold uppercase tracking-[0.3em] mt-2">Disponíveis</p>
                             </div>
-                            
                             <button onClick={handleOpenBox} disabled={(userProfileData.caixas || 0) < 1 || isOpeningBoxAnim} className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 disabled:from-[#121520] disabled:to-[#121520] disabled:border-white/5 disabled:text-gray-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black py-5 rounded-2xl text-[11px] uppercase tracking-[0.2em] transition-all relative z-10 shadow-[0_10px_20px_rgba(6,182,212,0.3)] disabled:shadow-none transform-gpu hover:-translate-y-1 disabled:translate-y-0">
                                 Desvendar Recompensa
                             </button>
                         </div>
-                        
-                        {/* PAINEL DE RESGATE DIÁRIO - COM CRONÔMETRO CORRIGIDO */}
                         <div className="bg-[#0a0a0f]/80 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col gap-5">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[40px] pointer-events-none"></div>
-                            
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 flex-shrink-0 bg-[#121520] rounded-2xl border border-white/5 flex items-center justify-center text-cyan-400 shadow-inner"><Calendar className="w-5 h-5"/></div>
                                 <div>
@@ -603,19 +468,150 @@ export function NexoView({ user, userProfileData, showToast, mangas, onNavigate,
                                     <p className="text-[10px] text-gray-500 leading-snug font-medium">1 Caixa Nexo <span className="text-cyan-400">gratuita</span> todos os dias.</p>
                                 </div>
                             </div>
-                            
                             <div className="w-full bg-[#121520] rounded-xl p-4 flex items-center justify-between border border-white/5">
                                 <p className="text-[9px] text-gray-500 font-bold uppercase tracking-[0.2em]">Disponibilidade</p>
                                 {canClaimDaily ? (
                                     <button onClick={handleClaimDaily} className="bg-cyan-500 hover:bg-cyan-400 text-black font-black px-6 py-2 rounded-lg text-[10px] uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all">Resgatar Agora</button>
                                 ) : (
-                                    // AQUI ESTÁ O CRONÔMETRO FUNCIONANDO PERFEITAMENTE
                                     <span className="text-lg font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.5)] tracking-widest">{countdown}</span>
                                 )}
                             </div>
                         </div>
                     </div>
                 )}
+
+                {/* NOVO RANKING PREMIUM IGUAL À FOTO */}
+                {activeTab === "Ranking" && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto pb-10">
+                        <div className="text-center mb-8 relative z-10">
+                            <Crown className="w-12 h-12 text-purple-500 mx-auto mb-2 drop-shadow-[0_0_15px_rgba(168,85,247,0.6)]" />
+                            <h1 className="text-5xl font-black uppercase tracking-widest bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400 drop-shadow-lg mb-1">
+                                RANKING
+                            </h1>
+                            <p className="text-gray-400 text-xs font-bold uppercase tracking-[0.2em]">Os mais fortes da comunidade.</p>
+                        </div>
+
+                        {/* ABAS DO RANKING */}
+                        <div className="mb-12 overflow-x-auto no-scrollbar relative z-10">
+                            <div className="flex gap-3 w-max mx-auto px-2">
+                                {rankingTabs.map(tab => (
+                                    <button 
+                                        key={tab.id}
+                                        onClick={() => setRankCategory(tab.id)}
+                                        className={`flex flex-col items-center justify-center px-6 py-3 rounded-2xl border transition-all min-w-[120px]
+                                        ${rankCategory === tab.id 
+                                            ? 'bg-gradient-to-b from-purple-600/40 to-indigo-900/40 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
+                                            : 'bg-[#0f0524]/60 border-white/5 hover:border-white/20'}`}
+                                    >
+                                        <div className={`${rankCategory === tab.id ? 'text-white' : 'text-gray-500'} mb-1`}>{tab.icon}</div>
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${rankCategory === tab.id ? 'text-white' : 'text-gray-400'}`}>{tab.title}</span>
+                                        <span className="text-[8px] text-gray-500 font-bold uppercase tracking-widest">{tab.subtitle}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {loadingRank ? (
+                            <div className="flex flex-col items-center justify-center py-20 relative z-10">
+                                <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
+                                <p className="text-purple-400 font-black tracking-widest text-xs uppercase animate-pulse">Calculando Ranks...</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* PÓDIO TOP 3 */}
+                                {top3.length > 0 && (
+                                    <div className="flex items-end justify-center gap-2 md:gap-6 mb-12 relative z-10 mt-16 px-2">
+                                        
+                                        {/* 2º LUGAR */}
+                                        {top3[1] && (
+                                            <div onClick={() => setSelectedUserId(top3[1].id)} className="w-[30%] max-w-[140px] flex flex-col items-center order-1 cursor-pointer group transform hover:-translate-y-2 transition-transform duration-300">
+                                                <div className="relative w-full aspect-square rounded-[2rem] p-1 bg-gradient-to-b from-blue-400 to-transparent shadow-[0_0_30px_rgba(96,165,250,0.3)] mb-4">
+                                                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-500 text-white font-black text-sm rounded-lg flex items-center justify-center border-2 border-[#060014] z-20">2</div>
+                                                    <img src={cleanCosmeticUrl(top3[1].equipped_items?.avatar?.preview) || top3[1].avatarUrl || 'https://placehold.co/150/0f0524/60a5fa?text=2'} className="w-full h-full object-cover rounded-[1.8rem] bg-[#0f0524]" />
+                                                </div>
+                                                <h3 className="font-black text-sm truncate w-full text-center text-white">{top3[1].name || top3[1].displayName || 'Anônimo'}</h3>
+                                                <div className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest mt-1 mb-2">NV. {top3[1].level || 1}</div>
+                                                <div className="flex items-center gap-1 font-black text-white text-sm"><Flame className="w-3 h-3 text-blue-400"/> {top3[1].xp || 0}</div>
+                                            </div>
+                                        )}
+
+                                        {/* 1º LUGAR */}
+                                        {top3[0] && (
+                                            <div onClick={() => setSelectedUserId(top3[0].id)} className="w-[36%] max-w-[170px] flex flex-col items-center order-2 -translate-y-8 cursor-pointer group transform hover:-translate-y-2 transition-transform duration-300">
+                                                <div className="relative w-full aspect-square rounded-[2.5rem] p-1 bg-gradient-to-b from-yellow-400 via-yellow-600 to-transparent shadow-[0_0_40px_rgba(250,204,21,0.4)] mb-4 z-10">
+                                                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 w-12 h-12 bg-gradient-to-b from-yellow-300 to-yellow-600 text-white font-black text-xl rounded-xl flex items-center justify-center border-4 border-[#060014] z-20 shadow-lg">1</div>
+                                                    <img src={cleanCosmeticUrl(top3[0].equipped_items?.avatar?.preview) || top3[0].avatarUrl || 'https://placehold.co/200/0f0524/facc15?text=1'} className="w-full h-full object-cover rounded-[2.3rem] bg-[#0f0524]" />
+                                                </div>
+                                                <h3 className="font-black text-lg truncate w-full text-center text-yellow-400 drop-shadow-md">{top3[0].name || top3[0].displayName || 'Anônimo'}</h3>
+                                                <div className="px-3 py-1 rounded-md bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-[9px] font-black uppercase tracking-widest mt-1 mb-2">NV. {top3[0].level || 1}</div>
+                                                <div className="flex items-center gap-1.5 font-black text-white text-lg"><Flame className="w-4 h-4 text-yellow-500"/> {top3[0].xp || 0}</div>
+                                            </div>
+                                        )}
+
+                                        {/* 3º LUGAR */}
+                                        {top3[2] && (
+                                            <div onClick={() => setSelectedUserId(top3[2].id)} className="w-[30%] max-w-[140px] flex flex-col items-center order-3 cursor-pointer group transform hover:-translate-y-2 transition-transform duration-300">
+                                                <div className="relative w-full aspect-square rounded-[2rem] p-1 bg-gradient-to-b from-purple-500 to-transparent shadow-[0_0_30px_rgba(168,85,247,0.3)] mb-4">
+                                                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-8 h-8 bg-purple-500 text-white font-black text-sm rounded-lg flex items-center justify-center border-2 border-[#060014] z-20">3</div>
+                                                    <img src={cleanCosmeticUrl(top3[2].equipped_items?.avatar?.preview) || top3[2].avatarUrl || 'https://placehold.co/150/0f0524/a855f7?text=3'} className="w-full h-full object-cover rounded-[1.8rem] bg-[#0f0524]" />
+                                                </div>
+                                                <h3 className="font-black text-sm truncate w-full text-center text-white">{top3[2].name || top3[2].displayName || 'Anônimo'}</h3>
+                                                <div className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-widest mt-1 mb-2">NV. {top3[2].level || 1}</div>
+                                                <div className="flex items-center gap-1 font-black text-white text-sm"><Flame className="w-3 h-3 text-purple-500"/> {top3[2].xp || 0}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* LISTA TOP 100 */}
+                                <div className="max-w-4xl mx-auto relative z-10">
+                                    <div className="flex items-center justify-between mb-4 px-2">
+                                        <h3 className="font-black text-xs text-purple-400 uppercase tracking-[0.2em] flex items-center gap-2">TOP 100 <Flame className="w-3 h-3" /></h3>
+                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-500 uppercase tracking-widest">
+                                            Tempo real <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        {restOfUsers.length === 0 && top3.length === 0 && (
+                                            <p className="text-center text-gray-500 font-black text-xs py-10 uppercase tracking-widest">Nenhum registro no momento.</p>
+                                        )}
+                                        
+                                        {restOfUsers.map((player, index) => {
+                                            const rankPosition = index + 4;
+                                            const badge = getRankBadge(player.level);
+
+                                            return (
+                                                <div key={player.id} onClick={() => setSelectedUserId(player.id)} className="bg-[#0f0524]/60 border border-white/5 rounded-2xl p-4 flex items-center gap-4 hover:bg-[#1a0b3b] transition-colors cursor-pointer group">
+                                                    <div className="w-6 font-black text-gray-400 text-lg text-center group-hover:text-purple-400 transition-colors">{rankPosition}</div>
+                                                    
+                                                    <div className="w-12 h-12 rounded-full bg-black border border-white/10 overflow-hidden flex-shrink-0 group-hover:border-purple-500 transition-colors">
+                                                        <img src={cleanCosmeticUrl(player.equipped_items?.avatar?.preview) || player.avatarUrl || `https://placehold.co/100/0f0524/ffffff?text=${rankPosition}`} className="w-full h-full object-cover" />
+                                                    </div>
+                                                    
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-black text-sm text-white truncate group-hover:text-white">{player.name || player.displayName || 'Leitor Anônimo'}</h4>
+                                                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest truncate mt-0.5">{player.bio || 'Explorando obras'}</p>
+                                                    </div>
+
+                                                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                                        <div className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${badge.color}`}>
+                                                            <Crown className="w-3 h-3" /> {badge.text}
+                                                        </div>
+                                                        <div className="font-black text-white flex items-center gap-1.5">
+                                                            <Flame className="w-3.5 h-3.5 text-purple-500" /> {player.xp || 0}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
+
             </div>
         </div>
     );
