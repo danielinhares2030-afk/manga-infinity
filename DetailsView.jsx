@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Bookmark, Share2, MoreVertical, Star, Calendar, Book, Layout, Tag, MessageSquare, Play, CheckCircle, ChevronDown, Download, BookOpen } from 'lucide-react';
+import { ArrowLeft, Bookmark, Share2, MoreVertical, Star, Calendar, Book, Layout, Tag, MessageSquare, CheckCircle, ChevronDown, Download, BookOpen } from 'lucide-react';
 import { doc, updateDoc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { APP_ID } from './constants';
 import { CommentsSection } from './CommentsSection';
@@ -11,10 +11,10 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
     const [expandedSynopsis, setExpandedSynopsis] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [showAllChapters, setShowAllChapters] = useState(false);
+    const [chapterSortOrder, setChapterSortOrder] = useState('desc'); // 'desc' = Recentes, 'asc' = Antigos
 
     const libraryStatuses = ['Lendo', 'Concluído', 'Pausado', 'Dropado', 'Planejo Ler', 'Remover'];
 
-    // LÓGICA DE VISUALIZAÇÃO BLINDADA (CONTA APENAS UMA VEZ NA VIDA DO USUÁRIO)
     useEffect(() => {
         if (!manga?.id) return;
         const addView = async () => {
@@ -22,7 +22,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
             if (!localStorage.getItem(localKey)) {
                 try {
                     await updateDoc(doc(db, 'obras', manga.id), { views: increment(1) });
-                    localStorage.setItem(localKey, 'true'); // Fica salvo no celular para não contar de novo
+                    localStorage.setItem(localKey, 'true');
                 } catch (e) {}
             }
         };
@@ -56,11 +56,16 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
 
     const mangaHistory = (historyData || []).filter(h => h.mangaId === manga.id);
     const lastRead = mangaHistory.length > 0 ? mangaHistory[0] : null;
-    const chapters = manga.chapters || [];
-    const nextChapterToRead = lastRead ? chapters.find(c => Number(c.number) === Number(lastRead.chapterNumber) + 1) || chapters.find(c => c.id === lastRead.id) : chapters[chapters.length - 1];
+    
+    // ORDENAÇÃO REAL DE CAPÍTULOS
+    const rawChapters = manga.chapters || [];
+    const sortedChapters = [...rawChapters].sort((a, b) => {
+        if (chapterSortOrder === 'desc') return b.number - a.number;
+        return a.number - b.number;
+    });
 
-    // Paginação simples de Capítulos
-    const visibleChapters = showAllChapters ? chapters : chapters.slice(0, 5);
+    const nextChapterToRead = lastRead ? rawChapters.find(c => Number(c.number) === Number(lastRead.chapterNumber) + 1) || rawChapters.find(c => c.id === lastRead.id) : rawChapters[rawChapters.length - 1];
+    const visibleChapters = showAllChapters ? sortedChapters : sortedChapters.slice(0, 5);
 
     if (!manga) return null;
 
@@ -96,13 +101,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                     </div>
 
                     <div className="flex-1 flex flex-col justify-center">
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                            {(manga.genres || []).slice(0, 3).map(g => (
-                                <span key={g} className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    {g} <span className="text-red-600">•</span>
-                                </span>
-                            ))}
-                        </div>
                         <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight drop-shadow-lg">{manga.title}</h1>
                         
                         <div className="flex items-center gap-4 mb-6">
@@ -113,9 +111,27 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                             <span className="text-xs font-bold text-gray-500">{manga.views || '0'} visualizações</span>
                         </div>
 
+                        {/* INFORMAÇÕES MOVIDAS PARA O LADO DA CAPA */}
+                        <div className="grid grid-cols-2 gap-3 mb-6">
+                            {[
+                                { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Lançamento', value: new Date(manga.createdAt || Date.now()).getFullYear() },
+                                { icon: <Book className="w-4 h-4 text-gray-400" />, label: 'Formato', value: manga.type || 'Mangá' },
+                                { icon: <Layout className="w-4 h-4 text-gray-400" />, label: 'Capítulos', value: `${rawChapters.length}` },
+                                { icon: <Tag className="w-4 h-4 text-gray-400" />, label: 'Gêneros', value: (manga.genres || []).slice(0, 3).join(', ') || 'N/A' },
+                            ].map((info, idx) => (
+                                <div key={idx} className="bg-[#111] border border-white/5 rounded-xl p-3 flex items-center gap-3">
+                                    {info.icon}
+                                    <div>
+                                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">{info.label}</p>
+                                        <p className="text-xs font-bold text-white truncate">{info.value}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
                         <div>
                             <p className={`text-sm text-gray-400 leading-relaxed font-medium ${expandedSynopsis ? '' : 'line-clamp-3'}`}>
-                                {manga.synopsis || "Detalhes desta obra ainda não foram registrados no banco de dados."}
+                                {manga.synopsis || "Detalhes desta obra ainda não foram registrados."}
                             </p>
                             {manga.synopsis && manga.synopsis.length > 150 && (
                                 <button onClick={() => setExpandedSynopsis(!expandedSynopsis)} className="text-blue-500 text-xs font-bold mt-2 hover:text-blue-400 flex items-center gap-1">
@@ -167,24 +183,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    {[
-                        { icon: <Calendar className="w-5 h-5 text-gray-400" />, label: 'Lançamento', value: new Date(manga.createdAt || Date.now()).getFullYear() },
-                        { icon: <Book className="w-5 h-5 text-gray-400" />, label: 'Formato', value: manga.type || 'Mangá' },
-                        { icon: <Layout className="w-5 h-5 text-gray-400" />, label: 'Capítulos', value: `${chapters.length} capítulos` },
-                        { icon: <Tag className="w-5 h-5 text-gray-400" />, label: 'Gêneros', value: (manga.genres || []).slice(0, 3).join(', ') || 'Sem categoria' },
-                    ].map((info, idx) => (
-                        <div key={idx} className="bg-[#111] border border-white/5 rounded-2xl p-4 flex items-start gap-4">
-                            <div className="mt-1">{info.icon}</div>
-                            <div>
-                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{info.label}</p>
-                                <p className="text-xs font-bold text-white line-clamp-2">{info.value}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* COMENTÁRIOS COM DADOS REAIS */}
                 <div className="bg-[#111] border border-white/5 rounded-2xl p-5 mb-8">
                     <div className="flex items-center justify-between cursor-pointer" onClick={() => setShowComments(!showComments)}>
                         <h3 className="text-sm font-black flex items-center gap-2"><MessageSquare className="w-5 h-5 text-gray-400" /> Comentários</h3>
@@ -199,17 +197,23 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                     )}
                 </div>
 
-                {/* LISTA DE CAPÍTULOS FUNCIONAL */}
                 <div className="bg-[#111] border border-white/5 rounded-2xl p-5 mb-10">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-sm font-black flex items-center gap-2"><BookOpen className="w-5 h-5 text-gray-400" /> Capítulos</h3>
-                        <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
-                            Mais recentes
-                        </div>
+                        
+                        {/* ORDENAÇÃO DE CAPÍTULOS FUNCIONAL (Nativo) */}
+                        <select 
+                            value={chapterSortOrder} 
+                            onChange={(e) => setChapterSortOrder(e.target.value)}
+                            className="bg-[#0A0A0A] border border-white/10 text-gray-400 text-[10px] font-bold uppercase tracking-widest rounded-lg px-3 py-2 outline-none cursor-pointer"
+                        >
+                            <option value="desc">Mais recentes</option>
+                            <option value="asc">Mais antigos</option>
+                        </select>
                     </div>
 
                     <div className="flex flex-col gap-3">
-                        {chapters.length === 0 ? (
+                        {rawChapters.length === 0 ? (
                             <p className="text-center text-gray-500 font-bold text-xs py-10 uppercase tracking-widest">Nenhum capítulo disponível</p>
                         ) : (
                             visibleChapters.map(chapter => {
@@ -220,7 +224,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                     <div key={chapter.id} onClick={() => onChapterClick(manga, chapter)} className="flex items-center gap-4 bg-[#0A0A0A] border border-white/5 p-3 rounded-2xl hover:border-blue-500/50 cursor-pointer transition-all group">
                                         <div className="w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 relative">
                                             <img src={manga.coverUrl} className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-500" alt="Chap" />
-                                            {isNext && <div className="absolute top-1 left-1 w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>}
                                         </div>
                                         
                                         <div className="flex-1 min-w-0">
@@ -249,8 +252,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         )}
                     </div>
                     
-                    {/* BOTÃO VER TODOS FUNCIONAL */}
-                    {chapters.length > 5 && (
+                    {rawChapters.length > 5 && (
                         <button onClick={() => setShowAllChapters(!showAllChapters)} className="w-full mt-4 py-4 border-t border-white/5 text-[10px] font-black text-gray-400 hover:text-white uppercase tracking-[0.2em] transition-colors flex items-center justify-center gap-2">
                             {showAllChapters ? 'Ocultar capítulos' : 'Ver todos os capítulos'} <ChevronDown className={`w-3 h-3 transition-transform ${showAllChapters ? 'rotate-180' : ''}`} />
                         </button>
