@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Filter, RefreshCcw, Star, LayoutGrid, List, Flame, Bookmark, ChevronDown } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+// IMPORTAÇÃO CORRIGIDA: Adicionado o X, BookOpen e Play
+import { Search, Filter, RefreshCcw, Star, LayoutGrid, List, Flame, Bookmark, ChevronDown, X, BookOpen, Play } from 'lucide-react';
 
 export function CatalogView({ mangas = [], onNavigate, catalogState, setCatalogState }) {
     const [showFullFilters, setShowFullFilters] = useState(true);
@@ -210,7 +211,10 @@ export function CatalogView({ mangas = [], onNavigate, catalogState, setCatalogS
                                 <Bookmark className="w-3.5 h-3.5" />
                             </div>
 
-                            {/* Infos on Hover (optional, keeping it clean like the image) */}
+                            {/* Hover Play Button */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Play className="w-12 h-12 text-white fill-current drop-shadow-lg" />
+                            </div>
                         </div>
                         
                         <h4 className="font-bold text-sm text-white truncate mb-1.5">{manga.title}</h4>
