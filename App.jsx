@@ -5,7 +5,8 @@ import { doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, query, getDocs,
 import { app, auth, db } from './firebase'; 
 import { APP_ID, FALLBACK_SHOP_ITEMS } from './constants';
 import { getThemeClasses, removeXpLogic, addXpLogic, timeAgo, cleanCosmeticUrl } from './helpers';
-import { ErrorBoundary, GlobalToast, Footer, SplashScreen, NexoLogo } from './UIComponents';
+// ALTERAÇÃO FEITA: Importando EmpireLogo no lugar de NexoLogo
+import { ErrorBoundary, GlobalToast, Footer, SplashScreen, EmpireLogo } from './UIComponents';
 import { LoginView } from './LoginView';
 import { HomeView } from './HomeView';
 import { SearchView } from './SearchView';
@@ -231,48 +232,49 @@ function NexoScanApp() {
     const itemImg = eq.avatar.preview || eq.avatar.url || eq.avatar.img || eq.avatar.imagem || eq.avatar.image || eq.avatar.src || eq.avatar.foto || eq.avatar.link;
     return itemImg ? cleanCosmeticUrl(itemImg) : null;
   };
-  const activeAvatarSrc = getAvatarSrc() || cleanCosmeticUrl(userProfileData.avatarUrl) || user?.photoURL || `https://placehold.co/100x100/020205/0ea5e9?text=N`;
+  const activeAvatarSrc = getAvatarSrc() || cleanCosmeticUrl(userProfileData.avatarUrl) || user?.photoURL || `https://placehold.co/100x100/050505/ef4444?text=N`;
 
   return (
-    <div className={`min-h-screen font-sans selection:bg-cyan-600 selection:text-white flex flex-col transition-colors duration-300 ${getThemeClasses(userSettings.theme)} bg-[#020205] text-gray-200`}>
+    <div className={`min-h-screen font-sans selection:bg-red-600 selection:text-white flex flex-col transition-colors duration-300 ${getThemeClasses(userSettings.theme)} bg-[#050505] text-gray-200`}>
       <style dangerouslySetInnerHTML={{__html: [ ...shopItems.map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`), ...Object.values(eq).filter(Boolean).map(item => `.${item.cssClass || 'none'} { ${item.css || ''} } ${item.animacao || ''}`) ].join('\n')}} />
       <style>{`
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #0ea5e9; cursor: pointer; border: 2px solid white; box-shadow: 0 0 10px rgba(14,165,233,0.5); } 
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #ef4444; cursor: pointer; border: 2px solid white; box-shadow: 0 0 10px rgba(239,68,68,0.5); } 
         .no-scrollbar::-webkit-scrollbar { display: none; } 
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
-      {levelUpAlert && ( <div className="fixed top-20 right-4 z-[99999] bg-[#05050a]/95 backdrop-blur-md border border-cyan-500/30 text-white px-4 py-3 rounded-2xl flex items-center gap-3 animate-in slide-in-from-right fade-out duration-300 pointer-events-none shadow-[0_0_20px_rgba(6,182,212,0.3)]"><div className="bg-gradient-to-br from-cyan-500 to-blue-600 p-2 rounded-xl"><Trophy className="w-5 h-5 text-white" /></div><div className="flex flex-col"><span className="text-[10px] text-cyan-400 uppercase tracking-widest font-black">Poder Expandido!</span><span className="text-sm font-bold">Nível {levelUpAlert} Alcançado</span></div></div> )}
-      {dropAlert && ( <div className="fixed bottom-24 right-4 z-[99999] bg-[#05050a]/90 backdrop-blur-md border border-blue-500/50 rounded-2xl px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-out duration-300 pointer-events-none shadow-[0_0_20px_rgba(59,130,246,0.2)]"><div className="bg-blue-900/40 p-2 rounded-lg border border-blue-500/30"><Hexagon className="w-5 h-5 text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]" fill="currentColor" fillOpacity="0.2" /></div><div className="flex flex-col"><span className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Matéria Obtida</span><span className="text-white text-xs font-bold">+1 Cristal Nexo</span></div></div> )}
-      {isRandomizing && ( <div className="fixed inset-0 z-[2000] bg-[#020205]/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-100 pointer-events-none"><Dices className="w-24 h-24 text-cyan-500 animate-[spin_0.2s_linear_infinite]" /></div> )}
+      {levelUpAlert && ( <div className="fixed top-20 right-4 z-[99999] bg-[#0A0A0A]/95 backdrop-blur-md border border-red-500/30 text-white px-4 py-3 rounded-2xl flex items-center gap-3 animate-in slide-in-from-right fade-out duration-300 pointer-events-none shadow-[0_0_20px_rgba(239,68,68,0.3)]"><div className="bg-gradient-to-br from-red-600 to-blue-600 p-2 rounded-xl"><Trophy className="w-5 h-5 text-white" /></div><div className="flex flex-col"><span className="text-[10px] text-red-400 uppercase tracking-widest font-black">Poder Expandido!</span><span className="text-sm font-bold">Nível {levelUpAlert} Alcançado</span></div></div> )}
+      {dropAlert && ( <div className="fixed bottom-24 right-4 z-[99999] bg-[#0A0A0A]/90 backdrop-blur-md border border-blue-500/50 rounded-2xl px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-out duration-300 pointer-events-none shadow-[0_0_20px_rgba(59,130,246,0.2)]"><div className="bg-blue-900/40 p-2 rounded-lg border border-blue-500/30"><Hexagon className="w-5 h-5 text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]" fill="currentColor" fillOpacity="0.2" /></div><div className="flex flex-col"><span className="text-blue-400 text-[10px] font-black uppercase tracking-widest">Matéria Obtida</span><span className="text-white text-xs font-bold">+1 Cristal Nexo</span></div></div> )}
+      {isRandomizing && ( <div className="fixed inset-0 z-[2000] bg-[#050505]/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-100 pointer-events-none"><Dices className="w-24 h-24 text-red-500 animate-[spin_0.2s_linear_infinite]" /></div> )}
 
       <GlobalToast toast={globalToast} />
 
       {currentView !== 'reader' && (
-        <nav className="sticky top-0 z-40 bg-[#020205]/80 backdrop-blur-xl border-b border-cyan-500/10 shadow-md relative">
+        <nav className="sticky top-0 z-40 bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-red-600/10 shadow-md relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigateTo('home')}>
-                <NexoLogo className="w-8 h-8 md:w-10 md:h-10 group-hover:scale-110 transition-transform duration-300" />
-                <span className="text-xl font-black text-white tracking-[0.2em] uppercase hidden sm:block">NEXO<span className="text-cyan-500">SCAN</span></span>
+                {/* ALTERAÇÃO: EmpireLogo no Header */}
+                <EmpireLogo className="w-10 h-8 group-hover:scale-110 transition-transform duration-300" />
+                <span className="text-xl font-black text-white tracking-[0.2em] uppercase hidden sm:block">MANGA<span className="text-red-600 ml-1">EMPIRE</span></span>
               </div>
               
               <div className="hidden md:block flex-1 max-w-lg mx-8 relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Search className="h-4 w-4 text-gray-500 group-focus-within:text-cyan-500 transition-colors" /></div>
-                <input type="text" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} onKeyDown={handleSearchSubmit} className="w-full pl-10 pr-4 py-2 rounded-xl border border-white/5 bg-[#0a0a16]/80 text-gray-100 outline-none focus:border-cyan-500/50 transition-all text-sm shadow-inner" placeholder="Buscar obras..." />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><Search className="h-4 w-4 text-gray-500 group-focus-within:text-red-500 transition-colors" /></div>
+                <input type="text" value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} onKeyDown={handleSearchSubmit} className="w-full pl-10 pr-4 py-2 rounded-xl border border-white/5 bg-[#111]/80 text-gray-100 outline-none focus:border-red-500/50 transition-all text-sm shadow-inner" placeholder="Buscar obras..." />
               </div>
 
               <div className="flex items-center gap-4 md:gap-6">
                 <div className="flex items-center gap-1 md:gap-3 border-r border-white/10 pr-4 md:pr-6">
-                  <button onClick={() => setShowMobileSearch(!showMobileSearch)} className="md:hidden p-2 rounded-full text-gray-400 hover:text-cyan-500 transition-colors duration-300" title="Pesquisar">{showMobileSearch ? <X className="w-5 h-5"/> : <Search className="w-5 h-5" />}</button>
-                  <button onClick={handleRandomManga} className="p-2 rounded-full text-gray-400 hover:text-cyan-500 transition-colors duration-300 group relative" title="Obra Aleatória"><Dices className="w-5 h-5 md:w-5 md:h-5 group-hover:text-cyan-500 transition-colors duration-300" /></button>
+                  <button onClick={() => setShowMobileSearch(!showMobileSearch)} className="md:hidden p-2 rounded-full text-gray-400 hover:text-red-500 transition-colors duration-300" title="Pesquisar">{showMobileSearch ? <X className="w-5 h-5"/> : <Search className="w-5 h-5" />}</button>
+                  <button onClick={handleRandomManga} className="p-2 rounded-full text-gray-400 hover:text-red-500 transition-colors duration-300 group relative" title="Obra Aleatória"><Dices className="w-5 h-5 md:w-5 md:h-5 group-hover:text-red-500 transition-colors duration-300" /></button>
                   <div className="relative">
-                    <button onClick={() => {if(!user) return showToast("Faça login para ver mensagens", "info"); setShowNotifMenu(!showNotifMenu)}} className="relative rounded-full p-2 text-gray-400 hover:text-cyan-500 transition-colors duration-300"><Bell className="w-5 h-5 md:w-5 md:h-5"/>{unreadNotifCount > 0 && <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-cyan-500 animate-pulse border border-[#05050a]"></span>}</button>
+                    <button onClick={() => {if(!user) return showToast("Faça login para ver mensagens", "info"); setShowNotifMenu(!showNotifMenu)}} className="relative rounded-full p-2 text-gray-400 hover:text-red-500 transition-colors duration-300"><Bell className="w-5 h-5 md:w-5 md:h-5"/>{unreadNotifCount > 0 && <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-red-600 animate-pulse border border-[#050505]"></span>}</button>
                     {showNotifMenu && user && (
-                        <div className="absolute top-full right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-72 bg-[#0a0a16] border border-cyan-500/20 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in slide-in-from-top-2">
-                            <div className="p-3 border-b border-white/5 bg-[#05050a] flex items-center justify-between"><h3 className="font-black text-sm text-white flex items-center gap-2"><Bell className="w-4 h-4 text-cyan-500"/> Alertas do Sistema</h3>{unreadNotifCount > 0 && <span className="text-[10px] rounded-lg bg-cyan-600 text-white px-1.5 py-0.5 font-black">{unreadNotifCount}</span>}</div>
+                        <div className="absolute top-full right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-72 bg-[#0A0A0A] border border-red-600/20 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in slide-in-from-top-2">
+                            <div className="p-3 border-b border-white/5 bg-[#050505] flex items-center justify-between"><h3 className="font-black text-sm text-white flex items-center gap-2"><Bell className="w-4 h-4 text-red-500"/> Alertas do Sistema</h3>{unreadNotifCount > 0 && <span className="text-[10px] rounded-lg bg-red-600 text-white px-1.5 py-0.5 font-black">{unreadNotifCount}</span>}</div>
                             <div className="max-h-64 overflow-y-auto no-scrollbar">
-                                {notifications.length === 0 ? <p className="text-center text-xs text-gray-500 py-6">Nenhum aviso no momento.</p> : notifications.map(n => <div key={n.id} onClick={async () => { await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'notifications', n.id), {read: true}); if(n.mangaId) { const m = mangas.find(mg=>mg.id===n.mangaId); if(m) navigateTo('details', m); setShowNotifMenu(false); } }} className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${!n.read ? 'bg-cyan-900/20' : ''}`}><p className="text-xs text-gray-300 font-medium leading-relaxed">{n.text}</p><p className="text-[9px] text-cyan-500 mt-1.5 font-bold uppercase">{timeAgo(n.createdAt)}</p></div>)}
+                                {notifications.length === 0 ? <p className="text-center text-xs text-gray-500 py-6">Nenhum aviso no momento.</p> : notifications.map(n => <div key={n.id} onClick={async () => { await updateDoc(doc(db, 'artifacts', APP_ID, 'users', user.uid, 'notifications', n.id), {read: true}); if(n.mangaId) { const m = mangas.find(mg=>mg.id===n.mangaId); if(m) navigateTo('details', m); setShowNotifMenu(false); } }} className={`p-3 border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors ${!n.read ? 'bg-red-900/20' : ''}`}><p className="text-xs text-gray-300 font-medium leading-relaxed">{n.text}</p><p className="text-[9px] text-red-500 mt-1.5 font-bold uppercase">{timeAgo(n.createdAt)}</p></div>)}
                             </div>
                         </div>
                     )}
@@ -280,36 +282,36 @@ function NexoScanApp() {
                 </div>
 
                 <div className="hidden md:flex items-center gap-6 text-sm font-bold text-gray-400">
-                  <button onClick={() => navigateTo('home')} className={`hover:text-cyan-400 transition-colors duration-300 ${currentView === 'home' ? 'text-cyan-500' : ''}`}>Início</button>
-                  <button onClick={() => navigateTo('catalog')} className={`hover:text-cyan-400 transition-colors duration-300 ${currentView === 'catalog' ? 'text-cyan-500' : ''}`}>Catálogo</button>
-                  <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`hover:text-cyan-400 transition-colors duration-300 flex items-center gap-1 ${currentView === 'nexo' ? 'text-cyan-500' : ''}`}><Swords className="w-4 h-4"/> Nexo</button>
-                  <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`hover:text-cyan-400 transition-colors duration-300 flex items-center gap-1 ${currentView === 'profile' ? 'text-cyan-500' : ''}`}><UserCircle className="w-4 h-4"/> Perfil</button>
+                  <button onClick={() => navigateTo('home')} className={`hover:text-red-400 transition-colors duration-300 ${currentView === 'home' ? 'text-red-500' : ''}`}>Início</button>
+                  <button onClick={() => navigateTo('catalog')} className={`hover:text-red-400 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : ''}`}>Catálogo</button>
+                  <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`hover:text-red-400 transition-colors duration-300 flex items-center gap-1 ${currentView === 'nexo' ? 'text-red-500' : ''}`}><Swords className="w-4 h-4"/> Nexo</button>
+                  <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`hover:text-red-400 transition-colors duration-300 flex items-center gap-1 ${currentView === 'profile' ? 'text-red-500' : ''}`}><UserCircle className="w-4 h-4"/> Perfil</button>
                 </div>
                 {user ? (
                   <div className="cursor-pointer flex items-center gap-3 group" onClick={() => navigateTo('profile')}>
                     <div className="hidden sm:flex flex-col text-right">
-                      <span className="text-sm font-bold text-gray-200 group-hover:text-cyan-400 transition-colors duration-300">{user.displayName || "Nexo"}</span>
-                      <span className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">Nível {userProfileData.level || 1}</span>
+                      <span className="text-sm font-bold text-gray-200 group-hover:text-red-400 transition-colors duration-300">{user.displayName || "Usuário"}</span>
+                      <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Nível {userProfileData.level || 1}</span>
                     </div>
                     
                     <div className="relative w-10 h-10 flex items-center justify-center flex-shrink-0 group">
-                        <div className="w-9 h-9 rounded-full overflow-hidden bg-[#0a0a16] flex items-center justify-center relative z-10 border-[2px] border-[#05050a] group-hover:border-cyan-500 transition-colors">
-                            <img src={activeAvatarSrc} className="w-full h-full object-cover" alt="Avatar" onError={(e) => e.target.src = `https://placehold.co/100x100/020205/0ea5e9?text=N`} />
+                        <div className="w-9 h-9 rounded-full overflow-hidden bg-[#111] flex items-center justify-center relative z-10 border-[2px] border-[#050505] group-hover:border-red-500 transition-colors">
+                            <img src={activeAvatarSrc} className="w-full h-full object-cover" alt="Avatar" onError={(e) => e.target.src = `https://placehold.co/100x100/050505/ef4444?text=N`} />
                         </div>
                         
                         {cleanCosmeticUrl(eq.moldura?.preview) && ( <img src={cleanCosmeticUrl(eq.moldura.preview)} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] max-w-none object-contain object-center z-30 pointer-events-none" /> )}
                     </div>
                   </div>
-                ) : ( <button onClick={() => navigateTo('login')} className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-500 hover:to-cyan-400 rounded-xl font-black px-5 py-2 transition-all duration-300 text-sm shadow-[0_0_15px_rgba(6,182,212,0.4)]">Entrar</button> )}
+                ) : ( <button onClick={() => navigateTo('login')} className="bg-gradient-to-r from-red-600 to-blue-600 text-white hover:from-red-500 hover:to-blue-500 rounded-xl font-black px-5 py-2 transition-all duration-300 text-sm shadow-[0_0_15px_rgba(239,68,68,0.4)]">Entrar</button> )}
               </div>
             </div>
           </div>
           
           {showMobileSearch && (
-            <div className="absolute top-full left-0 w-full bg-[#05050a]/95 backdrop-blur-xl border-b border-white/10 p-3 shadow-xl md:hidden animate-in slide-in-from-top-2 z-50">
+            <div className="absolute top-full left-0 w-full bg-[#050505]/95 backdrop-blur-xl border-b border-white/10 p-3 shadow-xl md:hidden animate-in slide-in-from-top-2 z-50">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                <input type="text" value={globalSearch} onChange={e => setGlobalSearch(e.target.value)} onKeyDown={(e) => { handleSearchSubmit(e); if(e.key === 'Enter') setShowMobileSearch(false); }} className="w-full pl-9 pr-4 py-2 border border-white/10 rounded-xl bg-[#0a0a16] text-gray-100 outline-none focus:border-cyan-500 text-sm transition-colors duration-300" placeholder="Buscar obras..." autoFocus />
+                <input type="text" value={globalSearch} onChange={e => setGlobalSearch(e.target.value)} onKeyDown={(e) => { handleSearchSubmit(e); if(e.key === 'Enter') setShowMobileSearch(false); }} className="w-full pl-9 pr-4 py-2 border border-white/10 rounded-xl bg-[#111] text-gray-100 outline-none focus:border-red-500 text-sm transition-colors duration-300" placeholder="Buscar obras..." autoFocus />
               </div>
             </div>
           )}
@@ -333,17 +335,17 @@ function NexoScanApp() {
       {currentView !== 'reader' && currentView !== 'login' && <Footer />}
 
       {currentView !== 'reader' && (
-        <div className="md:hidden fixed bottom-0 w-full bg-[#05050a]/95 backdrop-blur-2xl border-t border-cyan-500/10 z-40 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
+        <div className="md:hidden fixed bottom-0 w-full bg-[#050505]/95 backdrop-blur-2xl border-t border-red-600/10 z-40 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
           <div className="flex justify-around items-center h-[60px] px-2 relative">
-            <button onClick={() => navigateTo('home')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'home' ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-500'}`}><HomeIcon className="w-5 h-5" /><span className="text-[9px] font-bold">Início</span></button>
-            <button onClick={() => navigateTo('catalog')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'catalog' ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-500'}`}><LayoutGrid className="w-5 h-5" /><span className="text-[9px] font-bold">Catálogo</span></button>
+            <button onClick={() => navigateTo('home')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'home' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><HomeIcon className="w-5 h-5" /><span className="text-[9px] font-bold">Início</span></button>
+            <button onClick={() => navigateTo('catalog')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'catalog' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><LayoutGrid className="w-5 h-5" /><span className="text-[9px] font-bold">Catálogo</span></button>
             <div className="relative -top-5 flex justify-center w-16">
-                <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`flex flex-col items-center justify-center w-14 h-14 rounded-full border-[3px] border-[#020205] transition-transform hover:scale-105 duration-300 ${currentView === 'nexo' ? 'bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'bg-[#0a0a16] text-cyan-500'}`}>
+                <button onClick={() => user ? navigateTo('nexo') : navigateTo('login')} className={`flex flex-col items-center justify-center w-14 h-14 rounded-full border-[3px] border-[#050505] transition-transform hover:scale-105 duration-300 ${currentView === 'nexo' ? 'bg-gradient-to-tr from-red-600 to-blue-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'bg-[#111] text-red-500'}`}>
                     <Swords className="w-6 h-6 relative z-10" fill={currentView === 'nexo' ? "currentColor" : "none"}/><span className="text-[8px] font-black relative z-10 mt-0.5">NEXO</span>
                 </button>
             </div>
-            <button onClick={() => user ? navigateTo('library') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'library' ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-500'}`}><Library className="w-5 h-5" /><span className="text-[9px] font-bold">Biblioteca</span></button>
-            <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'profile' ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-500'}`}><UserCircle className="w-5 h-5" /><span className="text-[9px] font-bold">Perfil</span></button>
+            <button onClick={() => user ? navigateTo('library') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'library' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><Library className="w-5 h-5" /><span className="text-[9px] font-bold">Biblioteca</span></button>
+            <button onClick={() => user ? navigateTo('profile') : navigateTo('login')} className={`flex flex-col items-center gap-1 w-14 transition-colors duration-300 ${currentView === 'profile' ? 'text-red-500' : 'text-gray-500 hover:text-red-400'}`}><UserCircle className="w-5 h-5" /><span className="text-[9px] font-bold">Perfil</span></button>
           </div>
         </div>
       )}
