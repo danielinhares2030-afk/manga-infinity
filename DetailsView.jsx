@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Share2, MoreHorizontal, Bookmark, BookOpen, Star, MessageSquare, ChevronDown, Flame, Bell, Heart, ListFilter } from 'lucide-react';
+import { ChevronLeft, Share2, MoreHorizontal, Bookmark, BookOpen, Star, MessageSquare, ChevronDown, Flame, Bell, Heart, ListFilter, CheckCircle } from 'lucide-react';
 import { doc, updateDoc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { APP_ID } from './constants';
 import { CommentsSection } from './CommentsSection';
