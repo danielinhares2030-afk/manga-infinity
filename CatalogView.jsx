@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Star, Clock, ChevronRight, ChevronLeft, Moon, SlidersHorizontal, X, Filter, Flame } from 'lucide-react';
+import { Search, Star, Clock, ChevronRight, ChevronLeft, Moon, SlidersHorizontal, X, Filter, Flame, BookOpen } from 'lucide-react';
 import { timeAgo } from './helpers';
 
 export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
@@ -7,7 +7,7 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 18;
 
-    // Estados dos Filtros Avançados
+    // Estados dos Filtros
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [selectedType, setSelectedType] = useState('Todos');
     const [selectedGenre, setSelectedGenre] = useState('Todos');
@@ -78,40 +78,38 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
         return 'Mangá';
     };
 
-    // Cores dinâmicas para as tags de origem (Para não ficar só roxo)
+    // Cores das tags seguindo a paleta do documento
     const getTagColor = (type) => {
         const lower = type.toLowerCase();
-        if (lower === 'manhwa') return 'from-indigo-600 to-blue-600 text-white shadow-indigo-500/40';
-        if (lower === 'manhua') return 'from-rose-600 to-red-600 text-white shadow-rose-500/40';
-        if (lower === 'shoujo') return 'from-pink-500 to-rose-400 text-white shadow-pink-500/40';
-        if (lower === 'seinen') return 'from-slate-700 to-gray-900 text-white shadow-black/50';
-        return 'from-purple-600 to-fuchsia-600 text-white shadow-purple-500/40'; // Padrão
+        if (lower === 'manhwa') return 'bg-[#8C199C] text-[#FAFAFA] border-[#8C199C]'; // Violeta
+        if (lower === 'manhua') return 'bg-[#B03D23] text-[#FAFAFA] border-[#B03D23]'; // Laranja-Avermelhado
+        if (lower === 'shoujo') return 'bg-[#950606] text-[#FAFAFA] border-[#950606]'; // Vermelho Escuro
+        return 'bg-[#333333] text-[#FAFAFA] border-[#333333]'; // Neutro/Cinza Escuro
     };
 
     return (
-        <div className="pb-32 animate-in fade-in duration-500 bg-[#050308] min-h-screen relative font-sans text-white overflow-x-hidden selection:bg-fuchsia-500/30">
+        <div className="pb-32 animate-in fade-in duration-500 bg-[#1B1B1B] min-h-screen relative font-sans text-[#FAFAFA] overflow-x-hidden selection:bg-[#950606]/40">
             
             <div className="px-4 md:px-8 max-w-7xl mx-auto pt-6 relative z-10">
                 
-                {/* HERO BANNER - CATÁLOGO INFERIA COM FOTO BONITA */}
-                <div className="relative w-full h-48 md:h-64 rounded-3xl overflow-hidden mb-10 shadow-[0_10px_40px_rgba(0,0,0,0.8)] border border-white/5">
-                    {/* Imagem de fundo bonita (Uma paisagem épica escura/neon) */}
+                {/* HERO BANNER - CATÁLOGO INFERIA COM FOTO */}
+                <div className="relative w-full h-48 md:h-64 rounded-3xl overflow-hidden mb-10 shadow-[0_10px_30px_rgba(0,0,0,0.8)] border border-white/5">
                     <img 
-                        src="https://images.unsplash.com/photo-1618336753974-aae8e04506aa?q=80&w=2070&auto=format&fit=crop" 
-                        alt="Catálogo Inferia Banner" 
-                        className="w-full h-full object-cover saturate-150 contrast-125"
+                        src="https://images.unsplash.com/photo-1542451313056-b7c8e626645f?q=80&w=2070&auto=format&fit=crop" 
+                        alt="Catálogo Inferia" 
+                        className="w-full h-full object-cover saturate-150 contrast-125 object-center"
                     />
                     
-                    {/* Degradê misturando as novas cores */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#050308] via-[#050308]/80 to-transparent"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#050308] via-transparent to-transparent"></div>
+                    {/* Degradê sobre a imagem */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#1B1B1B] via-[#1B1B1B]/80 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1B1B1B] via-transparent to-transparent"></div>
                     
                     <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 z-10">
                         <div className="flex items-center gap-2 mb-1">
-                            <Flame className="w-5 h-5 text-fuchsia-500" />
-                            <span className="text-fuchsia-500 text-[10px] font-black uppercase tracking-[0.3em]">Explorar o Vazio</span>
+                            <Flame className="w-5 h-5 text-[#B03D23]" />
+                            <span className="text-[#B03D23] text-[10px] font-black uppercase tracking-[0.3em]">Explorar o Acervo</span>
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 tracking-tighter uppercase drop-shadow-lg">
+                        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#950606] via-[#B03D23] to-[#8C199C] tracking-tighter uppercase drop-shadow-lg">
                             Catálogo Inferia
                         </h1>
                     </div>
@@ -120,86 +118,83 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
                 {/* BARRA DE PESQUISA E BOTÃO DE FILTROS */}
                 <div className="flex flex-col md:flex-row gap-4 mb-10 max-w-4xl">
                     <div className="relative flex-1 group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 rounded-2xl blur opacity-20 group-focus-within:opacity-50 transition duration-500"></div>
-                        <div className="relative flex items-center bg-[#0B0910] rounded-2xl border border-white/10 overflow-hidden">
-                            <Search className="absolute left-5 w-5 h-5 text-gray-500 group-focus-within:text-fuchsia-400 transition-colors" />
+                        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#950606] to-[#B03D23] rounded-2xl blur opacity-20 group-focus-within:opacity-50 transition duration-500"></div>
+                        <div className="relative flex items-center bg-[#121212] rounded-2xl border border-white/10 overflow-hidden">
+                            <Search className="absolute left-5 w-5 h-5 text-[#333333] group-focus-within:text-[#B03D23] transition-colors" />
                             <input 
                                 type="text" 
                                 placeholder="Buscar por título, autor ou gênero..." 
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                                className="w-full bg-transparent py-4 pl-14 pr-4 text-sm text-white outline-none placeholder-gray-600 font-medium"
+                                className="w-full bg-transparent py-4 pl-14 pr-4 text-sm text-[#FAFAFA] outline-none placeholder-[#333333] font-medium"
                             />
                         </div>
                     </div>
                     
                     <button 
                         onClick={() => setIsFilterOpen(true)}
-                        className="flex-shrink-0 bg-[#0B0910] border border-white/10 hover:border-purple-500/50 hover:bg-white/5 px-8 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 group"
+                        className="flex-shrink-0 bg-[#121212] border border-white/10 hover:border-[#950606]/50 hover:bg-[#950606]/10 px-8 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 group shadow-sm"
                     >
-                        <Filter className="w-4 h-4 text-gray-400 group-hover:text-fuchsia-400 transition-colors" />
-                        <span className="text-[10px] font-black text-gray-300 group-hover:text-white uppercase tracking-[0.2em]">Refinar</span>
+                        <Filter className="w-4 h-4 text-[#FAFAFA] group-hover:text-[#B03D23] transition-colors" />
+                        <span className="text-[10px] font-black text-[#FAFAFA] uppercase tracking-[0.2em]">Filtros</span>
                     </button>
                 </div>
 
                 {/* CONTADOR DE OBRAS */}
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="h-px bg-gradient-to-r from-fuchsia-500/50 to-transparent flex-1"></div>
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                    <div className="h-px bg-gradient-to-r from-[#8C199C]/50 to-transparent flex-1"></div>
+                    <span className="text-[10px] font-black text-[#FAFAFA] uppercase tracking-[0.2em]">
                         {filteredMangas.length} Obras Encontradas
                     </span>
-                    <div className="h-px bg-gradient-to-l from-indigo-500/50 to-transparent flex-1"></div>
+                    <div className="h-px bg-gradient-to-l from-[#950606]/50 to-transparent flex-1"></div>
                 </div>
 
-                {/* GRADE DE OBRAS (CARDS PREMIUM REDESENHADOS) */}
+                {/* GRADE DE OBRAS (CARDS) */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                     {currentItems.length > 0 ? currentItems.map(manga => {
                         const origin = getOriginTag(manga);
-                        const tagColor = getTagColor(origin);
+                        const tagClasses = getTagColor(origin);
 
                         return (
                             <div key={manga.id} onClick={() => onNavigate('details', manga)} className="cursor-pointer group flex flex-col relative perspective-1000">
                                 
-                                <div className={`relative aspect-[1/1.4] rounded-2xl overflow-hidden bg-[#0B0910] shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_rgba(168,85,247,0.2)] border border-white/5 group-hover:border-fuchsia-500/40 ${dataSaver ? 'blur-[1px]' : ''}`}>
+                                <div className={`relative aspect-[1/1.4] rounded-2xl overflow-hidden bg-[#121212] shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_rgba(149,6,6,0.3)] border border-[#333333] group-hover:border-[#950606] ${dataSaver ? 'blur-[1px]' : ''}`}>
                                     
                                     <img src={manga.coverUrl} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100" loading="lazy" alt={manga.title} />
                                     
-                                    {/* Degradê do card (Escurece mais em baixo para leitura) */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#050308] via-[#050308]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                                    {/* Degradê do card */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1B1B1B] via-[#1B1B1B]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
                                     
-                                    {/* TAG DE ORIGEM (Colorida dinamicamente) */}
-                                    <div className={`absolute top-2 left-2 bg-gradient-to-r ${tagColor} text-[8px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest shadow-lg`}>
+                                    {/* TAG DE ORIGEM */}
+                                    <div className={`absolute top-2 left-2 text-[8px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest shadow-lg border ${tagClasses}`}>
                                         {origin}
                                     </div>
 
                                     {/* AVALIAÇÃO */}
-                                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 flex items-center gap-1 shadow-lg">
-                                        <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                                        <span className="text-[9px] font-black text-white">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
+                                    <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 flex items-center gap-1 shadow-lg">
+                                        <Star className="w-2.5 h-2.5 text-[#F1A822] fill-[#F1A822]" />
+                                        <span className="text-[9px] font-black text-[#FAFAFA]">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
                                     </div>
                                     
                                     {/* INFORMAÇÕES DO RODAPÉ DO CARD */}
                                     <div className="absolute bottom-0 w-full p-3 md:p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
-                                        <h3 className="font-bold text-sm text-gray-100 line-clamp-2 leading-tight group-hover:text-fuchsia-300 transition-colors drop-shadow-md">
+                                        <h3 className="font-bold text-sm text-[#FAFAFA] line-clamp-2 leading-tight group-hover:text-[#B03D23] transition-colors drop-shadow-md">
                                             {manga.title}
                                         </h3>
                                         <div className="flex items-center justify-between mt-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                                                <Clock className="w-3 h-3 text-indigo-400"/> {timeAgo(manga.createdAt)}
+                                            <p className="text-[9px] text-[#FAFAFA] font-bold uppercase tracking-widest flex items-center gap-1">
+                                                <Clock className="w-3 h-3 text-[#8C199C]"/> {timeAgo(manga.createdAt)}
                                             </p>
-                                            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 group-hover:bg-fuchsia-500 transition-colors">
-                                                <ChevronRight className="w-3 h-3 text-white" />
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         );
                     }) : (
-                        <div className="col-span-full py-24 flex flex-col items-center justify-center bg-[#0B0910] rounded-3xl border border-white/5 shadow-inner">
-                            <Moon className="w-12 h-12 text-indigo-900 mb-6 animate-pulse" />
-                            <h3 className="text-base font-black text-white uppercase tracking-[0.2em] mb-2">O Vazio Infinito</h3>
-                            <p className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">Nenhuma obra encontrada nestes reinos.</p>
+                        <div className="col-span-full py-24 flex flex-col items-center justify-center bg-[#121212] rounded-3xl border border-[#333333] shadow-inner">
+                            <Moon className="w-12 h-12 text-[#950606] mb-6 animate-pulse" />
+                            <h3 className="text-base font-black text-[#FAFAFA] uppercase tracking-[0.2em] mb-2">O Vazio Infinito</h3>
+                            <p className="text-[#333333] font-bold text-[10px] uppercase tracking-widest">Nenhuma obra encontrada nestes reinos.</p>
                         </div>
                     )}
                 </div>
@@ -207,14 +202,14 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
                 {/* PAGINAÇÃO */}
                 {totalPages > 1 && (
                     <div className="mt-16 mb-8 flex items-center justify-center gap-2">
-                        <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="p-3 rounded-xl bg-[#0B0910] text-gray-400 border border-white/5 disabled:opacity-30 hover:bg-white/10 hover:text-white transition-all hover:-translate-x-1">
+                        <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="p-3 rounded-xl bg-[#121212] text-[#FAFAFA] border border-[#333333] disabled:opacity-30 hover:border-[#950606] hover:text-[#B03D23] transition-all hover:-translate-x-1">
                             <ChevronLeft className="w-4 h-4" />
                         </button>
                         
                         <div className="flex items-center gap-1.5 px-2">
                             {[...Array(totalPages)].map((_, i) => {
                                 if (totalPages > 5 && (i + 1 !== 1 && i + 1 !== totalPages && Math.abs(currentPage - (i + 1)) > 1)) {
-                                    if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-gray-600 px-1 text-sm font-black tracking-widest">...</span>;
+                                    if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-[#333333] px-1 text-sm font-black tracking-widest">...</span>;
                                     return null;
                                 }
                                 return (
@@ -223,8 +218,8 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
                                         onClick={() => setCurrentPage(i + 1)} 
                                         className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${
                                             currentPage === i + 1 
-                                            ? 'bg-gradient-to-br from-indigo-500 via-purple-500 to-fuchsia-500 text-white shadow-[0_0_15px_rgba(217,70,239,0.4)] scale-110 border-none' 
-                                            : 'bg-transparent text-gray-500 border border-transparent hover:border-white/10 hover:bg-white/5 hover:text-white'
+                                            ? 'bg-[#950606] text-[#FAFAFA] shadow-[0_0_15px_rgba(149,6,6,0.6)] scale-110 border-none' 
+                                            : 'bg-transparent text-[#FAFAFA] border border-transparent hover:border-[#333333] hover:bg-[#121212]'
                                         }`}
                                     >
                                         {i + 1}
@@ -233,7 +228,7 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
                             })}
                         </div>
                         
-                        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="p-3 rounded-xl bg-[#0B0910] text-gray-400 border border-white/5 disabled:opacity-30 hover:bg-white/10 hover:text-white transition-all hover:translate-x-1">
+                        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="p-3 rounded-xl bg-[#121212] text-[#FAFAFA] border border-[#333333] disabled:opacity-30 hover:border-[#950606] hover:text-[#B03D23] transition-all hover:translate-x-1">
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -246,22 +241,22 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
             {isFilterOpen && (
                 <div className="fixed inset-0 z-[100] flex justify-end pointer-events-none">
                     
-                    {/* Backdrop (Fundo Escuro) - Clique para fechar */}
+                    {/* Backdrop Escuro - Clique para fechar */}
                     <div 
                         className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto transition-opacity duration-300" 
                         onClick={() => setIsFilterOpen(false)}
                     ></div>
                     
-                    {/* Menu Lateral (Gaveta) - Fica no canto e não no meio */}
-                    <div className="w-full max-w-[280px] sm:max-w-xs h-full bg-[#0B0910] border-l border-white/5 pointer-events-auto flex flex-col animate-in slide-in-from-right duration-300 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] relative z-10">
+                    {/* Painel Lateral (Gaveta) - Fica no canto e não no meio */}
+                    <div className="w-full max-w-[280px] sm:max-w-xs h-full bg-[#1B1B1B] border-l border-[#950606]/30 pointer-events-auto flex flex-col animate-in slide-in-from-right duration-300 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] relative z-10">
                         
                         {/* Cabeçalho do Drawer */}
-                        <div className="flex items-center justify-between p-6 border-b border-white/5 bg-[#050308]">
+                        <div className="flex items-center justify-between p-6 border-b border-[#333333] bg-[#121212]">
                             <div className="flex items-center gap-3">
-                                <SlidersHorizontal className="w-5 h-5 text-fuchsia-500" />
-                                <span className="font-black text-white uppercase tracking-[0.2em] text-sm">Filtros</span>
+                                <SlidersHorizontal className="w-5 h-5 text-[#B03D23]" />
+                                <span className="font-black text-[#FAFAFA] uppercase tracking-[0.2em] text-sm">Filtros</span>
                             </div>
-                            <button onClick={() => setIsFilterOpen(false)} className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 hover:text-fuchsia-400 transition-colors">
+                            <button onClick={() => setIsFilterOpen(false)} className="w-8 h-8 rounded-full bg-[#333333]/50 flex items-center justify-center hover:bg-[#950606] hover:text-[#FAFAFA] transition-colors">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
@@ -271,10 +266,10 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
                             
                             {/* Bloco: Ordem */}
                             <div>
-                                <h3 className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Star className="w-3 h-3"/> Organizar Por</h3>
+                                <h3 className="text-[9px] font-black text-[#B03D23] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Star className="w-3 h-3"/> Organizar Por</h3>
                                 <div className="flex flex-col gap-2">
                                     {sortOptions.map(opt => (
-                                        <button key={opt} onClick={() => { setSortBy(opt); setCurrentPage(1); }} className={`px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-left transition-all ${sortBy === opt ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md' : 'bg-[#15121C] text-gray-400 border border-white/5 hover:border-indigo-500/30 hover:text-white'}`}>
+                                        <button key={opt} onClick={() => { setSortBy(opt); setCurrentPage(1); }} className={`px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-left transition-all ${sortBy === opt ? 'bg-[#950606] text-[#FAFAFA] shadow-md' : 'bg-[#121212] text-[#FAFAFA] border border-[#333333] hover:border-[#B03D23]'}`}>
                                             {opt}
                                         </button>
                                     ))}
@@ -283,10 +278,10 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
 
                             {/* Bloco: Formato */}
                             <div>
-                                <h3 className="text-[9px] font-black text-fuchsia-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><BookOpen className="w-3 h-3"/> Formato da Obra</h3>
+                                <h3 className="text-[9px] font-black text-[#8C199C] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><BookOpen className="w-3 h-3"/> Formato da Obra</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {types.map(opt => (
-                                        <button key={opt} onClick={() => { setSelectedType(opt); setCurrentPage(1); }} className={`px-4 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${selectedType === opt ? 'bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white shadow-md' : 'bg-[#15121C] text-gray-400 border border-white/5 hover:border-fuchsia-500/30 hover:text-white'}`}>
+                                        <button key={opt} onClick={() => { setSelectedType(opt); setCurrentPage(1); }} className={`px-4 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${selectedType === opt ? 'bg-[#8C199C] text-[#FAFAFA] shadow-md' : 'bg-[#121212] text-[#FAFAFA] border border-[#333333] hover:border-[#8C199C]'}`}>
                                             {opt}
                                         </button>
                                     ))}
@@ -295,10 +290,10 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
 
                             {/* Bloco: Gêneros */}
                             <div>
-                                <h3 className="text-[9px] font-black text-purple-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Flame className="w-3 h-3"/> Gêneros</h3>
+                                <h3 className="text-[9px] font-black text-[#950606] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Flame className="w-3 h-3"/> Gêneros</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {genresList.map(opt => (
-                                        <button key={opt} onClick={() => { setSelectedGenre(opt); setCurrentPage(1); }} className={`px-3 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${selectedGenre === opt ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md' : 'bg-[#15121C] text-gray-400 border border-white/5 hover:border-purple-500/30 hover:text-white'}`}>
+                                        <button key={opt} onClick={() => { setSelectedGenre(opt); setCurrentPage(1); }} className={`px-3 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${selectedGenre === opt ? 'bg-[#950606] text-[#FAFAFA] shadow-md' : 'bg-[#121212] text-[#FAFAFA] border border-[#333333] hover:border-[#950606]'}`}>
                                             {opt}
                                         </button>
                                     ))}
@@ -307,8 +302,8 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
                         </div>
                         
                         {/* Rodapé do Drawer */}
-                        <div className="p-6 border-t border-white/5 bg-[#050308]">
-                            <button onClick={() => setIsFilterOpen(false)} className="w-full py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
+                        <div className="p-6 border-t border-[#333333] bg-[#121212]">
+                            <button onClick={() => setIsFilterOpen(false)} className="w-full py-4 bg-[#950606] hover:bg-[#B03D23] text-[#FAFAFA] rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(149,6,6,0.4)] hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
                                 <Filter className="w-4 h-4"/> Ver {filteredMangas.length} Obras
                             </button>
                         </div>
@@ -319,8 +314,8 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
             <style dangerouslySetInnerHTML={{__html: `
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #666; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #333333; border-radius: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #950606; }
             `}} />
         </div>
     );
