@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-    ChevronLeft, Share2, Heart, Download, BookOpen, Eye, EyeOff, 
-    Search, Star, Clock, ChevronDown, ChevronUp, MoreHorizontal, 
-    ListFilter, Flame, Play
+    ChevronLeft, Share2, Bookmark, BookOpen, Eye, EyeOff, 
+    Search, Star, Clock, ChevronDown, ChevronUp, 
+    ListFilter, Play
 } from 'lucide-react';
 import { doc, updateDoc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { APP_ID } from './constants';
@@ -14,6 +14,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
     const [sortOrder, setSortOrder] = useState('desc');
     const [chapterSearch, setChapterSearch] = useState('');
     const [isSynopsisExpanded, setIsSynopsisExpanded] = useState(false);
+    const [showBookmarkMenu, setShowBookmarkMenu] = useState(false);
 
     // ==========================================
     // LÓGICA DE BANCO DE DADOS E ESTADOS
@@ -36,31 +37,29 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
         addView();
     }, [manga?.id, db]);
 
-    const userLibDoc = libraryData && libraryData[manga.id];
-    const isFavorite = userLibDoc?.isFavorite || false;
+    // Lógica do Sistema de Bookmark
+    const currentStatus = libraryData?.[manga.id] || null;
 
-    const toggleFavorite = async () => {
+    const updateLibraryStatus = async (status) => {
         if (!user) return onRequireLogin();
         try {
             const ref = doc(db, 'artifacts', APP_ID, 'users', user.uid, 'library', manga.id.toString());
-            if (isFavorite) {
-                await setDoc(ref, { isFavorite: false, updatedAt: Date.now() }, { merge: true });
-                showToast("Removido dos favoritos.", "info");
+            if (status === 'Remover') {
+                await deleteDoc(ref);
+                showToast("Obra removida da biblioteca.", "info");
             } else {
-                await setDoc(ref, { mangaId: manga.id, isFavorite: true, updatedAt: Date.now() }, { merge: true });
-                showToast("Adicionado aos favoritos! ❤️", "success");
+                await setDoc(ref, { mangaId: manga.id, status: status, updatedAt: Date.now() }, { merge: true });
+                showToast(`Salvo como: ${status}`, "success");
             }
-        } catch (error) { showToast("Erro ao favoritar.", "error"); }
+            setShowBookmarkMenu(false);
+        } catch (error) { 
+            showToast("Erro ao atualizar biblioteca.", "error"); 
+        }
     };
 
     const handleShare = () => {
         navigator.clipboard.writeText(window.location.href);
         showToast("Link copiado! Compartilhe a obra.", "success");
-    };
-
-    const handleDownloadManga = () => {
-        showToast("Iniciando download da obra...", "info");
-        // Lógica futura de download (PDF/CBZ)
     };
 
     const toggleChapterRead = async (chapter, isRead) => {
@@ -119,14 +118,9 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         Manga <span className="text-[#C6401E]">Inferia</span>
                     </span>
 
-                    <div className="flex items-center gap-2">
-                        <button onClick={handleShare} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-[#F4F3EE] focus:outline-none focus:ring-2 focus:ring-[#C6401E]" aria-label="Compartilhar">
-                            <Share2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={handleDownloadManga} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-[#F4F3EE] focus:outline-none focus:ring-2 focus:ring-[#C6401E]" aria-label="Baixar Obra">
-                            <Download className="w-5 h-5" />
-                        </button>
-                    </div>
+                    <button onClick={handleShare} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors text-gray-400 hover:text-[#F4F3EE] focus:outline-none focus:ring-2 focus:ring-[#C6401E]" aria-label="Compartilhar">
+                        <Share2 className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
@@ -139,7 +133,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                     <div className="w-[200px] md:w-[280px] flex-shrink-0 relative group perspective-1000">
                         <div className="absolute -inset-4 bg-[#C6401E]/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
                         
-                        {/* Selo de Status */}
                         <div className="absolute -top-3 -left-3 z-20 bg-[#F1A822] text-[#0E0B0B] text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-[0_5px_15px_rgba(241,168,34,0.4)]">
                             {manga.status || 'Em Lançamento'}
                         </div>
@@ -210,14 +203,35 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                 {lastRead ? 'Continuar Leitura' : 'Iniciar Leitura'}
                             </button>
 
-                            <button 
-                                onClick={toggleFavorite} 
-                                className={`w-full sm:w-auto h-14 px-6 rounded-xl flex items-center justify-center gap-2 transition-all border font-bold text-xs uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[#C6401E] ${isFavorite ? 'bg-[#C6401E]/10 border-[#C6401E] text-[#C6401E]' : 'bg-[#151212] border-white/10 text-gray-400 hover:bg-white/5 hover:text-[#F4F3EE]'}`}
-                                aria-label="Favoritar"
-                            >
-                                <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
-                                {isFavorite ? 'Favorito' : 'Salvar'}
-                            </button>
+                            {/* SISTEMA DE BOOKMARK */}
+                            <div className="relative w-full sm:w-auto">
+                                <button 
+                                    onClick={() => setShowBookmarkMenu(!showBookmarkMenu)} 
+                                    className={`w-full sm:w-auto h-14 px-6 rounded-xl flex items-center justify-center gap-2 transition-all border font-bold text-xs uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[#C6401E] ${currentStatus ? 'bg-[#C6401E]/10 border-[#C6401E] text-[#C6401E]' : 'bg-[#151212] border-white/10 text-gray-400 hover:bg-white/5 hover:text-[#F4F3EE]'}`}
+                                >
+                                    <Bookmark className={`w-4 h-4 ${currentStatus ? 'fill-current' : ''}`} />
+                                    {currentStatus || 'Salvar'}
+                                </button>
+                                
+                                {showBookmarkMenu && (
+                                    <>
+                                        {/* Overlay invisível para fechar ao clicar fora */}
+                                        <div className="fixed inset-0 z-40" onClick={() => setShowBookmarkMenu(false)}></div>
+                                        
+                                        <div className="absolute top-full right-0 mt-2 w-48 bg-[#151212] border border-white/10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2">
+                                            {['Lendo', 'Finalizado', 'Favorito', 'Pausado', 'Remover'].map(s => (
+                                                <button 
+                                                    key={s} 
+                                                    onClick={() => updateLibraryStatus(s)} 
+                                                    className={`px-4 py-3 text-left text-xs font-bold uppercase tracking-widest hover:bg-white/5 transition-colors ${currentStatus === s ? 'text-[#C6401E] bg-[#C6401E]/5' : 'text-gray-300'} ${s === 'Remover' ? 'text-red-500 hover:bg-red-500/10' : ''}`}
+                                                >
+                                                    {s}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -258,13 +272,12 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                         value={chapterSearch}
                                         onChange={(e) => setChapterSearch(e.target.value)}
                                         className="w-full bg-[#0E0B0B] border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-xs text-[#F4F3EE] outline-none focus:border-[#C6401E] transition-colors"
-                                        aria-label="Buscar capítulo"
                                     />
                                 </div>
                                 
                                 <button 
                                     onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} 
-                                    className="w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-bold text-gray-300 bg-[#0E0B0B] border border-white/10 px-4 py-2.5 rounded-lg hover:border-[#C6401E] hover:text-[#C6401E] transition-colors focus:outline-none focus:ring-2 focus:ring-[#C6401E]"
+                                    className="w-full sm:w-auto flex items-center justify-center gap-2 text-xs font-bold text-gray-300 bg-[#0E0B0B] border border-white/10 px-4 py-2.5 rounded-lg hover:border-[#C6401E] hover:text-[#C6401E] transition-colors"
                                 >
                                     <ListFilter className="w-4 h-4" />
                                     {sortOrder === 'desc' ? 'Mais Recentes' : 'Mais Antigos'}
@@ -286,13 +299,10 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                                 key={chapter.id} 
                                                 className={`group flex items-center justify-between p-4 bg-[#151212] border border-white/5 hover:border-[#C6401E]/40 rounded-xl transition-all duration-300 ${isRead ? 'opacity-60' : 'opacity-100'}`}
                                             >
-                                                {/* INFORMAÇÕES DO CAPÍTULO (Clicável para ler) */}
+                                                {/* INFORMAÇÕES DO CAPÍTULO */}
                                                 <div 
-                                                    className="flex-1 flex items-center gap-4 cursor-pointer focus:outline-none"
+                                                    className="flex-1 flex items-center gap-4 cursor-pointer"
                                                     onClick={() => onChapterClick(manga, chapter)}
-                                                    tabIndex={0}
-                                                    role="button"
-                                                    onKeyDown={(e) => e.key === 'Enter' && onChapterClick(manga, chapter)}
                                                 >
                                                     <div className="flex flex-col gap-1">
                                                         <div className="flex items-center gap-3">
@@ -311,14 +321,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
 
                                                 {/* AÇÕES INDIVIDUAIS DO CAPÍTULO */}
                                                 <div className="flex items-center gap-2 pl-4 border-l border-white/5">
-                                                    <button 
-                                                        onClick={() => handleDownloadManga()}
-                                                        className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-500 hover:text-[#F4F3EE] hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-[#C6401E]"
-                                                        aria-label="Baixar Capítulo"
-                                                        title="Baixar Capítulo"
-                                                    >
-                                                        <Download className="w-4 h-4" />
-                                                    </button>
                                                     <button 
                                                         onClick={() => toggleChapterRead(chapter, isRead)}
                                                         className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-[#C6401E] ${isRead ? 'text-[#C6401E] bg-[#C6401E]/10' : 'text-gray-500 hover:text-[#F4F3EE] hover:bg-white/5'}`}
