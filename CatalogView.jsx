@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Star, Clock, ChevronRight, ChevronLeft, Moon, Filter, X, Play, BookOpen, Flame, Tag } from 'lucide-react';
+import { Search, Star, Clock, ChevronRight, ChevronLeft, Moon, Filter, X, BookOpen, Flame, Tag } from 'lucide-react';
 import { timeAgo } from './helpers';
 
 export function CatalogView({ mangas = [], onNavigate }) {
@@ -64,6 +64,28 @@ export function CatalogView({ mangas = [], onNavigate }) {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredMangas.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Identificar a origem/tipo para a tag do card
+    const getOriginTag = (manga) => {
+        if (manga.type) return manga.type;
+        if (manga.genres) {
+            const lowerGenres = manga.genres.map(g => g.toLowerCase());
+            if (lowerGenres.includes('manhwa')) return 'Manhwa';
+            if (lowerGenres.includes('manhua')) return 'Manhua';
+            if (lowerGenres.includes('shoujo')) return 'Shoujo';
+            if (lowerGenres.includes('seinen')) return 'Seinen';
+        }
+        return 'Mangá';
+    };
+
+    // Cores das tags seguindo a paleta da Inferia
+    const getTagColor = (type) => {
+        const lower = type.toLowerCase();
+        if (lower === 'manhwa') return 'bg-[#8C199C] text-[#FAFAFA] border-[#8C199C]'; 
+        if (lower === 'manhua') return 'bg-[#B03D23] text-[#FAFAFA] border-[#B03D23]'; 
+        if (lower === 'shoujo') return 'bg-[#950606] text-[#FAFAFA] border-[#950606]'; 
+        return 'bg-[#333333] text-[#FAFAFA] border-[#333333]'; 
+    };
 
     // Componente Interno: Menu de Filtros (Reutilizável Desktop/Mobile)
     const FilterPanel = () => (
@@ -190,55 +212,51 @@ export function CatalogView({ mangas = [], onNavigate }) {
                         )}
                     </div>
 
-                    {/* GRADE DE CARDS */}
+                    {/* GRADE DE CARDS (Design Original Restaurado) */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {currentItems.length > 0 ? currentItems.map(manga => (
-                            <div key={manga.id} className="bg-[#1B1B1B] border border-[#333333] rounded-xl overflow-hidden shadow-lg flex flex-col transition-all hover:border-[#950606] hover:shadow-[0_8px_25px_rgba(149,6,6,0.2)] group">
-                                
-                                {/* CAPA DA OBRA (PROPORÇÃO 3:4) */}
-                                <div className="relative aspect-[3/4] overflow-hidden cursor-pointer" onClick={() => onNavigate('details', manga)}>
-                                    <img src={manga.coverUrl} className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105" loading="lazy" alt={manga.title} />
-                                    
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1B1B1B] via-transparent to-transparent opacity-80"></div>
-                                    
-                                    {/* AVALIAÇÃO NO TOPO */}
-                                    <div className="absolute top-2 right-2 bg-[#1B1B1B]/90 backdrop-blur-sm border border-[#333333] px-2 py-1 rounded-md flex items-center gap-1">
-                                        <Star className="w-3 h-3 text-[#F1A822] fill-[#F1A822]" />
-                                        <span className="text-[10px] font-bold text-[#FAFAFA]">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
-                                    </div>
-                                </div>
-                                
-                                {/* CONTEÚDO DO CARD */}
-                                <div className="p-4 flex flex-col flex-1 gap-2">
-                                    <h3 
-                                        className="font-bold text-[14px] md:text-[16px] text-[#FAFAFA] line-clamp-2 leading-tight cursor-pointer hover:text-[#B03D23] transition-colors"
-                                        onClick={() => onNavigate('details', manga)}
-                                    >
-                                        {manga.title}
-                                    </h3>
-                                    
-                                    <span className="text-[12px] text-gray-400 font-medium truncate">
-                                        {manga.author || 'Autor Anônimo'}
-                                    </span>
-                                    
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                        {(manga.genres || []).slice(0, 2).map(g => (
-                                            <span key={g} className="text-[10px] font-bold uppercase bg-[#333333] text-gray-300 px-2 py-0.5 rounded-sm">
-                                                {g}
-                                            </span>
-                                        ))}
-                                    </div>
+                        {currentItems.length > 0 ? currentItems.map(manga => {
+                            const origin = getOriginTag(manga);
+                            const tagClasses = getTagColor(origin);
 
-                                    {/* BOTÃO DE AÇÃO EXIGIDO NO DOC (Altura >= 40px, cor primária) */}
-                                    <button 
-                                        onClick={() => onNavigate('details', manga)}
-                                        className="mt-auto w-full h-[44px] bg-[#950606] hover:bg-[#B03D23] text-[#FAFAFA] rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-colors active:scale-95"
-                                    >
-                                        <Play className="w-4 h-4 fill-current" /> Ler Obra
-                                    </button>
+                            return (
+                                <div key={manga.id} onClick={() => onNavigate('details', manga)} className="cursor-pointer group flex flex-col relative perspective-1000">
+                                    
+                                    <div className="relative aspect-[1/1.4] rounded-2xl overflow-hidden bg-[#1B1B1B] shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_rgba(149,6,6,0.2)] border border-[#333333] group-hover:border-[#950606]">
+                                        
+                                        <img src={manga.coverUrl} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100" loading="lazy" alt={manga.title} />
+                                        
+                                        {/* Degradê do card */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-[#1B1B1B] via-[#1B1B1B]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+                                        
+                                        {/* TAG DE ORIGEM */}
+                                        <div className={`absolute top-2 left-2 text-[8px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest shadow-lg border ${tagClasses}`}>
+                                            {origin}
+                                        </div>
+
+                                        {/* AVALIAÇÃO */}
+                                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 flex items-center gap-1 shadow-lg">
+                                            <Star className="w-2.5 h-2.5 text-[#F1A822] fill-[#F1A822]" />
+                                            <span className="text-[9px] font-black text-[#FAFAFA]">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
+                                        </div>
+                                        
+                                        {/* INFORMAÇÕES DO RODAPÉ DO CARD */}
+                                        <div className="absolute bottom-0 w-full p-3 md:p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                                            <h3 className="font-bold text-sm text-[#FAFAFA] line-clamp-2 leading-tight group-hover:text-[#B03D23] transition-colors drop-shadow-md">
+                                                {manga.title}
+                                            </h3>
+                                            <div className="flex items-center justify-between mt-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                                                    <Clock className="w-3 h-3 text-[#B03D23]"/> {timeAgo(manga.createdAt)}
+                                                </p>
+                                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 group-hover:bg-[#950606] transition-colors">
+                                                    <ChevronRight className="w-3 h-3 text-[#FAFAFA]" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        )) : (
+                            );
+                        }) : (
                             <div className="col-span-full py-20 flex flex-col items-center justify-center bg-[#1B1B1B] border border-[#333333] rounded-2xl">
                                 <Moon className="w-12 h-12 text-[#333333] mb-4" />
                                 <h3 className="text-[#FAFAFA] font-black uppercase tracking-widest mb-1">Nenhuma Obra Encontrada</h3>
