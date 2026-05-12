@@ -2,11 +2,10 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Star, Clock, ChevronRight, ChevronLeft, Moon, Filter, X, BookOpen, Flame, Tag, Play } from 'lucide-react';
 import { timeAgo } from './helpers';
 
-export function CatalogView({ mangas = [], onNavigate }) {
+export function HomeView({ mangas = [], onNavigate }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [carouselIndex, setCarouselIndex] = useState(0);
-    const [isCarouselPaused, setIsCarouselPaused] = useState(false);
     const itemsPerPage = 20;
 
     // Estados dos Filtros
@@ -24,24 +23,14 @@ export function CatalogView({ mangas = [], onNavigate }) {
         return [...mangas].sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0)).slice(0, 5);
     }, [mangas]);
 
-    // Auto-play do Carrossel (Pausa no Hover)
+    // Auto-play do Carrossel
     useEffect(() => {
-        if (featuredMangas.length === 0 || isCarouselPaused) return;
+        if (featuredMangas.length === 0) return;
         const interval = setInterval(() => {
             setCarouselIndex((prev) => (prev + 1) % featuredMangas.length);
         }, 5000);
         return () => clearInterval(interval);
-    }, [featuredMangas.length, isCarouselPaused]);
-
-    // Prevenir rolagem do body quando modal mobile estiver aberto
-    useEffect(() => {
-        if (isMobileFilterOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => { document.body.style.overflow = 'unset'; };
-    }, [isMobileFilterOpen]);
+    }, [featuredMangas.length]);
 
     // Lógica de Filtro Principal
     const filteredMangas = useMemo(() => {
@@ -174,7 +163,7 @@ export function CatalogView({ mangas = [], onNavigate }) {
             <div className="fixed bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#8C199C] rounded-full mix-blend-screen filter blur-[150px] opacity-10 pointer-events-none"></div>
 
             {/* HEADER GLASSMORPHISM */}
-            <header className="sticky top-0 z-50 bg-[#0D0D0D]/80 backdrop-blur-xl border-b border-white/5 shadow-2xl">
+            <header className="sticky top-0 z-50 bg-[#0D0D0D]/70 backdrop-blur-xl border-b border-white/5 shadow-2xl">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="flex items-center justify-between w-full md:w-auto">
                         <h1 className="text-xl md:text-2xl font-black uppercase tracking-[0.2em] text-[#FAFAFA] drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
@@ -205,11 +194,7 @@ export function CatalogView({ mangas = [], onNavigate }) {
                 
                 {/* CARROSSEL HERO SURREAL E LEVE */}
                 {featuredMangas.length > 0 && searchQuery === '' && currentPage === 1 && (
-                    <section 
-                        className="relative w-full h-[400px] md:h-[450px] rounded-[2rem] overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10"
-                        onMouseEnter={() => setIsCarouselPaused(true)}
-                        onMouseLeave={() => setIsCarouselPaused(false)}
-                    >
+                    <section className="relative w-full h-[400px] md:h-[450px] rounded-[2rem] overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10">
                         {/* Background animado do carrossel */}
                         {featuredMangas.map((manga, idx) => (
                             <div 
@@ -407,9 +392,9 @@ export function CatalogView({ mangas = [], onNavigate }) {
             {/* MODAL DE FILTROS MOBILE */}
             {isMobileFilterOpen && (
                 <div className="md:hidden fixed inset-0 z-[100] flex flex-col justify-end">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={() => setIsMobileFilterOpen(false)}></div>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={() => setIsMobileFilterOpen(false)}></div>
                     
-                    <div className="bg-[#0D0D0D]/95 backdrop-blur-2xl w-full max-h-[85vh] rounded-t-[2.5rem] border-t border-white/10 relative z-10 flex flex-col shadow-[0_-20px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-full duration-300 ease-out">
+                    <div className="bg-[#0D0D0D]/90 backdrop-blur-2xl w-full max-h-[85vh] rounded-t-[2.5rem] border-t border-white/10 relative z-10 flex flex-col shadow-[0_-20px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-full duration-300 ease-out">
                         
                         <div className="flex items-center justify-between p-6 border-b border-white/5">
                             <h2 className="font-black text-[#FAFAFA] uppercase tracking-[0.2em] text-sm flex items-center gap-3">
