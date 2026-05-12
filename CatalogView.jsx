@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Star, Clock, ChevronRight, ChevronLeft, Moon, SlidersHorizontal, X, Filter, Flame, BookOpen } from 'lucide-react';
+import { Search, Star, Clock, ChevronRight, ChevronLeft, Moon, Filter, X, Play, BookOpen, Flame, Tag } from 'lucide-react';
 import { timeAgo } from './helpers';
 
-export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
+export function CatalogView({ mangas = [], onNavigate }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 18;
+    const itemsPerPage = 20;
 
     // Estados dos Filtros
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
     const [selectedType, setSelectedType] = useState('Todos');
     const [selectedGenre, setSelectedGenre] = useState('Todos');
     const [sortBy, setSortBy] = useState('Recentes');
@@ -65,258 +65,266 @@ export function CatalogView({ mangas = [], onNavigate, dataSaver }) {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredMangas.slice(indexOfFirstItem, indexOfLastItem);
 
-    // Identificar a origem/tipo para a tag do card
-    const getOriginTag = (manga) => {
-        if (manga.type) return manga.type;
-        if (manga.genres) {
-            const lowerGenres = manga.genres.map(g => g.toLowerCase());
-            if (lowerGenres.includes('manhwa')) return 'Manhwa';
-            if (lowerGenres.includes('manhua')) return 'Manhua';
-            if (lowerGenres.includes('shoujo')) return 'Shoujo';
-            if (lowerGenres.includes('seinen')) return 'Seinen';
-        }
-        return 'Mangá';
-    };
-
-    // Cores das tags seguindo a paleta do documento
-    const getTagColor = (type) => {
-        const lower = type.toLowerCase();
-        if (lower === 'manhwa') return 'bg-[#8C199C] text-[#FAFAFA] border-[#8C199C]'; // Violeta
-        if (lower === 'manhua') return 'bg-[#B03D23] text-[#FAFAFA] border-[#B03D23]'; // Laranja-Avermelhado
-        if (lower === 'shoujo') return 'bg-[#950606] text-[#FAFAFA] border-[#950606]'; // Vermelho Escuro
-        return 'bg-[#333333] text-[#FAFAFA] border-[#333333]'; // Neutro/Cinza Escuro
-    };
-
-    return (
-        <div className="pb-32 animate-in fade-in duration-500 bg-[#1B1B1B] min-h-screen relative font-sans text-[#FAFAFA] overflow-x-hidden selection:bg-[#950606]/40">
-            
-            <div className="px-4 md:px-8 max-w-7xl mx-auto pt-6 relative z-10">
-                
-                {/* HERO BANNER - CATÁLOGO INFERIA COM FOTO */}
-                <div className="relative w-full h-48 md:h-64 rounded-3xl overflow-hidden mb-10 shadow-[0_10px_30px_rgba(0,0,0,0.8)] border border-white/5">
-                    <img 
-                        src="https://images.unsplash.com/photo-1542451313056-b7c8e626645f?q=80&w=2070&auto=format&fit=crop" 
-                        alt="Catálogo Inferia" 
-                        className="w-full h-full object-cover saturate-150 contrast-125 object-center"
-                    />
-                    
-                    {/* Degradê sobre a imagem */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#1B1B1B] via-[#1B1B1B]/80 to-transparent"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1B1B1B] via-transparent to-transparent"></div>
-                    
-                    <div className="absolute bottom-6 left-6 md:bottom-10 md:left-10 z-10">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Flame className="w-5 h-5 text-[#B03D23]" />
-                            <span className="text-[#B03D23] text-[10px] font-black uppercase tracking-[0.3em]">Explorar o Acervo</span>
-                        </div>
-                        <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#950606] via-[#B03D23] to-[#8C199C] tracking-tighter uppercase drop-shadow-lg">
-                            Catálogo Inferia
-                        </h1>
-                    </div>
-                </div>
-
-                {/* BARRA DE PESQUISA E BOTÃO DE FILTROS */}
-                <div className="flex flex-col md:flex-row gap-4 mb-10 max-w-4xl">
-                    <div className="relative flex-1 group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#950606] to-[#B03D23] rounded-2xl blur opacity-20 group-focus-within:opacity-50 transition duration-500"></div>
-                        <div className="relative flex items-center bg-[#121212] rounded-2xl border border-white/10 overflow-hidden">
-                            <Search className="absolute left-5 w-5 h-5 text-[#333333] group-focus-within:text-[#B03D23] transition-colors" />
-                            <input 
-                                type="text" 
-                                placeholder="Buscar por título, autor ou gênero..." 
-                                value={searchQuery}
-                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                                className="w-full bg-transparent py-4 pl-14 pr-4 text-sm text-[#FAFAFA] outline-none placeholder-[#333333] font-medium"
-                            />
-                        </div>
-                    </div>
-                    
-                    <button 
-                        onClick={() => setIsFilterOpen(true)}
-                        className="flex-shrink-0 bg-[#121212] border border-white/10 hover:border-[#950606]/50 hover:bg-[#950606]/10 px-8 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 group shadow-sm"
-                    >
-                        <Filter className="w-4 h-4 text-[#FAFAFA] group-hover:text-[#B03D23] transition-colors" />
-                        <span className="text-[10px] font-black text-[#FAFAFA] uppercase tracking-[0.2em]">Filtros</span>
-                    </button>
-                </div>
-
-                {/* CONTADOR DE OBRAS */}
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="h-px bg-gradient-to-r from-[#8C199C]/50 to-transparent flex-1"></div>
-                    <span className="text-[10px] font-black text-[#FAFAFA] uppercase tracking-[0.2em]">
-                        {filteredMangas.length} Obras Encontradas
-                    </span>
-                    <div className="h-px bg-gradient-to-l from-[#950606]/50 to-transparent flex-1"></div>
-                </div>
-
-                {/* GRADE DE OBRAS (CARDS) */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-                    {currentItems.length > 0 ? currentItems.map(manga => {
-                        const origin = getOriginTag(manga);
-                        const tagClasses = getTagColor(origin);
-
-                        return (
-                            <div key={manga.id} onClick={() => onNavigate('details', manga)} className="cursor-pointer group flex flex-col relative perspective-1000">
-                                
-                                <div className={`relative aspect-[1/1.4] rounded-2xl overflow-hidden bg-[#121212] shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_rgba(149,6,6,0.3)] border border-[#333333] group-hover:border-[#950606] ${dataSaver ? 'blur-[1px]' : ''}`}>
-                                    
-                                    <img src={manga.coverUrl} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110 opacity-90 group-hover:opacity-100" loading="lazy" alt={manga.title} />
-                                    
-                                    {/* Degradê do card */}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1B1B1B] via-[#1B1B1B]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
-                                    
-                                    {/* TAG DE ORIGEM */}
-                                    <div className={`absolute top-2 left-2 text-[8px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest shadow-lg border ${tagClasses}`}>
-                                        {origin}
-                                    </div>
-
-                                    {/* AVALIAÇÃO */}
-                                    <div className="absolute top-2 right-2 bg-black/80 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 flex items-center gap-1 shadow-lg">
-                                        <Star className="w-2.5 h-2.5 text-[#F1A822] fill-[#F1A822]" />
-                                        <span className="text-[9px] font-black text-[#FAFAFA]">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
-                                    </div>
-                                    
-                                    {/* INFORMAÇÕES DO RODAPÉ DO CARD */}
-                                    <div className="absolute bottom-0 w-full p-3 md:p-4 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
-                                        <h3 className="font-bold text-sm text-[#FAFAFA] line-clamp-2 leading-tight group-hover:text-[#B03D23] transition-colors drop-shadow-md">
-                                            {manga.title}
-                                        </h3>
-                                        <div className="flex items-center justify-between mt-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                                            <p className="text-[9px] text-[#FAFAFA] font-bold uppercase tracking-widest flex items-center gap-1">
-                                                <Clock className="w-3 h-3 text-[#8C199C]"/> {timeAgo(manga.createdAt)}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    }) : (
-                        <div className="col-span-full py-24 flex flex-col items-center justify-center bg-[#121212] rounded-3xl border border-[#333333] shadow-inner">
-                            <Moon className="w-12 h-12 text-[#950606] mb-6 animate-pulse" />
-                            <h3 className="text-base font-black text-[#FAFAFA] uppercase tracking-[0.2em] mb-2">O Vazio Infinito</h3>
-                            <p className="text-[#333333] font-bold text-[10px] uppercase tracking-widest">Nenhuma obra encontrada nestes reinos.</p>
-                        </div>
-                    )}
-                </div>
-
-                {/* PAGINAÇÃO */}
-                {totalPages > 1 && (
-                    <div className="mt-16 mb-8 flex items-center justify-center gap-2">
-                        <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="p-3 rounded-xl bg-[#121212] text-[#FAFAFA] border border-[#333333] disabled:opacity-30 hover:border-[#950606] hover:text-[#B03D23] transition-all hover:-translate-x-1">
-                            <ChevronLeft className="w-4 h-4" />
+    // Componente Interno: Menu de Filtros (Reutilizável Desktop/Mobile)
+    const FilterPanel = () => (
+        <div className="flex flex-col gap-8">
+            {/* Bloco: Ordenar */}
+            <div>
+                <h3 className="text-[#FAFAFA] text-sm font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#B03D23]" /> Ordenar Por
+                </h3>
+                <div className="flex flex-col gap-2">
+                    {sortOptions.map(opt => (
+                        <button 
+                            key={opt} 
+                            onClick={() => { setSortBy(opt); setCurrentPage(1); }} 
+                            className={`px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest text-left transition-colors border ${sortBy === opt ? 'bg-[#950606] text-[#FAFAFA] border-[#950606]' : 'bg-[#1B1B1B] text-[#FAFAFA] border-[#333333] hover:border-[#B03D23]'}`}
+                        >
+                            {opt}
                         </button>
-                        
-                        <div className="flex items-center gap-1.5 px-2">
-                            {[...Array(totalPages)].map((_, i) => {
-                                if (totalPages > 5 && (i + 1 !== 1 && i + 1 !== totalPages && Math.abs(currentPage - (i + 1)) > 1)) {
-                                    if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="text-[#333333] px-1 text-sm font-black tracking-widest">...</span>;
-                                    return null;
-                                }
-                                return (
-                                    <button 
-                                        key={i} 
-                                        onClick={() => setCurrentPage(i + 1)} 
-                                        className={`w-10 h-10 rounded-xl font-black text-xs transition-all ${
-                                            currentPage === i + 1 
-                                            ? 'bg-[#950606] text-[#FAFAFA] shadow-[0_0_15px_rgba(149,6,6,0.6)] scale-110 border-none' 
-                                            : 'bg-transparent text-[#FAFAFA] border border-transparent hover:border-[#333333] hover:bg-[#121212]'
-                                        }`}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        
-                        <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="p-3 rounded-xl bg-[#121212] text-[#FAFAFA] border border-[#333333] disabled:opacity-30 hover:border-[#950606] hover:text-[#B03D23] transition-all hover:translate-x-1">
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                )}
+                    ))}
+                </div>
             </div>
 
-            {/* ========================================= */}
-            {/* DRAWER LATERAL DE FILTROS (Canto Direito) */}
-            {/* ========================================= */}
-            {isFilterOpen && (
-                <div className="fixed inset-0 z-[100] flex justify-end pointer-events-none">
+            {/* Bloco: Formato */}
+            <div>
+                <h3 className="text-[#FAFAFA] text-sm font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-[#8C199C]" /> Formato
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                    {types.map(opt => (
+                        <button 
+                            key={opt} 
+                            onClick={() => { setSelectedType(opt); setCurrentPage(1); }} 
+                            className={`px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors border ${selectedType === opt ? 'bg-[#950606] text-[#FAFAFA] border-[#950606]' : 'bg-[#1B1B1B] text-[#FAFAFA] border-[#333333] hover:border-[#8C199C]'}`}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Bloco: Gêneros */}
+            <div>
+                <h3 className="text-[#FAFAFA] text-sm font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-[#950606]" /> Gêneros
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                    {genresList.map(opt => (
+                        <button 
+                            key={opt} 
+                            onClick={() => { setSelectedGenre(opt); setCurrentPage(1); }} 
+                            className={`px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-colors border ${selectedGenre === opt ? 'bg-[#950606] text-[#FAFAFA] border-[#950606]' : 'bg-[#1B1B1B] text-[#FAFAFA] border-[#333333] hover:border-[#B03D23]'}`}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="bg-[#1B1B1B] min-h-screen font-sans text-[#FAFAFA] pb-24 selection:bg-[#950606]/40 flex flex-col">
+            
+            {/* HEADER FIXO - BUSCA E TÍTULO */}
+            <header className="sticky top-0 z-40 bg-[#1B1B1B] border-b border-[#333333] shadow-md">
+                <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
                     
-                    {/* Backdrop Escuro - Clique para fechar */}
-                    <div 
-                        className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto transition-opacity duration-300" 
-                        onClick={() => setIsFilterOpen(false)}
-                    ></div>
+                    <div className="flex items-center justify-between w-full md:w-auto">
+                        <h1 className="text-xl md:text-2xl font-black uppercase tracking-[0.2em] text-[#FAFAFA]">
+                            Manga <span className="text-[#950606]">Inferia</span>
+                        </h1>
+                        <button 
+                            className="md:hidden p-2 bg-[#333333] rounded-lg text-[#FAFAFA]"
+                            onClick={() => setIsMobileFilterOpen(true)}
+                        >
+                            <Filter className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* BARRA DE PESQUISA */}
+                    <div className="relative w-full md:w-96 group">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#B03D23] transition-colors" />
+                        <input 
+                            type="text" 
+                            placeholder="Pesquisar obras..." 
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                            className="w-full bg-[#1B1B1B] border border-[#333333] rounded-xl py-3 pl-11 pr-4 text-sm text-[#FAFAFA] outline-none focus:border-[#950606] transition-colors"
+                        />
+                    </div>
+                </div>
+            </header>
+
+            {/* ESTRUTURA PRINCIPAL (SIDEBAR ESQUERDA + GRID DIREITA) */}
+            <main className="flex-1 max-w-7xl mx-auto w-full px-4 pt-8 flex gap-8">
+                
+                {/* SIDEBAR DESKTOP */}
+                <aside className="hidden md:block w-64 flex-shrink-0">
+                    <div className="sticky top-28 border border-[#333333] bg-[#1B1B1B] rounded-2xl p-6 shadow-lg">
+                        <FilterPanel />
+                    </div>
+                </aside>
+
+                {/* ÁREA DE CONTEÚDO (GRID) */}
+                <section className="flex-1">
                     
-                    {/* Painel Lateral (Gaveta) - Fica no canto e não no meio */}
-                    <div className="w-full max-w-[280px] sm:max-w-xs h-full bg-[#1B1B1B] border-l border-[#950606]/30 pointer-events-auto flex flex-col animate-in slide-in-from-right duration-300 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] relative z-10">
+                    {/* FEEDBACK DE FILTROS ATIVOS E CONTADOR */}
+                    <div className="flex flex-wrap items-center gap-3 mb-6">
+                        <span className="text-sm font-bold text-gray-400 uppercase tracking-widest mr-2">
+                            {filteredMangas.length} Resultados
+                        </span>
                         
-                        {/* Cabeçalho do Drawer */}
-                        <div className="flex items-center justify-between p-6 border-b border-[#333333] bg-[#121212]">
-                            <div className="flex items-center gap-3">
-                                <SlidersHorizontal className="w-5 h-5 text-[#B03D23]" />
-                                <span className="font-black text-[#FAFAFA] uppercase tracking-[0.2em] text-sm">Filtros</span>
+                        {selectedType !== 'Todos' && (
+                            <span className="flex items-center gap-2 bg-[#333333] border border-[#B03D23] px-3 py-1.5 rounded-full text-xs font-bold text-[#FAFAFA] uppercase">
+                                <BookOpen className="w-3 h-3" /> {selectedType}
+                                <X className="w-3 h-3 cursor-pointer hover:text-[#950606]" onClick={() => setSelectedType('Todos')} />
+                            </span>
+                        )}
+                        {selectedGenre !== 'Todos' && (
+                            <span className="flex items-center gap-2 bg-[#333333] border border-[#B03D23] px-3 py-1.5 rounded-full text-xs font-bold text-[#FAFAFA] uppercase">
+                                <Tag className="w-3 h-3" /> {selectedGenre}
+                                <X className="w-3 h-3 cursor-pointer hover:text-[#950606]" onClick={() => setSelectedGenre('Todos')} />
+                            </span>
+                        )}
+                    </div>
+
+                    {/* GRADE DE CARDS */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {currentItems.length > 0 ? currentItems.map(manga => (
+                            <div key={manga.id} className="bg-[#1B1B1B] border border-[#333333] rounded-xl overflow-hidden shadow-lg flex flex-col transition-all hover:border-[#950606] hover:shadow-[0_8px_25px_rgba(149,6,6,0.2)] group">
+                                
+                                {/* CAPA DA OBRA (PROPORÇÃO 3:4) */}
+                                <div className="relative aspect-[3/4] overflow-hidden cursor-pointer" onClick={() => onNavigate('details', manga)}>
+                                    <img src={manga.coverUrl} className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-105" loading="lazy" alt={manga.title} />
+                                    
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#1B1B1B] via-transparent to-transparent opacity-80"></div>
+                                    
+                                    {/* AVALIAÇÃO NO TOPO */}
+                                    <div className="absolute top-2 right-2 bg-[#1B1B1B]/90 backdrop-blur-sm border border-[#333333] px-2 py-1 rounded-md flex items-center gap-1">
+                                        <Star className="w-3 h-3 text-[#F1A822] fill-[#F1A822]" />
+                                        <span className="text-[10px] font-bold text-[#FAFAFA]">{manga.rating ? Number(manga.rating).toFixed(1) : "5.0"}</span>
+                                    </div>
+                                </div>
+                                
+                                {/* CONTEÚDO DO CARD */}
+                                <div className="p-4 flex flex-col flex-1 gap-2">
+                                    <h3 
+                                        className="font-bold text-[14px] md:text-[16px] text-[#FAFAFA] line-clamp-2 leading-tight cursor-pointer hover:text-[#B03D23] transition-colors"
+                                        onClick={() => onNavigate('details', manga)}
+                                    >
+                                        {manga.title}
+                                    </h3>
+                                    
+                                    <span className="text-[12px] text-gray-400 font-medium truncate">
+                                        {manga.author || 'Autor Anônimo'}
+                                    </span>
+                                    
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                        {(manga.genres || []).slice(0, 2).map(g => (
+                                            <span key={g} className="text-[10px] font-bold uppercase bg-[#333333] text-gray-300 px-2 py-0.5 rounded-sm">
+                                                {g}
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    {/* BOTÃO DE AÇÃO EXIGIDO NO DOC (Altura >= 40px, cor primária) */}
+                                    <button 
+                                        onClick={() => onNavigate('details', manga)}
+                                        className="mt-auto w-full h-[44px] bg-[#950606] hover:bg-[#B03D23] text-[#FAFAFA] rounded-lg font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-colors active:scale-95"
+                                    >
+                                        <Play className="w-4 h-4 fill-current" /> Ler Obra
+                                    </button>
+                                </div>
                             </div>
-                            <button onClick={() => setIsFilterOpen(false)} className="w-8 h-8 rounded-full bg-[#333333]/50 flex items-center justify-center hover:bg-[#950606] hover:text-[#FAFAFA] transition-colors">
+                        )) : (
+                            <div className="col-span-full py-20 flex flex-col items-center justify-center bg-[#1B1B1B] border border-[#333333] rounded-2xl">
+                                <Moon className="w-12 h-12 text-[#333333] mb-4" />
+                                <h3 className="text-[#FAFAFA] font-black uppercase tracking-widest mb-1">Nenhuma Obra Encontrada</h3>
+                                <p className="text-gray-400 text-xs uppercase tracking-widest">Tente remover alguns filtros.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* PAGINAÇÃO TRADICIONAL */}
+                    {totalPages > 1 && (
+                        <div className="mt-12 flex items-center justify-center gap-2">
+                            <button 
+                                disabled={currentPage === 1} 
+                                onClick={() => setCurrentPage(prev => prev - 1)} 
+                                className="h-10 px-4 rounded-lg bg-[#1B1B1B] text-[#FAFAFA] border border-[#333333] disabled:opacity-50 hover:bg-[#333333] transition-colors flex items-center"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            
+                            <div className="flex items-center gap-1">
+                                {[...Array(totalPages)].map((_, i) => {
+                                    if (totalPages > 5 && (i + 1 !== 1 && i + 1 !== totalPages && Math.abs(currentPage - (i + 1)) > 1)) {
+                                        if (i + 1 === 2 || i + 1 === totalPages - 1) return <span key={i} className="px-2 text-gray-500">...</span>;
+                                        return null;
+                                    }
+                                    return (
+                                        <button 
+                                            key={i} 
+                                            onClick={() => setCurrentPage(i + 1)} 
+                                            className={`w-10 h-10 rounded-lg font-bold text-xs transition-colors border ${
+                                                currentPage === i + 1 
+                                                ? 'bg-[#950606] text-[#FAFAFA] border-[#950606]' 
+                                                : 'bg-[#1B1B1B] text-gray-400 border-[#333333] hover:bg-[#333333] hover:text-[#FAFAFA]'
+                                            }`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            
+                            <button 
+                                disabled={currentPage === totalPages} 
+                                onClick={() => setCurrentPage(prev => prev + 1)} 
+                                className="h-10 px-4 rounded-lg bg-[#1B1B1B] text-[#FAFAFA] border border-[#333333] disabled:opacity-50 hover:bg-[#333333] transition-colors flex items-center"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+                </section>
+            </main>
+
+            {/* MODAL DE FILTROS MOBILE (SEM BLUR BUGADO, FUNDO SÓLIDO) */}
+            {isMobileFilterOpen && (
+                <div className="md:hidden fixed inset-0 z-[100] flex flex-col justify-end">
+                    {/* Overlay escuro simples (clique para fechar) */}
+                    <div className="absolute inset-0 bg-black/80" onClick={() => setIsMobileFilterOpen(false)}></div>
+                    
+                    {/* Painel que sobe de baixo */}
+                    <div className="bg-[#1B1B1B] w-full max-h-[85vh] rounded-t-3xl border-t border-[#333333] relative z-10 flex flex-col animate-in slide-in-from-bottom-full duration-300">
+                        
+                        <div className="flex items-center justify-between p-5 border-b border-[#333333]">
+                            <h2 className="font-black text-[#FAFAFA] uppercase tracking-widest text-sm flex items-center gap-2">
+                                <Filter className="w-4 h-4 text-[#B03D23]" /> Filtrar Obras
+                            </h2>
+                            <button onClick={() => setIsMobileFilterOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-[#333333] text-[#FAFAFA]">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
                         
-                        {/* Corpo do Drawer (Scrollable) */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
-                            
-                            {/* Bloco: Ordem */}
-                            <div>
-                                <h3 className="text-[9px] font-black text-[#B03D23] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Star className="w-3 h-3"/> Organizar Por</h3>
-                                <div className="flex flex-col gap-2">
-                                    {sortOptions.map(opt => (
-                                        <button key={opt} onClick={() => { setSortBy(opt); setCurrentPage(1); }} className={`px-4 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest text-left transition-all ${sortBy === opt ? 'bg-[#950606] text-[#FAFAFA] shadow-md' : 'bg-[#121212] text-[#FAFAFA] border border-[#333333] hover:border-[#B03D23]'}`}>
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Bloco: Formato */}
-                            <div>
-                                <h3 className="text-[9px] font-black text-[#8C199C] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><BookOpen className="w-3 h-3"/> Formato da Obra</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {types.map(opt => (
-                                        <button key={opt} onClick={() => { setSelectedType(opt); setCurrentPage(1); }} className={`px-4 py-2.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${selectedType === opt ? 'bg-[#8C199C] text-[#FAFAFA] shadow-md' : 'bg-[#121212] text-[#FAFAFA] border border-[#333333] hover:border-[#8C199C]'}`}>
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Bloco: Gêneros */}
-                            <div>
-                                <h3 className="text-[9px] font-black text-[#950606] uppercase tracking-[0.2em] mb-4 flex items-center gap-2"><Flame className="w-3 h-3"/> Gêneros</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {genresList.map(opt => (
-                                        <button key={opt} onClick={() => { setSelectedGenre(opt); setCurrentPage(1); }} className={`px-3 py-2 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${selectedGenre === opt ? 'bg-[#950606] text-[#FAFAFA] shadow-md' : 'bg-[#121212] text-[#FAFAFA] border border-[#333333] hover:border-[#950606]'}`}>
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                        <div className="flex-1 overflow-y-auto p-5">
+                            <FilterPanel />
                         </div>
                         
-                        {/* Rodapé do Drawer */}
-                        <div className="p-6 border-t border-[#333333] bg-[#121212]">
-                            <button onClick={() => setIsFilterOpen(false)} className="w-full py-4 bg-[#950606] hover:bg-[#B03D23] text-[#FAFAFA] rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(149,6,6,0.4)] hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
-                                <Filter className="w-4 h-4"/> Ver {filteredMangas.length} Obras
+                        <div className="p-5 border-t border-[#333333] bg-[#1B1B1B]">
+                            <button 
+                                onClick={() => setIsMobileFilterOpen(false)} 
+                                className="w-full h-[48px] bg-[#950606] text-[#FAFAFA] font-black rounded-xl uppercase tracking-widest text-xs flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(149,6,6,0.3)]"
+                            >
+                                <Search className="w-4 h-4" /> Mostrar {filteredMangas.length} Resultados
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-            
-            <style dangerouslySetInnerHTML={{__html: `
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #333333; border-radius: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #950606; }
-            `}} />
         </div>
     );
 }
