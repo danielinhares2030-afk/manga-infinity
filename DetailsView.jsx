@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+// Importações de ícones atualizadas e corrigidas
 import { ChevronLeft, Share2, MoreHorizontal, Bookmark, BookOpen, Star, MessageSquare, ChevronDown, Flame, Bell, Heart, ListFilter, CheckCircle } from 'lucide-react';
 import { doc, updateDoc, setDoc, deleteDoc, increment } from "firebase/firestore";
 import { APP_ID } from './constants';
@@ -82,11 +83,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
     const sortedChapters = [...chapters].sort((a, b) => {
         return sortOrder === 'desc' ? b.number - a.number : a.number - b.number;
     });
-
-    const formatReaders = (num) => {
-        if (!num) return '0';
-        return num >= 1000 ? (num / 1000).toFixed(1) + 'K' : num.toString();
-    };
     
     const displayGenre = manga.genres && manga.genres.length > 0 ? manga.genres.slice(0, 3) : ['Ação', 'Fantasia'];
 
@@ -99,7 +95,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                 <div className="absolute inset-0 bg-gradient-to-b from-[#030105]/20 via-[#030105]/80 to-[#030105]"></div>
             </div>
 
-            {/* HEADER FLUTUANTE OUSADO */}
+            {/* HEADER FLUTUANTE OUSADO COM LOGO ATUALIZADO */}
             <div className="sticky top-4 left-0 w-full px-4 md:px-6 z-50 flex justify-center">
                 <div className="w-full max-w-5xl flex justify-between items-center bg-white/5 border border-white/10 backdrop-blur-xl rounded-full px-4 py-3 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
                     <button onClick={onBack} className="flex items-center gap-2 text-white hover:text-fuchsia-400 hover:bg-white/5 px-3 py-1.5 rounded-full transition-all">
@@ -107,7 +103,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         <span className="font-bold text-sm hidden md:block">Voltar</span>
                     </button>
 
-                    {/* LOGO CENTRAL (Corrigida com Ícone e Texto para não quebrar) */}
+                    {/* LOGO CENTRALIZADO COM TEMA OURO */}
                     <div className="flex flex-col items-center justify-center">
                         <Flame className="w-6 h-6 text-[#A855F7] mb-0.5 drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]" />
                         <span className="text-[10px] tracking-[0.4em] text-gray-400 uppercase font-light">Manga</span>
@@ -132,12 +128,19 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 md:pt-16 relative z-10">
                 
-                {/* ÁREA HERO OUSADA: GRID PRINCIPAL (CAPA DE LADO E INFO NA DIREITA) */}
+                {/* ÁREA HERO: CAPA DE UM LADO E INFORMAÇÕES DO OUTRO LADO, EXATAMENTE COMO NA FOTO */}
                 <div className="flex flex-col md:flex-row gap-8 md:gap-14 mb-16 items-center md:items-start">
                     
-                    {/* COLUNA ESQUERDA: CAPA COM GLOW E FLUTUAÇÃO */}
+                    {/* COLUNA ESQUERDA: CAPA COM DETALHES OURO E GLOW OURO/FUCHSIA */}
                     <div className="w-[200px] md:w-[280px] flex-shrink-0 relative group perspective-1000">
                         <div className="absolute -inset-2 bg-gradient-to-br from-purple-600 to-fuchsia-600 blur-[30px] opacity-40 group-hover:opacity-70 transition-opacity duration-700 rounded-3xl pointer-events-none"></div>
+                        {/* Detalhes ouro adicionados na capa */}
+                        <div className="absolute -top-3 -left-3 z-20 w-12 h-12 flex items-center justify-center bg-[#D4AF37] rounded-full border-2 border-white/20 shadow-[0_0_20px_rgba(212,175,55,0.8)]">
+                            <Star className="w-6 h-6 text-black fill-black" />
+                        </div>
+                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 w-16 h-12 flex items-center justify-center text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]">
+                            <Bookmark className="w-10 h-10 fill-current" />
+                        </div>
                         <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.9)] border border-white/10 bg-[#111] transform transition-transform duration-500 group-hover:-translate-y-2 group-hover:scale-[1.02]">
                             <img src={manga.coverUrl} alt={manga.title} className="w-full h-full object-cover" />
                             <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
@@ -148,16 +151,24 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         </div>
                     </div>
 
-                    {/* COLUNA DIREITA: INFOS (TIPOGRAFIA PREMIUM) */}
+                    {/* COLUNA DIREITA: INFORMAÇÕES DO MANGÁ */}
                     <div className="flex-1 flex flex-col justify-center text-center md:text-left pt-2 md:pt-6">
-                        <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-gray-200 to-gray-500 leading-tight mb-3 tracking-tight drop-shadow-sm uppercase">
-                            {manga.title || 'Sem Título'}
-                        </h1>
+                        {/* Título da Obra */}
+                        <div className="mb-4">
+                            <span className="text-gray-400 font-light text-xs md:text-sm tracking-widest uppercase mb-1">Título da</span>
+                            <div className="flex items-center gap-1.5 justify-center md:justify-start">
+                                <Bookmark className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                                <Bookmark className="w-4 h-4 text-[#D4AF37] fill-[#D4AF37]" />
+                            </div>
+                            <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-[#EAD28B] to-[#D4AF37] leading-tight mb-3 tracking-tight drop-shadow-sm uppercase">
+                                {manga.title || 'Sem Título'}
+                            </h1>
+                        </div>
                         <p className="text-purple-400 font-bold text-sm md:text-base mb-6 tracking-wide">
                             {manga.author || 'Autor Desconhecido'} <span className="text-gray-600 mx-2">•</span> <span className="text-gray-400">{manga.studio || 'Nexo Studio'}</span>
                         </p>
                         
-                        {/* Tags Neumórficas */}
+                        {/* Tags com Estilo Atualizado */}
                         <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-8">
                             {displayGenre.map(g => (
                                 <span key={g} className="px-4 py-1.5 rounded-full text-xs font-bold text-white bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/10 hover:border-purple-500/50 transition-all cursor-default">
@@ -167,14 +178,14 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                             <button className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-300 hover:bg-white/10 transition-colors">+</button>
                         </div>
 
-                        {/* Sinopse Elegante */}
+                        {/* Sinopse */}
                         <div className="text-gray-300 text-sm md:text-base leading-relaxed mb-8 font-medium max-w-2xl relative">
                             <p className="whitespace-pre-wrap line-clamp-3 text-transparent bg-clip-text bg-gradient-to-b from-gray-200 to-gray-600">
                                 {manga.synopsis || "Os registros akáshicos ainda não decifraram os mistérios desta obra."}
                             </p>
                         </div>
 
-                        {/* Ações Redesenhadas (Favoritar, Notificar) e Estatísticas */}
+                        {/* Botões Principais (Ler Agora, Favoritar, Notificar) */}
                         <div className="flex flex-col sm:flex-row items-center gap-6">
                             <button onClick={() => nextChapterToRead ? onChapterClick(manga, nextChapterToRead) : showToast("Nenhum capítulo disponível", "warning")} className="w-full sm:w-auto relative overflow-hidden group bg-white text-black font-black py-4 px-10 rounded-full flex items-center justify-center gap-3 transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
                                 {/* Efeito de Brilho Interno passando */}
@@ -183,7 +194,6 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                 <span className="text-base">{lastRead ? 'Continuar Leitura' : 'Iniciar Jornada'}</span>
                             </button>
 
-                            {/* Novos Botões (Favoritar, Notificar) com Conexão ao Banco */}
                             <div className="flex items-center gap-3">
                                 <button onClick={toggleFavorite} className={`w-14 h-14 rounded-2xl border flex items-center justify-center transition-all ${isFavorite ? 'bg-purple-600/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]' : 'bg-transparent border-white/10 hover:bg-white/10'}`}>
                                     <Heart className={`w-6 h-6 ${isFavorite ? 'text-purple-400 fill-purple-400' : 'text-gray-300'}`} />
@@ -192,33 +202,26 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                     <Bell className={`w-6 h-6 ${isNotified ? 'text-purple-400 fill-purple-400' : 'text-gray-300'}`} />
                                 </button>
                             </div>
-
-                            <div className="flex items-center gap-6 text-sm font-bold bg-white/5 backdrop-blur-md px-6 py-3.5 rounded-full border border-white/10">
-                                <div className="flex items-center gap-2">
-                                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                                    <span className="text-white">{Number(manga?.rating || 5.0).toFixed(1)}</span>
-                                </div>
-                                <div className="w-px h-4 bg-white/20"></div>
-                                <div className="flex items-center gap-2 text-gray-400">
-                                    <BookOpen className="w-4 h-4" />
-                                    {chapters.length} Cap.
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* ABAS MODERNAS */}
-                <div className="flex gap-8 border-b border-white/10 mb-8 px-2">
+                {/* ABAS MODERNAS COM ÍCONES E TEMA OURO */}
+                <div className="flex flex-wrap gap-8 border-b border-white/10 mb-8 px-2 justify-center md:justify-start">
                     {[
                         { id: 'capitulos', label: 'Tomo de Capítulos' },
                         { id: 'comentarios', label: 'Taverna (Comentários)' },
                         { id: 'informacoes', label: 'Informações' },
                         { id: 'avaliacoes', label: 'Avaliações' }
                     ].map(tab => (
-                        <button key={tab.id} onClick={() => setDetailsTab(tab.id)} className={`pb-4 text-sm font-black uppercase tracking-wider transition-all relative ${detailsTab === tab.id ? 'text-white' : 'text-gray-600 hover:text-gray-400'}`}>
+                        <button key={tab.id} onClick={() => setDetailsTab(tab.id)} className={`pb-4 text-sm font-black uppercase tracking-wider transition-all relative flex items-center gap-2 ${detailsTab === tab.id ? 'text-white' : 'text-gray-600 hover:text-gray-400'}`}>
+                            {/* Ícone de Estrela com tema Ouro adicionado */}
+                            {tab.id === 'capitulos' && <Flame className="w-4 h-4 text-[#D4AF37]" />}
+                            {tab.id === 'comentarios' && <Flame className="w-4 h-4 text-[#D4AF37]" />}
+                            {tab.id === 'informacoes' && <Flame className="w-4 h-4 text-[#D4AF37]" />}
+                            {tab.id === 'avaliacoes' && <Star className="w-4 h-4 text-[#FFD700] fill-[#FFD700]" />}
                             {tab.label}
-                            {detailsTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-[3px] rounded-t-full bg-gradient-to-r from-purple-500 to-fuchsia-500 shadow-[0_-2px_15px_rgba(232,121,249,0.8)]"></div>}
+                            {detailsTab === tab.id && <div className="absolute bottom-0 left-0 w-full h-[3px] rounded-t-full bg-gradient-to-r from-[#D4AF37] to-[#FFD700] shadow-[0_-2px_15px_rgba(212,175,55,1)]"></div>}
                         </button>
                     ))}
                 </div>
@@ -226,13 +229,16 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                 {/* CONTEÚDO DAS ABAS */}
                 <div className="w-full pb-10">
                     
-                    {/* ABA: CAPÍTULOS REDESENHADA (Sem Botão de Download) */}
+                    {/* ABA: CAPÍTULOS, REDESENHADA E COM TEMA OURO */}
                     {detailsTab === 'capitulos' && (
                         <div className="animate-in slide-in-from-bottom-4 duration-500 bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm">
                             
                             {/* CABEÇALHO DA LISTA DE CAPÍTULOS */}
                             <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-xl font-bold text-white tracking-widest uppercase">Capítulos</h2>
+                                <div className="flex items-center gap-3">
+                                    <Bookmark className="w-5 h-5 text-[#D4AF37] fill-[#D4AF37]" />
+                                    <h2 className="text-xl font-bold text-white tracking-widest uppercase">Capítulos</h2>
+                                </div>
                                 <div className="flex items-center gap-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
                                     <button onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')} className="flex items-center gap-2 hover:text-white transition-colors">
                                         Mais Recentes <ChevronDown className="w-4 h-4" />
@@ -244,7 +250,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                 </div>
                             </div>
 
-                            {/* LISTA DE CAPÍTULOS REDESENHADA */}
+                            {/* LISTA DE CAPÍTULOS ATUALIZADA */}
                             <div className="flex flex-col gap-3">
                                 {chapters.length === 0 ? (
                                     <div className="text-center py-10 bg-black/40 rounded-2xl border border-white/5">
@@ -257,7 +263,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                         return (
                                             <div key={chapter.id} className="group bg-black/40 border border-white/5 hover:border-white/10 rounded-2xl p-3 pr-6 flex items-center gap-4 transition-all relative overflow-hidden group">
                                                 
-                                                {/* Efeito Neon Roxo na Borda Esquerda */}
+                                                {/* Efeito Neon Roxo na Borda Esquerda MANTIDO */}
                                                 <div className="absolute left-0 top-0 w-1 h-full bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                                                 <div 
@@ -271,6 +277,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                                                     </div>
                                                     
                                                     <div className="flex items-center gap-3">
+                                                        <Bookmark className="w-4 h-4 text-[#D4AF37]" />
                                                         <span className={`font-medium text-sm transition-colors ${isRead ? 'text-gray-600' : 'text-gray-200'} group-hover:text-fuchsia-300`}>Capítulo {chapter.number}</span>
                                                         {index === 0 && sortOrder === 'desc' && (
                                                             <span className="bg-fuchsia-600 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-wider shadow-[0_0_10px_rgba(217,70,239,0.5)]">Novo</span>
@@ -280,7 +287,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
 
                                                 {/* Data e Botão de Salvar Capítulo individual */}
                                                 <div className="flex items-center gap-4 pl-2 pr-4">
-                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{timeAgo(chapter.rawTime || Date.now())}</span>
+                                                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider hidden sm:block">{timeAgo(chapter.rawTime || Date.now())}</span>
                                                     <button className="text-gray-600 hover:text-purple-500 transition-colors">
                                                         <Bookmark className="w-5 h-5 transition-colors group-hover:text-purple-400" />
                                                     </button>
@@ -297,7 +304,7 @@ export default function DetailsView({ manga, libraryData, historyData, user, use
                         </div>
                     )}
 
-                    {/* CONTEÚDO DAS OUTRAS ABAS */}
+                    {/* CONTEÚDO DAS OUTRAS ABAS (MANTIDO) */}
                     {detailsTab === 'comentarios' && (
                         <div className="animate-in fade-in duration-500 bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-sm">
                             <CommentsSection mangaId={manga.id} user={user} userProfileData={userProfileData} onRequireLogin={onRequireLogin} showToast={showToast} />
